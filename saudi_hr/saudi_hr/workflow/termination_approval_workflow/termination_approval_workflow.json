@@ -1,0 +1,96 @@
+{
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "Workflow",
+ "doctype_or_field": "DocType",
+ "document_type": "Termination Notice",
+ "is_active": 1,
+ "module": "Saudi HR",
+ "name": "Termination Approval Workflow",
+ "override_status": 0,
+ "send_email_alert": 1,
+ "workflow_state_field": "workflow_state",
+ "states": [
+  {
+   "allow_edit": "HR User",
+   "doc_status": "0",
+   "is_optional_state": 0,
+   "message": "",
+   "state": "مسودة / Draft",
+   "style": "Warning"
+  },
+  {
+   "allow_edit": "HR Manager",
+   "doc_status": "0",
+   "is_optional_state": 0,
+   "message": "إشعار الإنهاء بانتظار مراجعة مدير الموارد البشرية",
+   "state": "مراجعة HR / HR Review",
+   "style": "Primary"
+  },
+  {
+   "allow_edit": "HR Manager",
+   "doc_status": "0",
+   "is_optional_state": 0,
+   "message": "إشعار الإنهاء بانتظار موافقة الإدارة العليا",
+   "state": "موافقة الإدارة / Management Approval",
+   "style": "Primary"
+  },
+  {
+   "allow_edit": "HR Manager",
+   "doc_status": "1",
+   "is_optional_state": 0,
+   "message": "تمت الموافقة وإصدار إشعار الإنهاء",
+   "state": "معتمد / Approved",
+   "style": "Success"
+  },
+  {
+   "allow_edit": "HR Manager",
+   "doc_status": "2",
+   "is_optional_state": 0,
+   "message": "تم إلغاء إشعار الإنهاء",
+   "state": "ملغى / Cancelled",
+   "style": "Danger"
+  }
+ ],
+ "transitions": [
+  {
+   "action": "رفع للمراجعة / Submit for Review",
+   "allow_self_approval": 1,
+   "allowed": "HR User",
+   "condition": "",
+   "next_state": "مراجعة HR / HR Review",
+   "state": "مسودة / Draft"
+  },
+  {
+   "action": "إحالة للإدارة / Refer to Management",
+   "allow_self_approval": 1,
+   "allowed": "HR Manager",
+   "condition": "",
+   "next_state": "موافقة الإدارة / Management Approval",
+   "state": "مراجعة HR / HR Review"
+  },
+  {
+   "action": "رد للمسودة / Return",
+   "allow_self_approval": 1,
+   "allowed": "HR Manager",
+   "condition": "",
+   "next_state": "مسودة / Draft",
+   "state": "مراجعة HR / HR Review"
+  },
+  {
+   "action": "اعتماد نهائي / Final Approve",
+   "allow_self_approval": 1,
+   "allowed": "HR Manager",
+   "condition": "",
+   "next_state": "معتمد / Approved",
+   "state": "موافقة الإدارة / Management Approval"
+  },
+  {
+   "action": "إلغاء / Cancel",
+   "allow_self_approval": 1,
+   "allowed": "HR Manager",
+   "condition": "",
+   "next_state": "ملغى / Cancelled",
+   "state": "موافقة الإدارة / Management Approval"
+  }
+ ]
+}

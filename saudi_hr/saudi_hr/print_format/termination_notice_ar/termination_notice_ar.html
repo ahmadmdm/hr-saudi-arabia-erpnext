@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: 'Arial', 'Tahoma', sans-serif; direction: rtl; font-size: 13px; color: #1a1a1a; margin: 0; padding: 35px 40px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; margin-bottom: 25px; }
+  .header-title h1 { font-size: 20px; color: #2c3e50; margin: 0 0 4px 0; }
+  .header-title h2 { font-size: 13px; color: #888; margin: 0; }
+  .header-info { font-size: 12px; color: #555; text-align: left; }
+  p { line-height: 2.0; margin: 10px 0; font-size: 13.5px; }
+  .details-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px 20px; margin: 18px 0; }
+  .details-box .row { display: flex; margin: 6px 0; }
+  .details-box .label { font-weight: bold; min-width: 180px; color: #2c3e50; }
+  .details-box .value { flex: 1; color: #333; }
+  .article-box { background: #fff3cd; border-right: 4px solid #ffc107; padding: 10px 15px; margin: 15px 0; font-size: 12px; line-height: 1.8; }
+  .signature-section { margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; text-align: center; }
+  .signature-line { border-top: 1px solid #555; margin-top: 55px; padding-top: 8px; font-size: 12px; color: #333; }
+  .stamp-area { border: 2px dashed #ccc; width: 120px; height: 120px; margin: 20px auto 0 auto; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #aaa; border-radius: 50%; text-align: center; }
+  .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 12px; font-size: 11px; color: #999; text-align: center; }
+  .highlight { font-weight: bold; color: #c0392b; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-title">
+    <h1>إشعار إنهاء الخدمة / Termination Notice</h1>
+    <h2>{{ doc.company }}</h2>
+  </div>
+  <div class="header-info">
+    <div>رقم الإشعار: <strong>{{ doc.name }}</strong></div>
+    <div>تاريخ الإصدار: <strong>{{ frappe.format(frappe.utils.today(), "Date") }}</strong></div>
+  </div>
+</div>
+
+<!-- Salutation -->
+<p>السيد/ة المحترم/ة: <strong>{{ doc.employee_name or doc.employee }}</strong></p>
+<p>الموضوع: <span class="highlight">إشعار بإنهاء عقد العمل</span></p>
+
+<p>
+  نفيدكم بأنه بناءً على <strong>{{ doc.termination_reason }}</strong>، 
+  {% if doc.during_probation %}
+    وكون ذلك خلال فترة التجربة،
+  {% endif %}
+  فقد تقرر إنهاء عقد العمل الخاص بكم مع شركة <strong>{{ doc.company }}</strong>.
+</p>
+
+<!-- Details Box -->
+<div class="details-box">
+  <div class="row">
+    <span class="label">سبب الإنهاء:</span>
+    <span class="value">{{ doc.termination_reason }}</span>
+  </div>
+  <div class="row">
+    <span class="label">تاريخ بداية الإشعار:</span>
+    <span class="value">{{ frappe.format(doc.notice_start_date, "Date") }}</span>
+  </div>
+  <div class="row">
+    <span class="label">مدة الإشعار المطلوبة:</span>
+    <span class="value">{{ doc.notice_required_days or 0 }} يوماً</span>
+  </div>
+  {% if doc.notice_end_date %}
+  <div class="row">
+    <span class="label">آخر يوم عمل:</span>
+    <span class="value"><strong class="highlight">{{ frappe.format(doc.notice_end_date, "Date") }}</strong></span>
+  </div>
+  {% endif %}
+  {% if doc.eosb_applicable %}
+  <div class="row">
+    <span class="label">مكافأة نهاية الخدمة:</span>
+    <span class="value">✓ مستحقة — سيتم إصدار شهادة المكافأة</span>
+  </div>
+  {% endif %}
+</div>
+
+{% if doc.termination_article %}
+<div class="article-box">
+  <strong>الأساس القانوني:</strong> المادة {{ doc.termination_article }} من نظام العمل السعودي<br>
+  {% if doc.article_description %}{{ doc.article_description }}{% endif %}
+</div>
+{% endif %}
+
+<p>
+  يُرجى تسليم كافة مهامكم ومعدات الشركة قبل تاريخ مغادرة العمل،
+  وستقوم إدارة الموارد البشرية بإنجاز إجراءات التسوية النهائية وفقاً لنظام العمل السعودي.
+</p>
+
+<!-- Signatures -->
+<div class="signature-section">
+  <div>
+    <div class="stamp-area">ختم الشركة</div>
+    <div class="signature-line">
+      <strong>مدير الموارد البشرية</strong><br>
+      {{ doc.company }}<br>
+      التاريخ: _______________
+    </div>
+  </div>
+  <div>
+    <div class="stamp-area" style="border:none; background:#f9f9f9;"></div>
+    <div class="signature-line">
+      <strong>إقرار الموظف باستلام الإشعار</strong><br>
+      {{ doc.employee_name or doc.employee }}<br>
+      التاريخ: _______________
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  صادر وفقاً لنظام العمل السعودي — المرسوم الملكي م/51 | {{ doc.company }}
+</div>
+
+</body>
+</html>

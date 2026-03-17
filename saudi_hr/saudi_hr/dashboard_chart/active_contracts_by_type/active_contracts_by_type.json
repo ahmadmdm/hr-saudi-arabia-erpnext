@@ -1,0 +1,19 @@
+{
+ "based_on": "contract_type",
+ "chart_type": "Count",
+ "creation": "2026-03-17 00:00:00.000000",
+ "custom_options": "",
+ "doctype": "Dashboard Chart",
+ "document_type": "Saudi Employment Contract",
+ "filters_json": "[[\"Saudi Employment Contract\",\"contract_status\",\"=\",\"Active / نشط\"]]",
+ "group_by_based_on": "contract_type",
+ "group_by_type": "Count",
+ "is_public": 1,
+ "is_standard": 1,
+ "module": "Saudi HR",
+ "name": "Active Contracts by Type",
+ "number_of_groups": 0,
+ "timeseries": 0,
+ "type": "Donut",
+ "use_report_chart": 0
+}

@@ -1,0 +1,23 @@
+{
+ "attach_print": 0,
+ "channel": "Email",
+ "condition": "doc.days_to_iqama_expiry and doc.days_to_iqama_expiry <= 90",
+ "creation": "2026-03-17 00:00:00.000000",
+ "days_in_advance": 90,
+ "doctype": "Notification",
+ "document_type": "Work Permit Iqama",
+ "enabled": 1,
+ "event": "Days Before",
+ "message": "<p dir=\"rtl\">السيد/ة مدير الموارد البشرية،</p>\n<p dir=\"rtl\">تنبيه: إقامة الموظف <b>{{ doc.employee_name }}</b> ستنتهي خلال <b>{{ doc.days_to_iqama_expiry }}</b> يوماً.</p>\n<p dir=\"rtl\">رقم الإقامة: {{ doc.iqama_number }}<br>\nتاريخ الانتهاء: {{ doc.iqama_expiry_date }}</p>\n<p dir=\"rtl\">يُرجى اتخاذ الإجراءات اللازمة لتجديد الإقامة في أقرب وقت.</p>",
+ "module": "Saudi HR",
+ "name": "Iqama Expiry Alert",
+ "recipients": [
+  {
+   "cc": "",
+   "condition": "",
+   "receiver_by_role": "HR Manager"
+  }
+ ],
+ "send_system_notification": 1,
+ "subject": "تنبيه: إقامة موظف ستنتهي قريباً — {{ doc.employee_name }}"
+}

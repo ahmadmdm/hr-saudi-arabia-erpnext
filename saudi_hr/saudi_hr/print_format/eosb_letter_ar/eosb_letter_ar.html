@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: 'Arial', 'Tahoma', sans-serif; direction: rtl; font-size: 13px; color: #222; margin: 0; padding: 30px; }
+  .header { text-align: center; border-bottom: 3px double #1e8449; padding-bottom: 15px; margin-bottom: 25px; }
+  .header h1 { font-size: 22px; color: #1e8449; margin: 5px 0; }
+  .header h2 { font-size: 14px; color: #777; }
+  .ref { font-size: 12px; color: #888; margin-top: 5px; }
+  .date-line { text-align: left; margin-bottom: 20px; font-size: 12px; color: #555; }
+  p { line-height: 1.9; margin: 8px 0; }
+  .section-title { background: #1e8449; color: white; padding: 6px 14px; font-size: 14px; border-radius: 3px; margin: 18px 0 10px 0; }
+  table.calc { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  table.calc th { background: #1e8449; color: white; padding: 8px; text-align: right; font-size: 13px; }
+  table.calc td { padding: 7px 10px; border-bottom: 1px solid #e8e8e8; }
+  table.calc tr:nth-child(even) td { background: #f9fefb; }
+  .total-row td { font-weight: bold; font-size: 14px; background: #d4efdf !important; border-top: 2px solid #1e8449; }
+  .factor-box { background: #fef9e7; border: 1px solid #f0c040; padding: 10px 15px; border-radius: 4px; margin: 10px 0; font-size: 12px; }
+  .signature-section { margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .signature-box { text-align: center; }
+  .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 8px; font-size: 12px; }
+  .footer { text-align: center; margin-top: 40px; font-size: 11px; color: #888; border-top: 1px solid #ddd; padding-top: 10px; }
+  .amount-highlight { font-size: 20px; font-weight: bold; color: #1e8449; text-align: center; padding: 12px; background: #d4efdf; border-radius: 5px; margin: 15px 0; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div style="font-size:13px; color:#555;">{{ doc.company }}</div>
+  <h1>شهادة مكافأة نهاية الخدمة</h1>
+  <h2>End of Service Benefit Certificate</h2>
+  <div class="ref">المرجع: {{ doc.name }}</div>
+</div>
+
+<div class="date-line">التاريخ: {{ frappe.format(frappe.utils.today(), "Date") }}</div>
+
+<p>تشهد شركة <strong>{{ doc.company }}</strong> بأنه تم احتساب مكافأة نهاية الخدمة للموظف/ة:</p>
+
+<div class="section-title">بيانات الموظف — Employee Information</div>
+<table class="calc">
+  <tr><td style="font-weight:bold; width:220px;">اسم الموظف</td><td>{{ doc.employee_name or doc.employee }}</td></tr>
+  <tr><td style="font-weight:bold;">رقم الموظف</td><td>{{ doc.employee }}</td></tr>
+  <tr><td style="font-weight:bold;">تاريخ الانضمام</td><td>{{ frappe.format(doc.joining_date, "Date") }}</td></tr>
+  <tr><td style="font-weight:bold;">تاريخ الإنهاء</td><td>{{ frappe.format(doc.termination_date, "Date") }}</td></tr>
+  <tr><td style="font-weight:bold;">سنوات الخدمة</td><td>{{ "%.2f"|format(doc.years_of_service or 0) }} سنة</td></tr>
+  <tr><td style="font-weight:bold;">سبب الإنهاء</td><td>{{ doc.termination_reason }}</td></tr>
+</table>
+
+<div class="section-title">تفاصيل الحساب — Calculation Details</div>
+<table class="calc">
+  <tr>
+    <th>البند</th>
+    <th>المبلغ (ريال سعودي)</th>
+  </tr>
+  <tr>
+    <td>آخر راتب أساسي (شهري)</td>
+    <td>{{ frappe.format(doc.last_basic_salary, {"fieldtype": "Currency"}) }}</td>
+  </tr>
+  {% if doc.eosb_years_1_5 %}
+  <tr>
+    <td>مكافأة السنوات 1–5 (نصف شهر/سنة)</td>
+    <td>{{ frappe.format(doc.eosb_years_1_5, {"fieldtype": "Currency"}) }}</td>
+  </tr>
+  {% endif %}
+  {% if doc.eosb_years_above_5 %}
+  <tr>
+    <td>مكافأة السنوات فوق 5 (شهر كامل/سنة)</td>
+    <td>{{ frappe.format(doc.eosb_years_above_5, {"fieldtype": "Currency"}) }}</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td>إجمالي المكافأة قبل التعديل</td>
+    <td>{{ frappe.format(doc.eosb_gross, {"fieldtype": "Currency"}) }}</td>
+  </tr>
+  {% if doc.eosb_deductions %}
+  <tr>
+    <td>الاستقطاعات</td>
+    <td style="color:#c0392b;">- {{ frappe.format(doc.eosb_deductions, {"fieldtype": "Currency"}) }}</td>
+  </tr>
+  {% endif %}
+  <tr class="total-row">
+    <td>صافي المكافأة المستحقة</td>
+    <td>{{ frappe.format(doc.net_eosb, {"fieldtype": "Currency"}) }}</td>
+  </tr>
+</table>
+
+{% if doc.resignation_factor and doc.resignation_factor < 1 %}
+<div class="factor-box">
+  <strong>ملاحظة:</strong> {{ doc.resignation_factor_label or "" }}<br>
+  تم تطبيق معامل {{ doc.resignation_factor }} على المكافأة الإجمالية وفقاً للمادة 84 من نظام العمل.
+</div>
+{% endif %}
+
+<div class="amount-highlight">
+  المبلغ المستحق الصافي: {{ frappe.format(doc.net_eosb, {"fieldtype": "Currency"}) }} ريال سعودي
+</div>
+
+{% if doc.calculation_notes %}
+<div style="background:#f5f5f5; padding:10px; border-radius:4px; font-size:12px; margin:10px 0;">
+  <strong>ملاحظات:</strong> {{ doc.calculation_notes }}
+</div>
+{% endif %}
+
+<div class="signature-section">
+  <div class="signature-box">
+    <div class="signature-line">
+      <strong>مدير الموارد البشرية</strong><br>
+      التاريخ: _______________
+    </div>
+  </div>
+  <div class="signature-box">
+    <div class="signature-line">
+      <strong>الموظف / استلمت المبلغ</strong><br>
+      {{ doc.employee_name or doc.employee }}<br>
+      التاريخ: _______________
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  محتسبة وفقاً للمادة 84 من نظام العمل السعودي — المرسوم الملكي م/51
+</div>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+ "attach_print": 0,
+ "channel": "Email",
+ "condition": "",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "Notification",
+ "document_type": "Overtime Request",
+ "enabled": 1,
+ "event": "New",
+ "message": "<p dir=\"rtl\">لديك طلب عمل إضافي جديد بانتظار الموافقة:</p>\n<ul dir=\"rtl\">\n  <li>الموظف: <b>{{ doc.employee_name }}</b></li>\n  <li>التاريخ: {{ doc.date }}</li>\n  <li>ساعات إضافية: {{ doc.overtime_hours }}</li>\n  <li>المبلغ: {{ doc.overtime_amount }} ريال</li>\n</ul>\n<p dir=\"rtl\">يُرجى مراجعة الطلب واتخاذ الإجراء المناسب.</p>",
+ "module": "Saudi HR",
+ "name": "Overtime Submitted Alert",
+ "recipients": [
+  {
+   "cc": "",
+   "condition": "",
+   "receiver_by_role": "HR Manager"
+  }
+ ],
+ "send_system_notification": 1,
+ "subject": "طلب عمل إضافي جديد — {{ doc.employee_name }} — {{ doc.date }}"
+}

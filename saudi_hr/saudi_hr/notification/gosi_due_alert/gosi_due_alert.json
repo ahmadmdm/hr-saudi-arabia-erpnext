@@ -1,0 +1,23 @@
+{
+ "attach_print": 0,
+ "channel": "Email",
+ "condition": "",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "Notification",
+ "document_type": "GOSI Contribution",
+ "enabled": 1,
+ "event": "Change",
+ "value_changed": "payment_status",
+ "message": "<p dir=\"rtl\">تحديث اشتراك التأمينات الاجتماعية:</p>\n<ul dir=\"rtl\">\n  <li>الموظف: <b>{{ doc.employee_name }}</b></li>\n  <li>الفترة: {{ doc.month }}/{{ doc.year }}</li>\n  <li>الإجمالي: {{ doc.total_contribution }} ريال</li>\n  <li>الحالة: {{ doc.payment_status }}</li>\n</ul>",
+ "module": "Saudi HR",
+ "name": "GOSI Due Alert",
+ "recipients": [
+  {
+   "cc": "",
+   "condition": "",
+   "receiver_by_role": "Accounts Manager"
+  }
+ ],
+ "send_system_notification": 1,
+ "subject": "تحديث اشتراك GOSI — {{ doc.employee_name }} — {{ doc.month }}/{{ doc.year }}"
+}

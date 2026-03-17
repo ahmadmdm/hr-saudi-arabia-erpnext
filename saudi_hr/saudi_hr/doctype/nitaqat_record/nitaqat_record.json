@@ -1,0 +1,209 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "company",
+  "period_date",
+  "column_break_1",
+  "activity_sector",
+  "activity_code",
+  "employees_section",
+  "total_employees",
+  "saudi_employees",
+  "non_saudi_employees",
+  "column_break_2",
+  "saudization_percentage",
+  "required_saudization_percentage",
+  "nitaqat_section",
+  "nitaqat_category",
+  "nitaqat_color",
+  "column_break_3",
+  "compliance_status",
+  "gap_to_next_band",
+  "notes_section",
+  "notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-NIT-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "period_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Period Date / تاريخ الفترة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "activity_sector",
+   "fieldtype": "Data",
+   "label": "Activity Sector / قطاع النشاط",
+   "reqd": 1
+  },
+  {
+   "fieldname": "activity_code",
+   "fieldtype": "Data",
+   "label": "Activity Code / رمز النشاط"
+  },
+  {
+   "fieldname": "employees_section",
+   "fieldtype": "Section Break",
+   "label": "Employees Count / عدد الموظفين"
+  },
+  {
+   "fieldname": "total_employees",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total Employees / إجمالي الموظفين",
+   "read_only": 1
+  },
+  {
+   "fieldname": "saudi_employees",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Saudi Employees / موظفون سعوديون",
+   "read_only": 1
+  },
+  {
+   "fieldname": "non_saudi_employees",
+   "fieldtype": "Int",
+   "label": "Non-Saudi Employees / موظفون غير سعوديين",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "saudization_percentage",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Saudization % / نسبة السعودة",
+   "read_only": 1
+  },
+  {
+   "fieldname": "required_saudization_percentage",
+   "fieldtype": "Percent",
+   "label": "Required % / النسبة المطلوبة"
+  },
+  {
+   "fieldname": "nitaqat_section",
+   "fieldtype": "Section Break",
+   "label": "Nitaqat Classification / تصنيف نطاقات"
+  },
+  {
+   "fieldname": "nitaqat_category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Nitaqat Category / تصنيف نطاقات",
+   "options": "Platinum / بلاتيني\nHigh Green / أخضر مرتفع\nMedium Green / أخضر متوسط\nLow Green / أخضر منخفض\nYellow / أصفر\nRed / أحمر",
+   "read_only": 1
+  },
+  {
+   "fieldname": "nitaqat_color",
+   "fieldtype": "Data",
+   "label": "Color / اللون",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "compliance_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Compliance Status / حالة الامتثال",
+   "options": "Compliant / ممتثل\nNon-Compliant / غير ممتثل\nAt Risk / في خطر",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gap_to_next_band",
+   "fieldtype": "Float",
+   "label": "Gap to Next Band / الفجوة للنطاق التالي (%)",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes / ملاحظات"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes / ملاحظات"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Nitaqat Record",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Nitaqat Record",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  },
+  {
+   "role": "HR User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "company",
+ "track_changes": 1
+}

@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "attendance_date",
+  "day_of_week",
+  "column_break_1",
+  "day_type",
+  "status",
+  "column_break_2",
+  "time_in",
+  "time_out",
+  "hours_worked",
+  "late_minutes",
+  "overtime_hours",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "attendance_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date / التاريخ",
+   "reqd": 1
+  },
+  {
+   "fieldname": "day_of_week",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Day / اليوم",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Working Day / يوم عمل",
+   "fieldname": "day_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Day Type / نوع اليوم",
+   "options": "Working Day / يوم عمل\nFriday / الجمعة\nSaturday / السبت\nPublic Holiday / عطلة رسمية\nAnnual Leave / إجازة سنوية\nSick Leave / إجازة مرضية\nMaternity Leave / إجازة أمومة\nSpecial Leave / إجازة خاصة\nUnpaid Leave / إجازة بدون راتب"
+  },
+  {
+   "default": "Present / حاضر",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Present / حاضر\nAbsent / غائب\nLate / متأخر\nHalf Day / نصف يوم\nLeave / إجازة\nHoliday / عطلة"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "time_in",
+   "fieldtype": "Time",
+   "label": "Time In / وقت الحضور"
+  },
+  {
+   "fieldname": "time_out",
+   "fieldtype": "Time",
+   "label": "Time Out / وقت الانصراف"
+  },
+  {
+   "fieldname": "hours_worked",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Hours Worked / ساعات العمل"
+  },
+  {
+   "fieldname": "late_minutes",
+   "fieldtype": "Int",
+   "label": "Late (min) / تأخير (دقيقة)"
+  },
+  {
+   "fieldname": "overtime_hours",
+   "fieldtype": "Float",
+   "label": "Overtime Hrs / ساعات إضافية"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "label": "Remarks / ملاحظات"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Monthly Attendance Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "attendance_date",
+ "sort_order": "ASC"
+}

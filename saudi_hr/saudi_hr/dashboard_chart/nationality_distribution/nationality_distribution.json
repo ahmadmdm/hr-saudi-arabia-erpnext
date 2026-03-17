@@ -1,0 +1,19 @@
+{
+ "based_on": "nationality",
+ "chart_type": "Count",
+ "creation": "2026-03-17 00:00:00.000000",
+ "custom_options": "",
+ "doctype": "Dashboard Chart",
+ "document_type": "Saudi Employment Contract",
+ "filters_json": "[[\"Saudi Employment Contract\",\"contract_status\",\"=\",\"Active / نشط\"]]",
+ "group_by_based_on": "nationality",
+ "group_by_type": "Count",
+ "is_public": 1,
+ "is_standard": 1,
+ "module": "Saudi HR",
+ "name": "Nationality Distribution",
+ "number_of_groups": 10,
+ "timeseries": 0,
+ "type": "Pie",
+ "use_report_chart": 0
+}

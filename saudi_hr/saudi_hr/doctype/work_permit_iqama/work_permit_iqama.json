@@ -1,0 +1,280 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "nationality",
+  "profession",
+  "iqama_section",
+  "iqama_number",
+  "iqama_issue_date",
+  "iqama_expiry_date",
+  "column_break_2",
+  "iqama_status",
+  "days_to_iqama_expiry",
+  "iqama_renewal_cost",
+  "work_permit_section",
+  "work_permit_number",
+  "work_permit_issue_date",
+  "work_permit_expiry_date",
+  "column_break_3",
+  "work_permit_status",
+  "days_to_permit_expiry",
+  "sponsor_section",
+  "sponsor_name",
+  "sponsor_id",
+  "column_break_4",
+  "sponsor_transfer_status",
+  "exit_reentry_section",
+  "exit_reentry_visa_number",
+  "exit_reentry_expiry_date",
+  "notes_section",
+  "notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-IQAMA-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / الموظف",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name / اسم الموظف",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.nationality",
+   "fieldname": "nationality",
+   "fieldtype": "Data",
+   "label": "Nationality / الجنسية"
+  },
+  {
+   "fieldname": "profession",
+   "fieldtype": "Data",
+   "label": "Profession on Iqama / المهنة في الإقامة"
+  },
+  {
+   "fieldname": "iqama_section",
+   "fieldtype": "Section Break",
+   "label": "Iqama / الإقامة"
+  },
+  {
+   "fieldname": "iqama_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Iqama Number / رقم الإقامة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "iqama_issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date / تاريخ الإصدار"
+  },
+  {
+   "fieldname": "iqama_expiry_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Expiry Date / تاريخ الانتهاء",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "iqama_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Iqama Status / حالة الإقامة",
+   "options": "Active / نشطة\nExpiring Soon / تنتهي قريباً\nExpired / منتهية",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_to_iqama_expiry",
+   "fieldtype": "Int",
+   "label": "Days to Expiry / أيام للانتهاء",
+   "read_only": 1
+  },
+  {
+   "fieldname": "iqama_renewal_cost",
+   "fieldtype": "Currency",
+   "label": "Renewal Cost (SAR) / تكلفة التجديد"
+  },
+  {
+   "fieldname": "work_permit_section",
+   "fieldtype": "Section Break",
+   "label": "Work Permit / تصريح العمل"
+  },
+  {
+   "fieldname": "work_permit_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Work Permit No. / رقم تصريح العمل"
+  },
+  {
+   "fieldname": "work_permit_issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date / تاريخ الإصدار"
+  },
+  {
+   "fieldname": "work_permit_expiry_date",
+   "fieldtype": "Date",
+   "label": "Expiry Date / تاريخ الانتهاء"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "work_permit_status",
+   "fieldtype": "Select",
+   "label": "Permit Status / حالة التصريح",
+   "options": "Active / نشط\nExpiring Soon / ينتهي قريباً\nExpired / منتهي\nN/A",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_to_permit_expiry",
+   "fieldtype": "Int",
+   "label": "Days to Permit Expiry / أيام لانتهاء التصريح",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sponsor_section",
+   "fieldtype": "Section Break",
+   "label": "Sponsor / الكفيل"
+  },
+  {
+   "fieldname": "sponsor_name",
+   "fieldtype": "Data",
+   "label": "Sponsor Name / اسم الكفيل"
+  },
+  {
+   "fieldname": "sponsor_id",
+   "fieldtype": "Data",
+   "label": "Sponsor ID / رقم الكفيل"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sponsor_transfer_status",
+   "fieldtype": "Select",
+   "label": "Transfer Status / حالة نقل الكفالة",
+   "options": "N/A\nIn Progress / جاري\nCompleted / مكتمل\nRejected / مرفوض"
+  },
+  {
+   "fieldname": "exit_reentry_section",
+   "fieldtype": "Section Break",
+   "label": "Exit Re-entry Visa / تأشيرة الخروج والعودة"
+  },
+  {
+   "fieldname": "exit_reentry_visa_number",
+   "fieldtype": "Data",
+   "label": "Exit Re-entry Visa No. / رقم تأشيرة الخروج والعودة"
+  },
+  {
+   "fieldname": "exit_reentry_expiry_date",
+   "fieldtype": "Date",
+   "label": "Exit Re-entry Expiry / تاريخ انتهاء الخروج والعودة"
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes / ملاحظات"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes / ملاحظات"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Work Permit Iqama",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Work Permit Iqama",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  },
+  {
+   "role": "HR User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  },
+  {
+   "role": "Employee",
+   "read": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "employee_name",
+ "track_changes": 1
+}

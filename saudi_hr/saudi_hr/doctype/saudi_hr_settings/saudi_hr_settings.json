@@ -1,0 +1,221 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "gosi_section",
+  "gosi_saudi_employee_rate",
+  "gosi_saudi_employer_rate",
+  "column_break_gosi",
+  "gosi_non_saudi_employee_rate",
+  "gosi_non_saudi_employer_rate",
+  "leave_section",
+  "annual_leave_years_threshold",
+  "annual_leave_before_threshold",
+  "annual_leave_after_threshold",
+  "column_break_leave",
+  "sick_leave_full_pay_days",
+  "sick_leave_partial_pay_days",
+  "sick_leave_partial_pay_percentage",
+  "contract_section",
+  "probation_period_days",
+  "max_probation_period_days",
+  "column_break_contract",
+  "notice_period_monthly_days",
+  "notice_period_non_monthly_days",
+  "alerts_section",
+  "iqama_expiry_alert_days",
+  "contract_expiry_alert_days",
+  "column_break_alerts",
+  "work_permit_expiry_alert_days",
+  "send_email_alerts"
+ ],
+ "fields": [
+  {
+   "fieldname": "gosi_section",
+   "fieldtype": "Section Break",
+   "label": "GOSI Rates / معدلات التأمينات الاجتماعية"
+  },
+  {
+   "default": "10",
+   "description": "9% pension + 1% unemployment = 10% total",
+   "fieldname": "gosi_saudi_employee_rate",
+   "fieldtype": "Percent",
+   "label": "Saudi Employee Rate % / نسبة موظف سعودي"
+  },
+  {
+   "default": "12",
+   "description": "9% pension + 2% hazard + 1% unemployment = 12% total",
+   "fieldname": "gosi_saudi_employer_rate",
+   "fieldtype": "Percent",
+   "label": "Saudi Employer Rate % / نسبة صاحب عمل سعودي"
+  },
+  {
+   "fieldname": "column_break_gosi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Non-Saudi employees are not subject to GOSI employee contribution",
+   "fieldname": "gosi_non_saudi_employee_rate",
+   "fieldtype": "Percent",
+   "label": "Non-Saudi Employee Rate % / نسبة موظف غير سعودي"
+  },
+  {
+   "default": "2",
+   "description": "Occupational hazards only / أخطار مهنية فقط",
+   "fieldname": "gosi_non_saudi_employer_rate",
+   "fieldtype": "Percent",
+   "label": "Non-Saudi Employer Rate % / نسبة صاحب عمل غير سعودي"
+  },
+  {
+   "fieldname": "leave_section",
+   "fieldtype": "Section Break",
+   "label": "Annual Leave / الإجازة السنوية (م.109)"
+  },
+  {
+   "default": "5",
+   "description": "Years of service threshold for 30-day entitlement",
+   "fieldname": "annual_leave_years_threshold",
+   "fieldtype": "Int",
+   "label": "Years Threshold / عتبة السنوات"
+  },
+  {
+   "default": "21",
+   "description": "Days before reaching threshold (< 5 years service)",
+   "fieldname": "annual_leave_before_threshold",
+   "fieldtype": "Int",
+   "label": "Days Before Threshold / أيام قبل العتبة"
+  },
+  {
+   "default": "30",
+   "description": "Days after reaching threshold (≥ 5 years service)",
+   "fieldname": "annual_leave_after_threshold",
+   "fieldtype": "Int",
+   "label": "Days After Threshold / أيام بعد العتبة"
+  },
+  {
+   "fieldname": "column_break_leave",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "30",
+   "description": "Days at 100% pay — الأيام بأجر كامل",
+   "fieldname": "sick_leave_full_pay_days",
+   "fieldtype": "Int",
+   "label": "Full Pay Days / أيام الأجر الكامل"
+  },
+  {
+   "default": "60",
+   "description": "Additional days at partial pay — الأيام الإضافية بأجر جزئي",
+   "fieldname": "sick_leave_partial_pay_days",
+   "fieldtype": "Int",
+   "label": "Partial Pay Days / أيام الأجر الجزئي"
+  },
+  {
+   "default": "75",
+   "fieldname": "sick_leave_partial_pay_percentage",
+   "fieldtype": "Percent",
+   "label": "Partial Pay % / نسبة الأجر الجزئي"
+  },
+  {
+   "fieldname": "contract_section",
+   "fieldtype": "Section Break",
+   "label": "Contract & Notice Period / العقود وفترة الإشعار"
+  },
+  {
+   "default": "90",
+   "fieldname": "probation_period_days",
+   "fieldtype": "Int",
+   "label": "Default Probation (Days) / فترة التجربة الافتراضية"
+  },
+  {
+   "default": "180",
+   "fieldname": "max_probation_period_days",
+   "fieldtype": "Int",
+   "label": "Max Probation (Days) / أقصى فترة تجربة"
+  },
+  {
+   "fieldname": "column_break_contract",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "60",
+   "description": "م.75/م.76 — Monthly salary employees",
+   "fieldname": "notice_period_monthly_days",
+   "fieldtype": "Int",
+   "label": "Notice Period — Monthly (Days) / إشعار الشهري (أيام)"
+  },
+  {
+   "default": "30",
+   "description": "م.75/م.76 — Non-monthly salary employees",
+   "fieldname": "notice_period_non_monthly_days",
+   "fieldtype": "Int",
+   "label": "Notice Period — Non-Monthly (Days) / إشعار غير الشهري"
+  },
+  {
+   "fieldname": "alerts_section",
+   "fieldtype": "Section Break",
+   "label": "Expiry Alerts / تنبيهات الانتهاء"
+  },
+  {
+   "default": "90",
+   "fieldname": "iqama_expiry_alert_days",
+   "fieldtype": "Int",
+   "label": "Iqama Alert (Days Before) / تنبيه الإقامة (أيام قبل)"
+  },
+  {
+   "default": "60",
+   "fieldname": "contract_expiry_alert_days",
+   "fieldtype": "Int",
+   "label": "Contract Alert (Days Before) / تنبيه العقد (أيام قبل)"
+  },
+  {
+   "fieldname": "column_break_alerts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "90",
+   "fieldname": "work_permit_expiry_alert_days",
+   "fieldtype": "Int",
+   "label": "Work Permit Alert (Days) / تنبيه تصريح العمل"
+  },
+  {
+   "default": "1",
+   "fieldname": "send_email_alerts",
+   "fieldtype": "Check",
+   "label": "Send Email Alerts / إرسال تنبيهات بالبريد"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Saudi HR Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  },
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

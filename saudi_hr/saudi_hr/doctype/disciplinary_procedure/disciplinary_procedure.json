@@ -1,0 +1,277 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "department",
+  "incident_section",
+  "incident_date",
+  "reported_by",
+  "column_break_2",
+  "violation_type",
+  "status",
+  "incident_description",
+  "investigation_section",
+  "investigation_committee",
+  "investigation_date",
+  "investigation_findings",
+  "column_break_3",
+  "employee_response_date",
+  "employee_response",
+  "decision_section",
+  "penalty_type",
+  "penalty_days",
+  "column_break_4",
+  "penalty_start_date",
+  "penalty_end_date",
+  "decision_notes",
+  "hr_manager_approval",
+  "appeal_section",
+  "appeal_submitted",
+  "appeal_date",
+  "appeal_notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-DIS-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / الموظف",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name / الاسم",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department / القسم",
+   "options": "Department"
+  },
+  {
+   "fieldname": "incident_section",
+   "fieldtype": "Section Break",
+   "label": "Incident / المخالفة"
+  },
+  {
+   "fieldname": "incident_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Incident Date / تاريخ المخالفة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reported_by",
+   "fieldtype": "Link",
+   "label": "Reported By / أُبلغ من",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "violation_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Violation Type / نوع المخالفة",
+   "options": "\nUnauthorised Absence / غياب بدون إذن\nInsubordination / عصيان الأوامر\nMisconduct / سوء السلوك\nAggression / اعتداء\nTheft / سرقة\nFraud / احتيال\nViolation of Policies / مخالفة السياسات\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "default": "Draft / مسودة",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Draft / مسودة\nUnder Investigation / قيد التحقيق\nPending Decision / بانتظار القرار\nDecision Issued / صدر القرار\nAppealed / مُستأنف\nClosed / مغلقة"
+  },
+  {
+   "fieldname": "incident_description",
+   "fieldtype": "Text Editor",
+   "label": "Incident Description / وصف المخالفة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "investigation_section",
+   "fieldtype": "Section Break",
+   "label": "Investigation / التحقيق (م.67)"
+  },
+  {
+   "fieldname": "investigation_committee",
+   "fieldtype": "Data",
+   "label": "Investigation Committee / لجنة التحقيق"
+  },
+  {
+   "fieldname": "investigation_date",
+   "fieldtype": "Date",
+   "label": "Investigation Date / تاريخ التحقيق"
+  },
+  {
+   "fieldname": "investigation_findings",
+   "fieldtype": "Text Editor",
+   "label": "Investigation Findings / نتائج التحقيق"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee_response_date",
+   "fieldtype": "Date",
+   "label": "Employee Response Date / تاريخ رد الموظف"
+  },
+  {
+   "fieldname": "employee_response",
+   "fieldtype": "Text Editor",
+   "label": "Employee Response / رد الموظف (م.67)"
+  },
+  {
+   "fieldname": "decision_section",
+   "fieldtype": "Section Break",
+   "label": "Penalty Decision / قرار الجزاء (م.65)"
+  },
+  {
+   "fieldname": "penalty_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Penalty Type / نوع الجزاء",
+   "options": "\nVerbal Warning / إنذار شفهي\nFirst Written Warning / إنذار كتابي أول (م.65)\nSecond Written Warning / إنذار كتابي ثانٍ (م.65)\nSuspension without Pay / إيقاف بدون أجر (م.65)\nDemotion / تخفيض الرتبة (م.65)\nTermination for Cause / فصل تأديبي (م.80)"
+  },
+  {
+   "fieldname": "penalty_days",
+   "fieldtype": "Int",
+   "label": "Suspension Days / أيام الإيقاف",
+   "depends_on": "eval:frm.doc.penalty_type && frm.doc.penalty_type.includes('Suspension')"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "penalty_start_date",
+   "fieldtype": "Date",
+   "label": "Penalty Start Date / تاريخ بدء الجزاء"
+  },
+  {
+   "fieldname": "penalty_end_date",
+   "fieldtype": "Date",
+   "label": "Penalty End Date / تاريخ انتهاء الجزاء",
+   "depends_on": "eval:frm.doc.penalty_type && frm.doc.penalty_type.includes('Suspension')"
+  },
+  {
+   "fieldname": "decision_notes",
+   "fieldtype": "Text Editor",
+   "label": "Decision Notes / ملاحظات القرار"
+  },
+  {
+   "default": "0",
+   "fieldname": "hr_manager_approval",
+   "fieldtype": "Check",
+   "label": "HR Manager Approved / موافقة مدير الموارد البشرية"
+  },
+  {
+   "fieldname": "appeal_section",
+   "fieldtype": "Section Break",
+   "label": "Appeal / التظلم (م.72)"
+  },
+  {
+   "default": "0",
+   "fieldname": "appeal_submitted",
+   "fieldtype": "Check",
+   "label": "Employee Submitted Appeal / قدّم الموظف تظلماً"
+  },
+  {
+   "fieldname": "appeal_date",
+   "fieldtype": "Date",
+   "label": "Appeal Date / تاريخ التظلم",
+   "depends_on": "appeal_submitted"
+  },
+  {
+   "fieldname": "appeal_notes",
+   "fieldtype": "Text Editor",
+   "label": "Appeal Notes / ملاحظات التظلم",
+   "depends_on": "appeal_submitted"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Disciplinary Procedure",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Disciplinary Procedure",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "sort_field": "incident_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

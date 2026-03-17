@@ -1,0 +1,298 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "department",
+  "nationality",
+  "training_details_section",
+  "training_title",
+  "training_type",
+  "training_provider",
+  "column_break_2",
+  "training_start_date",
+  "training_end_date",
+  "training_hours",
+  "training_location",
+  "training_cost",
+  "objectives_section",
+  "training_objectives",
+  "training_skills_gained",
+  "column_break_3",
+  "is_mandatory",
+  "is_saudization_related",
+  "nitaqat_category",
+  "results_section",
+  "attendance_status",
+  "result",
+  "score",
+  "certificate_obtained",
+  "column_break_4",
+  "certificate_name",
+  "certificate_expiry",
+  "training_provider_rating",
+  "notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-TRN-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / الموظف",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name / الاسم",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department / القسم",
+   "options": "Department"
+  },
+  {
+   "fetch_from": "employee.nationality",
+   "fieldname": "nationality",
+   "fieldtype": "Link",
+   "label": "Nationality / الجنسية",
+   "options": "Country",
+   "read_only": 1
+  },
+  {
+   "fieldname": "training_details_section",
+   "fieldtype": "Section Break",
+   "label": "Training Details / تفاصيل التدريب (م.60-64)"
+  },
+  {
+   "fieldname": "training_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Training Title / عنوان البرنامج التدريبي",
+   "reqd": 1
+  },
+  {
+   "fieldname": "training_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Training Type / نوع التدريب",
+   "options": "\nOn-the-Job / تدريب أثناء العمل\nExternal Course / دورة خارجية\nE-Learning / تعلم إلكتروني\nWorkshop / ورشة عمل\nConference / مؤتمر\nMandatory Safety / سلامة إلزامية\nSaudization / تدريب السعودة (م.60)\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "fieldname": "training_provider",
+   "fieldtype": "Data",
+   "label": "Training Provider / جهة التدريب"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "training_start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Start Date / تاريخ البدء",
+   "reqd": 1
+  },
+  {
+   "fieldname": "training_end_date",
+   "fieldtype": "Date",
+   "label": "End Date / تاريخ الانتهاء"
+  },
+  {
+   "fieldname": "training_hours",
+   "fieldtype": "Float",
+   "label": "Training Hours / ساعات التدريب"
+  },
+  {
+   "fieldname": "training_location",
+   "fieldtype": "Data",
+   "label": "Location / المكان"
+  },
+  {
+   "fieldname": "training_cost",
+   "fieldtype": "Currency",
+   "label": "Training Cost (SAR) / تكلفة التدريب"
+  },
+  {
+   "fieldname": "objectives_section",
+   "fieldtype": "Section Break",
+   "label": "Objectives & Skills / الأهداف والمهارات"
+  },
+  {
+   "fieldname": "training_objectives",
+   "fieldtype": "Text Editor",
+   "label": "Training Objectives / أهداف التدريب"
+  },
+  {
+   "fieldname": "training_skills_gained",
+   "fieldtype": "Small Text",
+   "label": "Skills Gained / المهارات المكتسبة"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_mandatory",
+   "fieldtype": "Check",
+   "label": "Mandatory Training / تدريب إلزامي"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_saudization_related",
+   "fieldtype": "Check",
+   "label": "Saudization Related / مرتبط بالسعودة (م.60)"
+  },
+  {
+   "depends_on": "is_saudization_related",
+   "fieldname": "nitaqat_category",
+   "fieldtype": "Select",
+   "label": "Nitaqat Category / نطاقات",
+   "options": "\nPlatinum / بلاتيني\nHigh Green / أخضر عالٍ\nMedium Green / أخضر متوسط\nLow Green / أخضر منخفض\nYellow / أصفر\nRed / أحمر"
+  },
+  {
+   "fieldname": "results_section",
+   "fieldtype": "Section Break",
+   "label": "Results / النتائج"
+  },
+  {
+   "default": "Attended / حضر",
+   "fieldname": "attendance_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Attendance / الحضور",
+   "options": "Attended / حضر\nAbsent / غاب\nPartial / جزئي"
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Result / النتيجة",
+   "options": "\nPass / نجح\nFail / رسب\nPending / قيد الانتظار\nNot Applicable / لا ينطبق"
+  },
+  {
+   "fieldname": "score",
+   "fieldtype": "Percent",
+   "label": "Score % / الدرجة"
+  },
+  {
+   "default": "0",
+   "fieldname": "certificate_obtained",
+   "fieldtype": "Check",
+   "label": "Certificate Obtained / حصل على شهادة"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "certificate_obtained",
+   "fieldname": "certificate_name",
+   "fieldtype": "Data",
+   "label": "Certificate Name / اسم الشهادة"
+  },
+  {
+   "depends_on": "certificate_obtained",
+   "fieldname": "certificate_expiry",
+   "fieldtype": "Date",
+   "label": "Certificate Expiry / انتهاء صلاحية الشهادة"
+  },
+  {
+   "fieldname": "training_provider_rating",
+   "fieldtype": "Select",
+   "label": "Provider Rating / تقييم الجهة",
+   "options": "\n5 - Excellent / ممتاز\n4 - Very Good / جيد جداً\n3 - Good / جيد\n2 - Fair / مقبول\n1 - Poor / ضعيف"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes / ملاحظات"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Training Record",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Training Record",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "HR User",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "sort_field": "training_start_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "training_title",
+ "track_changes": 1
+}

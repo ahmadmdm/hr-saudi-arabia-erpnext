@@ -1,0 +1,291 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "department",
+  "dispute_section",
+  "dispute_date",
+  "dispute_type",
+  "dispute_description",
+  "column_break_2",
+  "amount_claimed",
+  "currency",
+  "status",
+  "internal_resolution_section",
+  "hr_response",
+  "hr_response_date",
+  "internal_resolution",
+  "column_break_3",
+  "resolution_date",
+  "resolution_amount",
+  "ministry_section",
+  "mlsd_case_number",
+  "mlsd_submission_date",
+  "mlsd_hearing_date",
+  "mlsd_decision",
+  "column_break_4",
+  "mlsd_decision_date",
+  "mlsd_awarded_amount",
+  "labor_court_section",
+  "court_case_number",
+  "court_submission_date",
+  "court_decision",
+  "court_decision_date",
+  "court_awarded_amount",
+  "notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-LD-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / الموظف",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name / الاسم",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department / القسم",
+   "options": "Department"
+  },
+  {
+   "fieldname": "dispute_section",
+   "fieldtype": "Section Break",
+   "label": "Dispute Details / تفاصيل النزاع"
+  },
+  {
+   "fieldname": "dispute_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Dispute Date / تاريخ النزاع",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dispute_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Dispute Type / نوع النزاع",
+   "options": "\nUnpaid Salary / راتب غير مدفوع\nUnlawful Termination / فصل تعسفي\nEOSB Dispute / نزاع مكافأة نهاية الخدمة\nOvertime / عمل إضافي\nAnnual Leave / إجازة سنوية\nHarassment / تحرش\nDiscrimination / تمييز\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dispute_description",
+   "fieldtype": "Text Editor",
+   "label": "Description / وصف النزاع",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amount_claimed",
+   "fieldtype": "Currency",
+   "label": "Amount Claimed / المبلغ المطالب به"
+  },
+  {
+   "default": "SAR",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "default": "Open / مفتوح",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Open / مفتوح\nInternal Mediation / وساطة داخلية\nReferred to MLSD / مُحال لوزارة الموارد\nMLSD Mediation / وساطة الوزارة\nLabour Court / المحكمة العمالية\nResolved / محسوم\nClosed / مغلق"
+  },
+  {
+   "fieldname": "internal_resolution_section",
+   "fieldtype": "Section Break",
+   "label": "Internal Mediation / الوساطة الداخلية"
+  },
+  {
+   "fieldname": "hr_response",
+   "fieldtype": "Text Editor",
+   "label": "HR Response / رد الموارد البشرية"
+  },
+  {
+   "fieldname": "hr_response_date",
+   "fieldtype": "Date",
+   "label": "HR Response Date / تاريخ الرد"
+  },
+  {
+   "fieldname": "internal_resolution",
+   "fieldtype": "Text Editor",
+   "label": "Internal Resolution / حل داخلي"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "resolution_date",
+   "fieldtype": "Date",
+   "label": "Resolution Date / تاريخ الحل"
+  },
+  {
+   "fieldname": "resolution_amount",
+   "fieldtype": "Currency",
+   "label": "Settlement Amount / مبلغ التسوية"
+  },
+  {
+   "fieldname": "ministry_section",
+   "fieldtype": "Section Break",
+   "label": "MLSD Referral / إحالة وزارة الموارد (م.218)"
+  },
+  {
+   "fieldname": "mlsd_case_number",
+   "fieldtype": "Data",
+   "label": "MLSD Case Number / رقم القضية في الوزارة"
+  },
+  {
+   "fieldname": "mlsd_submission_date",
+   "fieldtype": "Date",
+   "label": "MLSD Submission Date / تاريخ تقديم الطلب"
+  },
+  {
+   "fieldname": "mlsd_hearing_date",
+   "fieldtype": "Date",
+   "label": "MLSD Hearing Date / تاريخ الجلسة"
+  },
+  {
+   "fieldname": "mlsd_decision",
+   "fieldtype": "Text Editor",
+   "label": "MLSD Decision / قرار الوزارة"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mlsd_decision_date",
+   "fieldtype": "Date",
+   "label": "MLSD Decision Date / تاريخ القرار"
+  },
+  {
+   "fieldname": "mlsd_awarded_amount",
+   "fieldtype": "Currency",
+   "label": "MLSD Awarded Amount / المبلغ المحكوم به"
+  },
+  {
+   "fieldname": "labor_court_section",
+   "fieldtype": "Section Break",
+   "label": "Labour Court / المحكمة العمالية (م.221)"
+  },
+  {
+   "fieldname": "court_case_number",
+   "fieldtype": "Data",
+   "label": "Court Case Number / رقم القضية القضائية"
+  },
+  {
+   "fieldname": "court_submission_date",
+   "fieldtype": "Date",
+   "label": "Court Submission Date / تاريخ رفع الدعوى"
+  },
+  {
+   "fieldname": "court_decision",
+   "fieldtype": "Text Editor",
+   "label": "Court Decision / حكم المحكمة"
+  },
+  {
+   "fieldname": "court_decision_date",
+   "fieldtype": "Date",
+   "label": "Court Decision Date / تاريخ الحكم"
+  },
+  {
+   "fieldname": "court_awarded_amount",
+   "fieldtype": "Currency",
+   "label": "Court Awarded Amount / المبلغ المحكوم به قضائياً"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes / ملاحظات"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Labor Dispute",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Labor Dispute",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "sort_field": "dispute_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

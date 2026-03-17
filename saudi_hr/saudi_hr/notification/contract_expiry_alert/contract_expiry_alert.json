@@ -1,0 +1,23 @@
+{
+ "attach_print": 0,
+ "channel": "Email",
+ "condition": "",
+ "creation": "2026-03-17 00:00:00.000000",
+ "days_in_advance": 60,
+ "doctype": "Notification",
+ "document_type": "Saudi Employment Contract",
+ "enabled": 1,
+ "event": "Days Before",
+ "message": "<p dir=\"rtl\">السيد/ة مدير الموارد البشرية،</p>\n<p dir=\"rtl\">تنبيه: عقد الموظف <b>{{ doc.employee_name }}</b> (محدد المدة) سينتهي خلال 60 يوماً.</p>\n<p dir=\"rtl\">رقم العقد: {{ doc.name }}<br>\nتاريخ انتهاء العقد: {{ doc.end_date }}</p>\n<p dir=\"rtl\">يُرجى مراجعة العقد واتخاذ القرار المناسب (تجديد أو إنهاء) وفقاً لنظام العمل السعودي.</p>",
+ "module": "Saudi HR",
+ "name": "Contract Expiry Alert",
+ "recipients": [
+  {
+   "cc": "",
+   "condition": "",
+   "receiver_by_role": "HR Manager"
+  }
+ ],
+ "send_system_notification": 1,
+ "subject": "تنبيه: عقد موظف سينتهي قريباً — {{ doc.employee_name }}"
+}
