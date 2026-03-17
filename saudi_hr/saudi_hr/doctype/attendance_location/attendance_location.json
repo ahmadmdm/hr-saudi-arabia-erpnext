@@ -5,6 +5,7 @@
  "autoname": "field:location_name",
  "creation": "2026-03-17 00:00:00.000000",
  "doctype": "DocType",
+ "icon": "fa fa-map-marker",
  "engine": "InnoDB",
  "field_order": [
   "location_name",
