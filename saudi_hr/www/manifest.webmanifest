@@ -1,0 +1,24 @@
+{
+  "name": "حضور الموظفين",
+  "short_name": "حضور",
+  "description": "تطبيق تسجيل حضور الموظفين عبر GPS",
+  "start_url": "/mobile-attendance",
+  "display": "standalone",
+  "background_color": "#0f3460",
+  "theme_color": "#0f3460",
+  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/assets/saudi_hr/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/saudi_hr/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

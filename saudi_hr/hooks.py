@@ -4,7 +4,7 @@ app_publisher = "IdeaOrbit"
 app_description = "Saudi HR Management System per Saudi Labor Law (Royal Decree M/51)"
 app_email = "info@ideaorbit.net"
 app_license = "MIT"
-app_version = "1.0.0"
+app_version = "1.1.0"
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
 # Apps Screen
@@ -14,7 +14,18 @@ add_to_apps_screen = [
 		"logo": "/assets/saudi_hr/images/logo.png",
 		"title": "Saudi HR / الموارد البشرية",
 		"route": "/app/saudi-hr",
-	}
+	},
+	{
+		"name": "saudi_hr_mobile",
+		"logo": "/assets/saudi_hr/images/logo.png",
+		"title": "حضور الموظفين / Attendance",
+		"route": "/mobile-attendance",
+	},
+]
+
+# ─── Web Routes ──────────────────────────────────────────────────────────────────
+website_route_rules = [
+	{"from_route": "/mobile-attendance", "to_route": "mobile-attendance"},
 ]
 
 # ─── Scheduled Tasks ───────────────────────────────────────────────────────────
@@ -68,4 +79,5 @@ fixtures = [
 		"doctype": "Property Setter",
 		"filters": [["module", "=", "Saudi HR"]],
 	},
+	"Attendance Location",
 ]

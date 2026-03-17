@@ -1,0 +1,142 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "field:location_name",
+ "creation": "2026-03-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "location_name",
+  "branch",
+  "column_break_1",
+  "is_active",
+  "section_gps",
+  "latitude",
+  "column_break_gps",
+  "longitude",
+  "section_settings",
+  "allowed_radius_meters",
+  "column_break_settings",
+  "geolocation"
+ ],
+ "fields": [
+  {
+   "fieldname": "location_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Location Name / اسم الموقع",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Branch / الفرع",
+   "options": "Branch"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Active / نشط"
+  },
+  {
+   "fieldname": "section_gps",
+   "fieldtype": "Section Break",
+   "label": "GPS Coordinates / إحداثيات GPS"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude / خط العرض",
+   "precision": "8",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_gps",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude / خط الطول",
+   "precision": "8",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_settings",
+   "fieldtype": "Section Break",
+   "label": "Settings / الإعدادات"
+  },
+  {
+   "default": "100",
+   "description": "Maximum distance in meters from the branch GPS point within which check-in is allowed. / الحد الأقصى للمسافة بالمتر المسموح بتسجيل الحضور منها.",
+   "fieldname": "allowed_radius_meters",
+   "fieldtype": "Int",
+   "label": "Allowed Radius (meters) / النطاق المسموح به (متر)"
+  },
+  {
+   "fieldname": "column_break_settings",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Auto-generated from Latitude & Longitude. / يتم توليده تلقائياً من الإحداثيات.",
+   "fieldname": "geolocation",
+   "fieldtype": "Geolocation",
+   "label": "Map Preview / معاينة الموقع على الخريطة",
+   "read_only": 1
+  }
+ ],
+ "in_create": 0,
+ "links": [],
+ "modified": "2026-03-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Attendance Location",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Employee",
+   "type": "read"
+  }
+ ],
+ "search_fields": "branch,location_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "location_name",
+ "track_changes": 1
+}

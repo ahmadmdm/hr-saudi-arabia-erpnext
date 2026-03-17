@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f3460" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="حضور" />
+  <title>{{ title }}</title>
+  <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary:   #0f3460;
+      --accent:    #e94560;
+      --green:     #1db954;
+      --green-dk:  #158a3e;
+      --red:       #e94560;
+      --red-dk:    #b71c40;
+      --orange:    #f0a500;
+      --bg:        #0a0e1a;
+      --card-bg:   #111827;
+      --card-bd:   #1e2a3a;
+      --text:      #e8eaf0;
+      --muted:     #7b8ca0;
+      --radius:    16px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Tajawal', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+    body { display: flex; flex-direction: column; min-height: 100svh; }
+
+    /* ─── Header ─────────────────────────────────────────────────────── */
+    .header {
+      background: var(--primary);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,.5);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-logo { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
+    .header-logo span { color: #e2b714; }
+    .header-user { font-size: 13px; color: rgba(255,255,255,.75); max-width: 55%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ─── Main scroll area ───────────────────────────────────────────── */
+    .main { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* ─── Clock ─────────────────────────────────────────────────────── */
+    .clock-bar {
+      text-align: center;
+      padding: 10px 0;
+    }
+    .clock-time { font-size: 52px; font-weight: 300; letter-spacing: -2px; line-height: 1; }
+    .clock-date { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    /* ─── Status Card ────────────────────────────────────────────────── */
+    .status-card {
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: background .4s, box-shadow .4s;
+      box-shadow: var(--shadow);
+    }
+    .status-card.present { background: linear-gradient(135deg, var(--green-dk), var(--green)); }
+    .status-card.absent  { background: linear-gradient(135deg, #1a1f2e, #242840); border: 1px solid var(--card-bd); }
+    .status-card.checked-out { background: linear-gradient(135deg, #3a1a2e, var(--red-dk)); }
+    .status-icon { font-size: 38px; flex-shrink: 0; }
+    .status-info h2 { font-size: 20px; font-weight: 700; }
+    .status-info p  { font-size: 13px; opacity: .8; margin-top: 3px; }
+
+    /* ─── Location Card ──────────────────────────────────────────────── */
+    .location-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-bd);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .location-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 10px;
+    }
+    .location-header .loc-icon { font-size: 22px; }
+    .location-header .loc-title { font-size: 15px; font-weight: 700; }
+    .location-rows { display: flex; flex-direction: column; gap: 8px; }
+    .location-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px;
+    }
+    .location-row .label { color: var(--muted); }
+    .location-row .value { font-weight: 500; }
+    .distance-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px; font-weight: 700;
+    }
+    .distance-pill.ok      { background: rgba(29,185,84,.18); color: var(--green); }
+    .distance-pill.warning { background: rgba(240,165,0,.18);  color: var(--orange); }
+    .distance-pill.error   { background: rgba(233,69,96,.18);  color: var(--red); }
+    .gps-status {
+      margin-top: 10px;
+      font-size: 12px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .gps-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted);
+      animation: none;
+    }
+    .gps-dot.active { background: var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%     { opacity: .5; transform: scale(1.4); }
+    }
+
+    /* ─── Action Button ──────────────────────────────────────────────── */
+    .action-btn {
+      width: 100%;
+      padding: 22px;
+      border: none; border-radius: var(--radius);
+      font-family: 'Tajawal', sans-serif;
+      font-size: 22px; font-weight: 900;
+      cursor: pointer;
+      transition: all .25s;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      box-shadow: var(--shadow);
+    }
+    .action-btn.checkin  { background: linear-gradient(135deg, var(--green-dk), var(--green)); color: #fff; }
+    .action-btn.checkout { background: linear-gradient(135deg, var(--red-dk), var(--red));    color: #fff; }
+    .action-btn:disabled {
+      background: #1e2a3a !important;
+      color: var(--muted) !important;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .action-btn:not(:disabled):active { transform: scale(.97); }
+    .action-btn .btn-icon { font-size: 28px; }
+
+    /* ─── History Table ──────────────────────────────────────────────── */
+    .history-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-bd);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .history-title {
+      padding: 14px 18px;
+      font-size: 14px; font-weight: 700;
+      border-bottom: 1px solid var(--card-bd);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .history-empty {
+      padding: 24px; text-align: center;
+      color: var(--muted); font-size: 13px;
+    }
+    .history-row {
+      display: flex; align-items: center;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--card-bd);
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-badge {
+      padding: 4px 12px; border-radius: 12px;
+      font-size: 12px; font-weight: 700; margin-left: 12px;
+      flex-shrink: 0;
+    }
+    .history-badge.in  { background: rgba(29,185,84,.18); color: var(--green); }
+    .history-badge.out { background: rgba(233,69,96,.18);  color: var(--red); }
+    .history-time { font-size: 15px; font-weight: 500; flex: 1; }
+    .history-meta { font-size: 12px; color: var(--muted); }
+
+    /* ─── Attendance Summary ─────────────────────────────────────────── */
+    .summary-card {
+      background: linear-gradient(135deg, #0f3460, #16213e);
+      border: 1px solid #1e3a5f;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .summary-title {
+      font-size: 13px; color: var(--muted);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .summary-key { font-size: 13px; color: var(--muted); }
+    .summary-val { font-size: 13px; font-weight: 700; color: var(--text); }
+
+    /* ─── Toast ──────────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1c2e40; border: 1px solid var(--card-bd);
+      color: var(--text); padding: 14px 22px;
+      border-radius: 12px; font-size: 14px; font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6);
+      z-index: 9999; max-width: calc(100vw - 40px); text-align: center;
+      transition: transform .3s cubic-bezier(.175,.885,.32,1.275), opacity .3s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.success { border-color: var(--green); }
+    #toast.error   { border-color: var(--red); }
+
+    /* ─── Loading overlay ────────────────────────────────────────────── */
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9990;
+      transition: opacity .4s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid var(--card-bd);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Spinner inside button ──────────────────────────────────────── */
+    .btn-spinner {
+      width: 24px; height: 24px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+    }
+    .loading-btn .btn-spinner { display: block; }
+    .loading-btn .btn-icon,
+    .loading-btn .btn-label { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Loading overlay ──────────────────────────────────────── -->
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-logo">Saudi <span>HR</span></div>
+  <div class="header-user" id="headerUser">جارٍ التحميل...</div>
+</header>
+
+<!-- ── Main Content ─────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Clock -->
+  <div class="clock-bar">
+    <div class="clock-time" id="clockTime">--:--</div>
+    <div class="clock-date" id="clockDate"></div>
+  </div>
+
+  <!-- Status Card -->
+  <div class="status-card absent" id="statusCard">
+    <div class="status-icon" id="statusIcon">🕐</div>
+    <div class="status-info">
+      <h2 id="statusTitle">جارٍ التحميل...</h2>
+      <p id="statusSub"></p>
+    </div>
+  </div>
+
+  <!-- Location Card -->
+  <div class="location-card" id="locationCard">
+    <div class="location-header">
+      <span class="loc-icon">📍</span>
+      <span class="loc-title" id="branchName">جارٍ تحديد الموقع...</span>
+    </div>
+    <div class="location-rows">
+      <div class="location-row">
+        <span class="label">المسافة عن الفرع</span>
+        <span class="distance-pill warning" id="distancePill">
+          <span id="distanceText">جارٍ القياس...</span>
+        </span>
+      </div>
+      <div class="location-row">
+        <span class="label">النطاق المسموح</span>
+        <span class="value" id="radiusText">--</span>
+      </div>
+    </div>
+    <div class="gps-status">
+      <div class="gps-dot" id="gpsDot"></div>
+      <span id="gpsStatusText">في انتظار GPS...</span>
+    </div>
+  </div>
+
+  <!-- Action Button -->
+  <button class="action-btn checkin" id="actionBtn" disabled>
+    <span class="btn-spinner"></span>
+    <span class="btn-icon" id="btnIcon">✅</span>
+    <span class="btn-label" id="btnLabel">تسجيل الحضور</span>
+  </button>
+
+  <!-- Today's Summary (shown after attendance is submitted) -->
+  <div class="summary-card" id="summaryCard" style="display:none">
+    <div class="summary-title">📊 ملخص اليوم</div>
+    <div class="summary-row">
+      <span class="summary-key">وقت الحضور</span>
+      <span class="summary-val" id="sumIn">--</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-key">وقت الانصراف</span>
+      <span class="summary-val" id="sumOut">--</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-key">ساعات العمل</span>
+      <span class="summary-val" id="sumHours">--</span>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-title">🗓 سجل اليوم</div>
+    <div id="historyList"><div class="history-empty">لا يوجد سجل اليوم</div></div>
+  </div>
+
+</main>
+
+<!-- ── Toast ─────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script>
+/* ────────────────────────────────────────────────────────────────────
+   Saudi HR Mobile Attendance PWA
+   All logic is self-contained here — no external JS dependencies.
+──────────────────────────────────────────────────────────────────── */
+
+const API_BASE = "/api/method/saudi_hr.saudi_hr.api";
+let state = {
+  loading: true,
+  gpsReady: false,
+  withinRadius: false,
+  lat: null,
+  lon: null,
+  location: null,     // branch location record
+  lastLogType: null,  // "IN" | "OUT" | null
+  attendance: null,   // today's submitted attendance
+  watchId: null,
+};
+
+// ─── CSRF token from cookie ───────────────────────────────────────
+function getCsrf() {
+  const m = document.cookie.match(/csrftoken=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : "";
+}
+
+// ─── Frappe API call ──────────────────────────────────────────────
+async function callApi(method, params = {}) {
+  const form = new FormData();
+  Object.entries(params).forEach(([k, v]) => form.append(k, v));
+  const res = await fetch(`${API_BASE}.${method}`, {
+    method: "POST",
+    headers: { "X-Frappe-CSRF-Token": getCsrf() },
+    body: form,
+    credentials: "same-origin",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err?._server_messages
+      ? JSON.parse(JSON.parse(err._server_messages)[0]).message
+      : (err?.exc_type || "خطأ في الاتصال بالخادم");
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  return data.message;
+}
+
+// ─── Clock ────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clockTime").textContent =
+    now.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", hour12: false });
+  document.getElementById("clockDate").textContent =
+    now.toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── Toast ────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type = "info") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ""; }, 4000);
+}
+
+// ─── Update UI from state ─────────────────────────────────────────
+function renderStatus() {
+  const card  = document.getElementById("statusCard");
+  const icon  = document.getElementById("statusIcon");
+  const title = document.getElementById("statusTitle");
+  const sub   = document.getElementById("statusSub");
+  const btn   = document.getElementById("actionBtn");
+  const btnIc = document.getElementById("btnIcon");
+  const btnLb = document.getElementById("btnLabel");
+
+  // Status card
+  if (state.attendance) {
+    card.className = "status-card checked-out";
+    icon.textContent = "✅";
+    title.textContent = "تم تسجيل الحضور والانصراف";
+    sub.textContent = "يمكنك مغادرة الصفحة";
+  } else if (state.lastLogType === "IN") {
+    card.className = "status-card present";
+    icon.textContent = "🟢";
+    title.textContent = "أنت حاضر الآن";
+    sub.textContent = "لا تنسَ تسجيل الانصراف عند المغادرة";
+  } else {
+    card.className = "status-card absent";
+    icon.textContent = "🕐";
+    title.textContent = "لم تسجّل حضورك بعد";
+    sub.textContent  = "اضغط الزر عند وصولك للفرع";
+  }
+
+  // Button
+  const isNextIn = (state.lastLogType !== "IN");
+  if (state.attendance) {
+    btn.className = "action-btn checkin";
+    btnIc.textContent = "✅";
+    btnLb.textContent = "تم إغلاق الدوام";
+    btn.disabled = true;
+  } else {
+    btn.className  = isNextIn ? "action-btn checkin" : "action-btn checkout";
+    btnIc.textContent = isNextIn ? "✅" : "🚪";
+    btnLb.textContent = isNextIn ? "تسجيل الحضور" : "تسجيل الانصراف";
+    // Enable only if we have GPS AND within radius (or no location configured)
+    btn.disabled = !(state.gpsReady && (state.withinRadius || !state.location));
+  }
+}
+
+// ─── Render history list ──────────────────────────────────────────
+function renderHistory(checkins) {
+  const list = document.getElementById("historyList");
+  if (!checkins || checkins.length === 0) {
+    list.innerHTML = '<div class="history-empty">لا يوجد سجل اليوم</div>';
+    return;
+  }
+  list.innerHTML = checkins.map(c => {
+    const t = new Date(c.time);
+    const timeStr = t.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    const isIn = c.log_type === "IN";
+    return `
+      <div class="history-row">
+        <span class="history-badge ${isIn ? "in" : "out"}">${isIn ? "حضور" : "انصراف"}</span>
+        <span class="history-time">${timeStr}</span>
+      </div>`;
+  }).join("");
+}
+
+// ─── Render summary ───────────────────────────────────────────────
+function renderSummary(att) {
+  const card = document.getElementById("summaryCard");
+  if (!att) { card.style.display = "none"; return; }
+  card.style.display = "block";
+  document.getElementById("sumIn").textContent    = att.in_time  ? new Date(att.in_time).toLocaleTimeString("ar-SA", { hour:"2-digit", minute:"2-digit", hour12:false }) : "--";
+  document.getElementById("sumOut").textContent   = att.out_time ? new Date(att.out_time).toLocaleTimeString("ar-SA", { hour:"2-digit", minute:"2-digit", hour12:false }) : "--";
+  document.getElementById("sumHours").textContent = att.working_hours ? att.working_hours + " ساعة" : "--";
+}
+
+// ─── Update distance display ──────────────────────────────────────
+function updateDistanceUI(distanceM) {
+  const pill  = document.getElementById("distancePill");
+  const text  = document.getElementById("distanceText");
+  const loc   = state.location;
+  const allowed = loc ? (loc.allowed_radius_meters || 100) : 100;
+
+  if (distanceM === null) {
+    pill.className = "distance-pill warning";
+    text.textContent = "جارٍ القياس...";
+    state.withinRadius = false;
+    return;
+  }
+
+  const d = Math.round(distanceM);
+  if (!loc) {
+    // No location restriction
+    pill.className = "distance-pill ok";
+    text.textContent = "بدون قيود";
+    state.withinRadius = true;
+    return;
+  }
+
+  text.textContent = d + " متر";
+  if (d <= allowed) {
+    pill.className = "distance-pill ok";
+    state.withinRadius = true;
+  } else if (d <= allowed * 2) {
+    pill.className = "distance-pill warning";
+    state.withinRadius = false;
+  } else {
+    pill.className = "distance-pill error";
+    state.withinRadius = false;
+  }
+  renderStatus();  // re-enable/disable button
+}
+
+// ─── Haversine (client side for display) ─────────────────────────
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000, p = Math.PI / 180;
+  const a = 0.5 - Math.cos((lat2 - lat1) * p) / 2
+    + Math.cos(lat1 * p) * Math.cos(lat2 * p)
+    * (1 - Math.cos((lon2 - lon1) * p)) / 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// ─── GPS watch ───────────────────────────────────────────────────
+function startGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById("gpsStatusText").textContent = "GPS غير مدعوم في هذا المتصفح";
+    return;
+  }
+  const dot   = document.getElementById("gpsDot");
+  const gtext = document.getElementById("gpsStatusText");
+
+  const opts = { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 };
+
+  state.watchId = navigator.geolocation.watchPosition(
+    pos => {
+      state.lat     = pos.coords.latitude;
+      state.lon     = pos.coords.longitude;
+      state.gpsReady = true;
+      dot.classList.add("active");
+      gtext.textContent = `دقة GPS: ±${Math.round(pos.coords.accuracy)} متر`;
+
+      if (state.location) {
+        const d = haversine(state.lat, state.lon, state.location.latitude, state.location.longitude);
+        updateDistanceUI(d);
+      } else {
+        updateDistanceUI(null);
+        state.withinRadius = true;
+      }
+      renderStatus();
+    },
+    err => {
+      dot.classList.remove("active");
+      gtext.textContent = err.code === 1
+        ? "❌ يرجى السماح بإذن الموقع"
+        : "⚠️ تعذّر تحديد الموقع";
+    },
+    opts
+  );
+}
+
+// ─── Load status from server ──────────────────────────────────────
+async function loadStatus() {
+  try {
+    const data = await callApi("get_attendance_status");
+    state.lastLogType = data.last_log_type;
+    state.location    = data.location || null;
+    state.attendance  = data.today_attendance || null;
+
+    // Update header with employee name
+    document.getElementById("headerUser").textContent = data.employee_name || "";
+
+    // Branch name
+    document.getElementById("branchName").textContent =
+      data.location ? data.location.location_name : (data.branch || "لم يُحدَّد الفرع");
+    document.getElementById("radiusText").textContent =
+      data.location ? (data.location.allowed_radius_meters || 100) + " متر" : "بدون قيود";
+
+    renderHistory(data.today_checkins);
+    renderSummary(data.today_attendance);
+    renderStatus();
+  } catch (e) {
+    showToast(e.message || "خطأ في تحميل البيانات", "error");
+    // Update status card to show error state
+    const card  = document.getElementById("statusCard");
+    const icon  = document.getElementById("statusIcon");
+    const title = document.getElementById("statusTitle");
+    const sub   = document.getElementById("statusSub");
+    card.className = "status-card absent";
+    icon.textContent = "⚠️";
+    title.textContent = e.message || "خطأ في تحميل البيانات";
+    sub.textContent = "يرجى التواصل مع المسؤول";
+    document.getElementById("headerUser").textContent = "";
+  }
+}
+
+// ─── Check-in / Check-out handler ────────────────────────────────
+async function doCheckin() {
+  const btn = document.getElementById("actionBtn");
+  if (btn.disabled) return;
+
+  if (!state.gpsReady || state.lat === null) {
+    showToast("في انتظار GPS... يرجى الانتظار لحظة", "error");
+    return;
+  }
+
+  // Loading state
+  btn.classList.add("loading-btn");
+  btn.disabled = true;
+
+  try {
+    const result = await callApi("do_mobile_checkin", {
+      latitude:  state.lat,
+      longitude: state.lon,
+    });
+
+    showToast(result.message, "success");
+    state.lastLogType = result.log_type === "IN" ? "IN" : "OUT";
+    if (result.attendance_name) {
+      // Reload full status to get attendance details
+      await loadStatus();
+    } else {
+      // Just update history
+      await loadStatus();
+    }
+  } catch (e) {
+    showToast(e.message || "فشل تسجيل الحضور", "error");
+    btn.disabled = false;
+  } finally {
+    btn.classList.remove("loading-btn");
+    renderStatus();
+  }
+}
+
+document.getElementById("actionBtn").addEventListener("click", doCheckin);
+
+// ─── Boot ────────────────────────────────────────────────────────
+async function boot() {
+  updateClock();
+  startGPS();
+  await loadStatus();
+  // Hide loading overlay
+  const overlay = document.getElementById("loading");
+  overlay.classList.add("hidden");
+  setTimeout(() => overlay.remove(), 500);
+}
+
+boot();
+</script>
+</body>
+</html>
