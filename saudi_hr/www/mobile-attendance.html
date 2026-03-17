@@ -618,6 +618,7 @@ function updateDistanceUI(distanceM) {
     pill.className = "distance-pill warning";
     text.textContent = "جارٍ القياس...";
     state.withinRadius = false;
+    renderStatus();
     return;
   }
 
@@ -792,8 +793,9 @@ function isInStandaloneMode() {
 function showInstallBanner() {
   // Don't show if already installed as PWA
   if (isInStandaloneMode()) return;
-  // Don't show if modal is still visible
-  if (!document.getElementById("locationModal").classList.contains("hidden")) return;
+  // Don't show if modal is still visible (may have been removed from DOM already)
+  const modal = document.getElementById("locationModal");
+  if (modal && !modal.classList.contains("hidden")) return;
   const banner = document.getElementById("installBanner");
   const installBtn = document.getElementById("installBtn");
   const iosSteps   = document.getElementById("iosSteps");

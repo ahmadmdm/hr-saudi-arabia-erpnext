@@ -128,7 +128,7 @@ def do_mobile_checkin(latitude, longitude):
 	latitude = flt(latitude)
 	longitude = flt(longitude)
 
-	if not latitude or not longitude:
+	if latitude is None or longitude is None:
 		frappe.throw(_("تعذّر الحصول على إحداثيات GPS. يرجى السماح بإذن الموقع وإعادة المحاولة."))
 
 	employee = _get_employee_for_user()
