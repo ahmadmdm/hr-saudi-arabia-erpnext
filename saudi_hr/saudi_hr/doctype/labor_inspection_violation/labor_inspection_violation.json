@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "creation": "2026-03-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "violation_category",
+  "legal_reference",
+  "column_break_1",
+  "severity",
+  "status",
+  "violation_description",
+  "corrective_action",
+  "column_break_2",
+  "fine_amount",
+  "correction_due_date",
+  "resolved_on",
+  "evidence_attachment",
+  "action_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "violation_category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Violation Category / فئة المخالفة",
+   "options": "\nWorking Hours / ساعات العمل\nWages / الأجور\nLeave Entitlement / استحقاق الإجازات\nContract Documentation / توثيق العقود\nSaudization / السعودة\nWork Permit and Iqama / تصريح العمل والإقامة\nHealth and Safety / السلامة والصحة\nRecord Keeping / حفظ السجلات\nWomen and Young Workers / النساء وصغار السن\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "fieldname": "legal_reference",
+   "fieldtype": "Data",
+   "label": "Legal Reference / المرجع النظامي"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Severity / الشدة",
+   "options": "\nLow / منخفض\nMedium / متوسط\nHigh / مرتفع\nCritical / حرج",
+   "reqd": 1
+  },
+  {
+   "default": "Open / مفتوح",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Open / مفتوح\nUnder Review / قيد المراجعة\nCorrective Action In Progress / التصحيح جارٍ\nCorrected / تم التصحيح\nWaived / معفى\nClosed / مغلق"
+  },
+  {
+   "fieldname": "violation_description",
+   "fieldtype": "Text Editor",
+   "label": "Violation Description / وصف المخالفة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "corrective_action",
+   "fieldtype": "Text Editor",
+   "label": "Corrective Action / الإجراء التصحيحي"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fine_amount",
+   "fieldtype": "Currency",
+   "label": "Fine Amount / مبلغ الغرامة"
+  },
+  {
+   "fieldname": "correction_due_date",
+   "fieldtype": "Date",
+   "label": "Correction Due Date / مهلة التصحيح"
+  },
+  {
+   "fieldname": "resolved_on",
+   "fieldtype": "Date",
+   "label": "Resolved On / تاريخ المعالجة"
+  },
+  {
+   "fieldname": "evidence_attachment",
+   "fieldtype": "Attach",
+   "label": "Evidence Attachment / مرفق الإثبات"
+  },
+  {
+   "fieldname": "action_log",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Compliance Action / إجراء الامتثال",
+   "no_copy": 1,
+   "options": "HR Compliance Action Log",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Labor Inspection Violation",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "idx",
+ "sort_order": "ASC"
+}

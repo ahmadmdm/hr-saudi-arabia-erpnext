@@ -9,10 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="حضور" />
   <title>{{ title }}</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/mobile-attendance-icon.svg" />
   <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
   <style>
     /* ─── Reset & Base ───────────────────────────────────────────────── */
@@ -129,6 +132,68 @@
       0%,100% { opacity: 1; transform: scale(1); }
       50%     { opacity: .5; transform: scale(1.4); }
     }
+
+    /* ─── Map Card ───────────────────────────────────────────────────── */
+    .map-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-bd);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .map-head {
+      padding: 14px 18px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .map-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .map-link {
+      color: #8fc6ff;
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .map-link.hidden { display: none; }
+    .map-frame {
+      width: 100%;
+      height: 220px;
+      border: 0;
+      display: block;
+      background: #0c1525;
+    }
+    #mapCanvas {
+      width: 100%;
+      height: 220px;
+      display: none;
+      background: #0c1525;
+    }
+    .map-empty {
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px;
+      line-height: 1.8;
+      background:
+        radial-gradient(circle at top right, rgba(15,52,96,.35), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+    }
+    .map-caption {
+      padding: 10px 18px 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .leaflet-control-attribution { font-size: 10px; }
 
     /* ─── Action Button ──────────────────────────────────────────────── */
     .action-btn {
@@ -432,6 +497,17 @@
     </div>
   </div>
 
+  <!-- Map -->
+  <div class="map-card" id="mapCard">
+    <div class="map-head">
+      <div class="map-title">🗺️ الخريطة</div>
+      <a class="map-link hidden" id="mapLink" href="#" target="_blank" rel="noopener">فتح في الخريطة</a>
+    </div>
+    <div class="map-frame" id="mapCanvas"></div>
+    <div class="map-empty" id="mapEmpty">سيتم عرض موقع الفرع أو موقعك الحالي هنا عند توفره.</div>
+    <div class="map-caption" id="mapCaption">عرض بصري لموقع الحضور للتحقق السريع.</div>
+  </div>
+
   <!-- Action Button -->
   <button class="action-btn checkin" id="actionBtn" disabled>
     <span class="btn-spinner"></span>
@@ -467,6 +543,9 @@
 <!-- ── Toast ─────────────────────────────────────────────────── -->
 <div id="toast"></div>
 
+<script>window.frappe = window.frappe || {};</script>
+<!-- csrf_token -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
 /* ────────────────────────────────────────────────────────────────────
    Saudi HR Mobile Attendance PWA
@@ -478,35 +557,53 @@ let state = {
   loading: true,
   gpsReady: false,
   withinRadius: false,
+  canCheckinWithoutGPS: false,
   lat: null,
   lon: null,
   location: null,     // branch location record
   lastLogType: null,  // "IN" | "OUT" | null
   attendance: null,   // today's submitted attendance
   watchId: null,
+  map: null,
+  branchMarker: null,
+  currentMarker: null,
+  pathLine: null,
 };
 
 // ─── CSRF token from cookie ───────────────────────────────────────
 function getCsrf() {
   const m = document.cookie.match(/csrftoken=([^;]+)/);
-  return m ? decodeURIComponent(m[1]) : "";
+  if (m) {
+    return decodeURIComponent(m[1]);
+  }
+  if (typeof frappe !== "undefined" && frappe.csrf_token) {
+    return frappe.csrf_token;
+  }
+  return "";
 }
 
 // ─── Frappe API call ──────────────────────────────────────────────
-async function callApi(method, params = {}) {
+async function callApi(method, params = {}, options = {}) {
+  const httpMethod = options.httpMethod || "POST";
+  const csrfToken = getCsrf();
   const form = new FormData();
   Object.entries(params).forEach(([k, v]) => form.append(k, v));
+  if (csrfToken && httpMethod !== "GET") {
+    form.append("csrf_token", csrfToken);
+  }
   const res = await fetch(`${API_BASE}.${method}`, {
-    method: "POST",
-    headers: { "X-Frappe-CSRF-Token": getCsrf() },
-    body: form,
+    method: httpMethod,
+    headers: csrfToken ? { "X-Frappe-CSRF-Token": csrfToken } : {},
+    body: httpMethod === "GET" ? undefined : form,
     credentials: "same-origin",
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     const msg = err?._server_messages
       ? JSON.parse(JSON.parse(err._server_messages)[0]).message
-      : (err?.exc_type || "خطأ في الاتصال بالخادم");
+      : (res.status === 403
+        ? "انتهت الجلسة أو تم رفض الطلب. حدّث الصفحة وسجّل الدخول مرة أخرى إذا لزم الأمر."
+        : (err?.exc_type || "خطأ في الاتصال بالخادم"));
     throw new Error(msg);
   }
   const data = await res.json();
@@ -573,9 +670,141 @@ function renderStatus() {
     btn.className  = isNextIn ? "action-btn checkin" : "action-btn checkout";
     btnIc.textContent = isNextIn ? "✅" : "🚪";
     btnLb.textContent = isNextIn ? "تسجيل الحضور" : "تسجيل الانصراف";
-    // Enable only if we have GPS AND within radius (or no location configured)
-    btn.disabled = !(state.gpsReady && (state.withinRadius || !state.location));
+    // Enable immediately if no location restriction exists; otherwise require GPS inside radius.
+    btn.disabled = !(state.canCheckinWithoutGPS || (state.gpsReady && state.withinRadius));
   }
+}
+
+function hasClosedAttendance() {
+  return Boolean(state.attendance);
+}
+
+function updateLocationMessaging() {
+  const gpsText = document.getElementById("gpsStatusText");
+  const modal = document.getElementById("locationModal");
+  const error = document.getElementById("permError");
+  const allowBtn = document.getElementById("allowLocationBtn");
+
+  if (hasClosedAttendance()) {
+    gpsText.textContent = "تم إغلاق الدوام، ولا حاجة للوصول إلى الموقع الآن";
+    if (modal && !modal.classList.contains("hidden")) {
+      hideLocationModal();
+    }
+    if (error) {
+      error.style.display = "none";
+    }
+    if (allowBtn) {
+      allowBtn.textContent = "📍 السماح بالوصول للموقع";
+      allowBtn.disabled = false;
+    }
+    return;
+  }
+
+  if (!state.location) {
+    gpsText.textContent = state.gpsReady ? gpsText.textContent : "الموقع اختياري حالياً لعدم وجود فرع مقيّد";
+    return;
+  }
+}
+
+function ensureMap() {
+  if (state.map || typeof L === "undefined") {
+    return state.map;
+  }
+  state.map = L.map("mapCanvas", { zoomControl: false });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors",
+  }).addTo(state.map);
+  return state.map;
+}
+
+function setMapView({ branchLat = null, branchLon = null, currentLat = null, currentLon = null, label = "", source = "" } = {}) {
+  const frame = document.getElementById("mapCanvas");
+  const empty = document.getElementById("mapEmpty");
+  const caption = document.getElementById("mapCaption");
+  const link = document.getElementById("mapLink");
+
+  const hasBranch = branchLat !== null && branchLon !== null && !Number.isNaN(Number(branchLat)) && !Number.isNaN(Number(branchLon));
+  const hasCurrent = currentLat !== null && currentLon !== null && !Number.isNaN(Number(currentLat)) && !Number.isNaN(Number(currentLon));
+
+  if (!hasBranch && !hasCurrent) {
+    frame.style.display = "none";
+    empty.style.display = "flex";
+    link.classList.add("hidden");
+    caption.textContent = source || "سيتم عرض موقع الفرع أو موقعك الحالي هنا عند توفره.";
+    return;
+  }
+
+  const map = ensureMap();
+  if (!map) {
+    empty.style.display = "flex";
+    caption.textContent = "تعذّر تحميل مكتبة الخريطة حالياً.";
+    return;
+  }
+
+  frame.style.display = "block";
+  empty.style.display = "none";
+
+  const points = [];
+  if (hasBranch) {
+    const latNum = Number(branchLat);
+    const lonNum = Number(branchLon);
+    points.push([latNum, lonNum]);
+    if (!state.branchMarker) {
+      state.branchMarker = L.marker([latNum, lonNum]).addTo(map).bindPopup("موقع الفرع");
+    } else {
+      state.branchMarker.setLatLng([latNum, lonNum]);
+    }
+  } else if (state.branchMarker) {
+    state.branchMarker.remove();
+    state.branchMarker = null;
+  }
+
+  if (hasCurrent) {
+    const latNum = Number(currentLat);
+    const lonNum = Number(currentLon);
+    points.push([latNum, lonNum]);
+    if (!state.currentMarker) {
+      const currentIcon = L.divIcon({
+        className: "",
+        html: '<div style="width:18px;height:18px;border-radius:999px;background:#e94560;border:3px solid #fff;box-shadow:0 0 0 4px rgba(233,69,96,.2)"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+      });
+      state.currentMarker = L.marker([latNum, lonNum], { icon: currentIcon }).addTo(map).bindPopup("موقعك الحالي");
+    } else {
+      state.currentMarker.setLatLng([latNum, lonNum]);
+    }
+  } else if (state.currentMarker) {
+    state.currentMarker.remove();
+    state.currentMarker = null;
+  }
+
+  if (state.pathLine) {
+    state.pathLine.remove();
+    state.pathLine = null;
+  }
+
+  if (hasBranch && hasCurrent) {
+    state.pathLine = L.polyline([
+      [Number(branchLat), Number(branchLon)],
+      [Number(currentLat), Number(currentLon)],
+    ], { color: "#f0a500", weight: 3, dashArray: "6,6" }).addTo(map);
+  }
+
+  if (points.length === 1) {
+    map.setView(points[0], 16);
+  } else {
+    map.fitBounds(points, { padding: [28, 28] });
+  }
+
+  setTimeout(() => map.invalidateSize(), 50);
+
+  const targetLat = hasCurrent ? Number(currentLat) : Number(branchLat);
+  const targetLon = hasCurrent ? Number(currentLon) : Number(branchLon);
+  link.href = `https://www.openstreetmap.org/?mlat=${targetLat}&mlon=${targetLon}#map=16/${targetLat}/${targetLon}`;
+  link.classList.remove("hidden");
+  caption.textContent = label || source || "موقع العرض الحالي على الخريطة.";
 }
 
 // ─── Render history list ──────────────────────────────────────────
@@ -615,9 +844,15 @@ function updateDistanceUI(distanceM) {
   const allowed = loc ? (loc.allowed_radius_meters || 100) : 100;
 
   if (distanceM === null) {
-    pill.className = "distance-pill warning";
-    text.textContent = "جارٍ القياس...";
-    state.withinRadius = false;
+    if (!loc) {
+      pill.className = "distance-pill ok";
+      text.textContent = "بدون قيود";
+      state.withinRadius = true;
+    } else {
+      pill.className = "distance-pill warning";
+      text.textContent = "جارٍ القياس...";
+      state.withinRadius = false;
+    }
     renderStatus();
     return;
   }
@@ -658,6 +893,13 @@ function haversine(lat1, lon1, lat2, lon2) {
 function startGPS() {
   if (!navigator.geolocation) {
     document.getElementById("gpsStatusText").textContent = "GPS غير مدعوم في هذا المتصفح";
+    setMapView({
+      branchLat: state.location ? state.location.latitude : null,
+      branchLon: state.location ? state.location.longitude : null,
+      label: state.location ? `موقع الفرع: ${state.location.location_name}` : "GPS غير مدعوم، ولا يوجد موقع فرع معروض.",
+      source: state.location ? "موقع الفرع المعتمد" : "GPS غير مدعوم في هذا المتصفح",
+    });
+    updateLocationMessaging();
     return;
   }
   const dot   = document.getElementById("gpsDot");
@@ -673,6 +915,15 @@ function startGPS() {
       dot.classList.add("active");
       gtext.textContent = `دقة GPS: ±${Math.round(pos.coords.accuracy)} متر`;
 
+      setMapView({
+        branchLat: state.location ? state.location.latitude : null,
+        branchLon: state.location ? state.location.longitude : null,
+        currentLat: state.lat,
+        currentLon: state.lon,
+        label: state.location ? `الفرع وموقعك الحالي على الخريطة` : "موقعك الحالي",
+        source: state.location ? "يعرض موقع الفرع مع موقعك الحالي" : "موقعك الحالي على الخريطة",
+      });
+
       if (state.location) {
         const d = haversine(state.lat, state.lon, state.location.latitude, state.location.longitude);
         updateDistanceUI(d);
@@ -680,13 +931,26 @@ function startGPS() {
         updateDistanceUI(null);
         state.withinRadius = true;
       }
+      updateLocationMessaging();
       renderStatus();
     },
     err => {
       dot.classList.remove("active");
-      gtext.textContent = err.code === 1
-        ? "❌ يرجى السماح بإذن الموقع"
-        : "⚠️ تعذّر تحديد الموقع";
+      gtext.textContent = hasClosedAttendance()
+        ? "تم إغلاق الدوام، ولا حاجة للوصول إلى الموقع الآن"
+        : (!state.location ? "الموقع اختياري حالياً" : (err.code === 1 ? "❌ يرجى السماح بإذن الموقع" : "⚠️ تعذّر تحديد الموقع"));
+      setMapView({
+        branchLat: state.location ? state.location.latitude : null,
+        branchLon: state.location ? state.location.longitude : null,
+        label: state.location ? `موقع الفرع: ${state.location.location_name}` : "لا يوجد موقع متاح للعرض حالياً",
+        source: state.location ? "موقع الفرع المعتمد" : "لا يوجد فرع محدد ولا موقع حالي",
+      });
+      if (!state.location) {
+        state.canCheckinWithoutGPS = true;
+        state.withinRadius = true;
+      }
+      updateLocationMessaging();
+      renderStatus();
     },
     opts
   );
@@ -695,10 +959,11 @@ function startGPS() {
 // ─── Load status from server ──────────────────────────────────────
 async function loadStatus() {
   try {
-    const data = await callApi("get_attendance_status");
+    const data = await callApi("get_attendance_status", {}, { httpMethod: "GET" });
     state.lastLogType = data.last_log_type;
     state.location    = data.location || null;
     state.attendance  = data.today_attendance || null;
+    state.canCheckinWithoutGPS = !state.location;
 
     // Update header with employee name
     document.getElementById("headerUser").textContent = data.employee_name || "";
@@ -709,8 +974,16 @@ async function loadStatus() {
     document.getElementById("radiusText").textContent =
       data.location ? (data.location.allowed_radius_meters || 100) + " متر" : "بدون قيود";
 
+    setMapView({
+      branchLat: data.location ? data.location.latitude : null,
+      branchLon: data.location ? data.location.longitude : null,
+      label: data.location ? `موقع الفرع: ${data.location.location_name}` : "لا يوجد فرع محدد، وسيُعرض موقعك الحالي عند السماح بالوصول للموقع.",
+      source: data.location ? "موقع الفرع المعتمد" : "لا يوجد موقع فرع معتمد لهذا الموظف",
+    });
+
     renderHistory(data.today_checkins);
     renderSummary(data.today_attendance);
+    updateLocationMessaging();
     renderStatus();
   } catch (e) {
     showToast(e.message || "خطأ في تحميل البيانات", "error");
@@ -733,8 +1006,13 @@ async function doCheckin() {
   if (btn.disabled) return;
 
   if (!state.gpsReady || state.lat === null) {
-    showToast("في انتظار GPS... يرجى الانتظار لحظة", "error");
-    return;
+    if (state.canCheckinWithoutGPS) {
+      state.lat = null;
+      state.lon = null;
+    } else {
+      showToast("في انتظار GPS... يرجى الانتظار لحظة", "error");
+      return;
+    }
   }
 
   // Loading state
@@ -823,6 +1101,7 @@ document.getElementById("installBtn").addEventListener("click", async () => {
 // ─── Location Permission Modal ────────────────────────────────────
 function hideLocationModal() {
   const modal = document.getElementById("locationModal");
+  if (!modal) return;
   modal.classList.add("hidden");
   setTimeout(() => modal.remove(), 300);
   // After modal closes, show install banner if deferred
@@ -834,6 +1113,10 @@ function hideLocationModal() {
 }
 
 async function requestLocation() {
+  if (hasClosedAttendance()) {
+    hideLocationModal();
+    return;
+  }
   const btn = document.getElementById("allowLocationBtn");
   const errEl = document.getElementById("permError");
   btn.textContent = "⏳ جارٍ التفعيل...";
@@ -874,6 +1157,19 @@ document.getElementById("skipLocationBtn").addEventListener("click", hideLocatio
 async function boot() {
   updateClock();
 
+  await loadStatus();
+
+  if (hasClosedAttendance()) {
+    hideLocationModal();
+    const overlay = document.getElementById("loading");
+    overlay.classList.add("hidden");
+    setTimeout(() => overlay.remove(), 500);
+    if (isIOS() && !isInStandaloneMode()) {
+      setTimeout(showInstallBanner, 2000);
+    }
+    return;
+  }
+
   // Check if location permission already granted → skip modal
   if (navigator.permissions) {
     try {
@@ -894,7 +1190,6 @@ async function boot() {
   }
 
   startGPS();
-  await loadStatus();
   // Hide loading overlay
   const overlay = document.getElementById("loading");
   overlay.classList.add("hidden");

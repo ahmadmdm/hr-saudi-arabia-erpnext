@@ -1,0 +1,251 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "inspection_title",
+  "inspection_authority",
+  "column_break_1",
+  "company",
+  "status",
+  "inspection_section",
+  "inspection_date",
+  "inspection_scope",
+  "column_break_2",
+  "inspector_name",
+  "internal_owner",
+  "reference_section",
+  "inspection_reference",
+  "follow_up_due_date",
+  "branch_location",
+  "findings_summary",
+  "violations_section",
+  "violations",
+  "totals_section",
+  "total_violations",
+  "open_violations",
+  "column_break_3",
+  "total_fines",
+  "notices_received",
+  "closure_section",
+  "closure_date",
+  "closure_notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-LIN-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "inspection_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Inspection Title / عنوان التفتيش",
+   "reqd": 1
+  },
+  {
+   "fieldname": "inspection_authority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Authority / الجهة",
+   "options": "\nMinistry of Human Resources / وزارة الموارد البشرية\nGOSI / التأمينات الاجتماعية\nMunicipality / البلدية\nCivil Defense / الدفاع المدني\nInternal Audit / تدقيق داخلي\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Draft / مسودة",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Draft / مسودة\nOpen Findings / مخالفات مفتوحة\nUnder Follow-up / قيد المتابعة\nCorrected / تم التصحيح\nClosed / مغلق"
+  },
+  {
+   "fieldname": "inspection_section",
+   "fieldtype": "Section Break",
+   "label": "Inspection Details / تفاصيل التفتيش"
+  },
+  {
+   "fieldname": "inspection_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Inspection Date / تاريخ التفتيش",
+   "reqd": 1
+  },
+  {
+   "fieldname": "inspection_scope",
+   "fieldtype": "Select",
+   "label": "Inspection Scope / نطاق التفتيش",
+   "options": "\nRoutine Inspection / تفتيش دوري\nComplaint Based / بناءً على شكوى\nFollow-up Visit / زيارة متابعة\nIncident Response / استجابة لحادث\nDocument Review / مراجعة مستندية",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "inspector_name",
+   "fieldtype": "Data",
+   "label": "Inspector Name / اسم المفتش"
+  },
+  {
+   "fieldname": "internal_owner",
+   "fieldtype": "Link",
+   "label": "Internal Owner / المسؤول الداخلي",
+   "options": "User"
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference & Findings / المرجع والنتائج"
+  },
+  {
+   "fieldname": "inspection_reference",
+   "fieldtype": "Data",
+   "label": "Reference No. / رقم المرجع"
+  },
+  {
+   "fieldname": "follow_up_due_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Due Date / موعد المتابعة"
+  },
+  {
+   "fieldname": "branch_location",
+   "fieldtype": "Data",
+   "label": "Branch or Location / الفرع أو الموقع"
+  },
+  {
+   "fieldname": "findings_summary",
+   "fieldtype": "Text Editor",
+   "label": "Findings Summary / ملخص النتائج",
+   "reqd": 1
+  },
+  {
+   "fieldname": "violations_section",
+   "fieldtype": "Section Break",
+   "label": "Violations / المخالفات"
+  },
+  {
+   "fieldname": "violations",
+   "fieldtype": "Table",
+   "label": "Violation Items / بنود المخالفات",
+   "options": "Labor Inspection Violation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals / الإجماليات"
+  },
+  {
+   "fieldname": "total_violations",
+   "fieldtype": "Int",
+   "label": "Total Violations / إجمالي المخالفات",
+   "read_only": 1
+  },
+  {
+   "fieldname": "open_violations",
+   "fieldtype": "Int",
+   "label": "Open Violations / المخالفات المفتوحة",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_fines",
+   "fieldtype": "Currency",
+   "label": "Total Fines / إجمالي الغرامات",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "notices_received",
+   "fieldtype": "Check",
+   "label": "Notice Received / تم استلام إشعار"
+  },
+  {
+   "fieldname": "closure_section",
+   "fieldtype": "Section Break",
+   "label": "Closure / الإغلاق"
+  },
+  {
+   "fieldname": "closure_date",
+   "fieldtype": "Date",
+   "label": "Closure Date / تاريخ الإغلاق"
+  },
+  {
+   "fieldname": "closure_notes",
+   "fieldtype": "Text Editor",
+   "label": "Closure Notes / ملاحظات الإغلاق"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Labor Inspection",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-shield",
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-03-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Labor Inspection",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "search_fields": "inspection_title,inspection_reference,inspector_name,branch_location",
+ "sort_field": "inspection_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "inspection_title",
+ "track_changes": 1
+}

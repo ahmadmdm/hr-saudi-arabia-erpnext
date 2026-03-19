@@ -1,0 +1,194 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "department",
+  "status",
+  "absence_section",
+  "absence_type",
+  "absence_start_date",
+  "absence_end_date",
+  "column_break_2",
+  "absence_days",
+  "notice_sent",
+  "show_cause_deadline",
+  "details_section",
+  "description",
+  "employee_response",
+  "escalation_action",
+  "disciplinary_procedure"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-ABS-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / الموظف",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name / الاسم",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department / القسم",
+   "options": "Department"
+  },
+  {
+   "default": "Open / مفتوح",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Open / مفتوح\nNotice Sent / تم إشعار الموظف\nEmployee Responded / تم الرد\nEscalated / تم التصعيد\nClosed / مغلق"
+  },
+  {
+    "description": "Record the absence period, its type, and any notice deadline sent to the employee.",
+   "fieldname": "absence_section",
+   "fieldtype": "Section Break",
+   "label": "Absence Details / تفاصيل الغياب"
+  },
+  {
+   "fieldname": "absence_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Absence Type / نوع الغياب",
+   "options": "\nUnauthorised Absence / غياب بدون إذن\nNo Call No Show / غياب بدون إشعار\nRepeated Late Attendance / تكرار التأخر\nPartial Absence / غياب جزئي\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "fieldname": "absence_start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Absence Start Date / تاريخ بداية الغياب",
+   "reqd": 1
+  },
+  {
+   "fieldname": "absence_end_date",
+   "fieldtype": "Date",
+   "label": "Absence End Date / تاريخ نهاية الغياب"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "absence_days",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Absence Days / عدد أيام الغياب",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "notice_sent",
+   "fieldtype": "Check",
+   "label": "Notice Sent / تم إرسال إشعار"
+  },
+  {
+   "fieldname": "show_cause_deadline",
+   "fieldtype": "Date",
+   "label": "Show Cause Deadline / مهلة طلب الإفادة"
+  },
+  {
+    "description": "Capture the employee response and any escalation or disciplinary linkage.",
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Case Handling / معالجة الحالة"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description / الوصف",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee_response",
+   "fieldtype": "Text Editor",
+   "label": "Employee Response / رد الموظف"
+  },
+  {
+   "fieldname": "escalation_action",
+   "fieldtype": "Text Editor",
+   "label": "Escalation Action / إجراء التصعيد"
+  },
+  {
+   "fieldname": "disciplinary_procedure",
+   "fieldtype": "Link",
+   "label": "Disciplinary Procedure / الإجراء التأديبي",
+   "options": "Disciplinary Procedure"
+  }
+ ],
+ "icon": "fa fa-user-times",
+ "links": [],
+ "modified": "2026-03-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Absence Case",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+    "report": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "search_fields": "employee,employee_name,absence_type",
+ "sort_field": "absence_start_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

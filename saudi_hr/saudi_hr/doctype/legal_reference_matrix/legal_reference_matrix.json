@@ -1,0 +1,189 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "reference_topic",
+  "law_name",
+  "column_break_1",
+  "company",
+  "status",
+  "reference_section",
+  "article_number",
+  "effective_from",
+  "column_break_2",
+  "control_owner",
+  "next_review_date",
+  "obligation_section",
+  "obligation_summary",
+  "required_control",
+  "linked_policy",
+  "risk_level",
+  "evidence_requirement",
+  "retirement_reason",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-LRM-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_topic",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Reference Topic / موضوع المرجع",
+   "reqd": 1
+  },
+  {
+   "default": "Saudi Labor Law / نظام العمل السعودي",
+   "fieldname": "law_name",
+   "fieldtype": "Data",
+   "label": "Law Name / اسم النظام",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Active / ساري",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Active / ساري\nNeeds Review / يحتاج مراجعة\nRetired / متقاعد"
+  },
+  {
+    "description": "Register the legal article, its effective date, and the internal owner responsible for monitoring it.",
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference Details / تفاصيل المرجع"
+  },
+  {
+   "fieldname": "article_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Article Number / رقم المادة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From / ساري من"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "control_owner",
+   "fieldtype": "Link",
+   "label": "Control Owner / مسؤول الضبط",
+   "options": "User"
+  },
+  {
+   "fieldname": "next_review_date",
+   "fieldtype": "Date",
+   "label": "Next Review Date / تاريخ المراجعة القادمة"
+  },
+  {
+    "description": "Map each legal obligation to a control, policy, and evidence requirement.",
+   "fieldname": "obligation_section",
+   "fieldtype": "Section Break",
+   "label": "Control Mapping / ربط الضوابط"
+  },
+  {
+   "fieldname": "obligation_summary",
+   "fieldtype": "Text Editor",
+   "label": "Obligation Summary / ملخص الالتزام",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "required_control",
+   "fieldtype": "Check",
+   "label": "Required Control / يتطلب ضبطاً"
+  },
+  {
+   "fieldname": "linked_policy",
+   "fieldtype": "Link",
+   "label": "Linked Policy / السياسة المرتبطة",
+   "options": "HR Policy Document"
+  },
+  {
+   "fieldname": "risk_level",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Risk Level / مستوى المخاطر",
+   "options": "\nLow / منخفض\nMedium / متوسط\nHigh / مرتفع\nCritical / حرج"
+  },
+  {
+   "fieldname": "evidence_requirement",
+   "fieldtype": "Small Text",
+   "label": "Evidence Requirement / متطلبات الإثبات"
+  },
+  {
+   "fieldname": "retirement_reason",
+   "fieldtype": "Small Text",
+    "depends_on": "eval:doc.status === 'Retired / متقاعد'",
+   "label": "Retirement Reason / سبب الإيقاف"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes / ملاحظات"
+  }
+ ],
+ "icon": "fa fa-balance-scale",
+ "links": [],
+ "modified": "2026-03-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Legal Reference Matrix",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+    "report": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "search_fields": "reference_topic,article_number,law_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "reference_topic",
+ "track_changes": 1
+}

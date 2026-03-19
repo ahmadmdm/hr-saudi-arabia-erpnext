@@ -1,0 +1,216 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "subject_employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "department",
+  "status",
+  "reference_section",
+  "case_type",
+  "reference_doctype",
+  "reference_name",
+  "column_break_2",
+  "allegation_date",
+  "investigator",
+  "timeline_section",
+  "investigation_start_date",
+  "investigation_end_date",
+  "closure_date",
+  "details_section",
+  "allegation_summary",
+  "employee_statement",
+  "findings",
+  "recommendation",
+  "outcome_summary"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-INV-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "subject_employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Subject Employee / الموظف محل التحقيق",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "subject_employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name / الاسم",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "subject_employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "subject_employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department / القسم",
+   "options": "Department"
+  },
+  {
+   "default": "Open / مفتوح",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Open / مفتوح\nIn Progress / قيد التحقيق\nFindings Issued / صدرت النتائج\nClosed / مغلق"
+  },
+  {
+    "description": "Identify the source case, allegation date, and assigned investigator.",
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference / المرجع"
+  },
+  {
+   "fieldname": "case_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Case Type / نوع الحالة",
+   "options": "\nAbsence / غياب\nMisconduct / مخالفة سلوكية\nWorkplace Complaint / شكوى عمل\nGrievance / تظلم\nSafety Incident / حادث سلامة\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference DocType / نوع المرجع",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "label": "Reference Name / اسم المرجع"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "allegation_date",
+   "fieldtype": "Date",
+   "label": "Allegation Date / تاريخ الواقعة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "investigator",
+   "fieldtype": "Link",
+   "label": "Investigator / المحقق",
+   "options": "User"
+  },
+  {
+    "description": "Track the lifecycle of the investigation from opening to closure.",
+   "fieldname": "timeline_section",
+   "fieldtype": "Section Break",
+   "label": "Timeline / التسلسل الزمني"
+  },
+  {
+   "fieldname": "investigation_start_date",
+   "fieldtype": "Date",
+   "label": "Investigation Start Date / بداية التحقيق"
+  },
+  {
+   "fieldname": "investigation_end_date",
+   "fieldtype": "Date",
+   "label": "Investigation End Date / نهاية التحقيق"
+  },
+  {
+   "fieldname": "closure_date",
+   "fieldtype": "Date",
+   "label": "Closure Date / تاريخ الإغلاق"
+  },
+  {
+    "description": "Write the allegation, employee statement, findings, and recommended outcome.",
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Investigation Details / تفاصيل التحقيق"
+  },
+  {
+   "fieldname": "allegation_summary",
+   "fieldtype": "Text Editor",
+   "label": "Allegation Summary / ملخص الواقعة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee_statement",
+   "fieldtype": "Text Editor",
+   "label": "Employee Statement / إفادة الموظف"
+  },
+  {
+   "fieldname": "findings",
+   "fieldtype": "Text Editor",
+   "label": "Findings / النتائج"
+  },
+  {
+   "fieldname": "recommendation",
+   "fieldtype": "Text Editor",
+   "label": "Recommendation / التوصية"
+  },
+  {
+   "fieldname": "outcome_summary",
+   "fieldtype": "Text Editor",
+   "label": "Outcome Summary / ملخص المخرجات"
+  }
+ ],
+ "icon": "fa fa-search",
+ "links": [],
+ "modified": "2026-03-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Investigation Record",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+    "report": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "search_fields": "subject_employee,employee_name,reference_name",
+ "sort_field": "allegation_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

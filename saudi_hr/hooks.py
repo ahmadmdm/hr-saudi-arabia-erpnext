@@ -4,7 +4,7 @@ app_publisher = "IdeaOrbit"
 app_description = "Saudi HR Management System per Saudi Labor Law (Royal Decree M/51)"
 app_email = "info@ideaorbit.net"
 app_license = "MIT"
-app_version = "1.1.0"
+app_version = "1.2.0"
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
 # Apps Screen
@@ -77,6 +77,10 @@ fixtures = [
 	},
 	{
 		"doctype": "Property Setter",
+		"filters": [["module", "=", "Saudi HR"]],
+	},
+	{
+		"doctype": "Workflow",
 		"filters": [["module", "=", "Saudi HR"]],
 	},
 	"Attendance Location",

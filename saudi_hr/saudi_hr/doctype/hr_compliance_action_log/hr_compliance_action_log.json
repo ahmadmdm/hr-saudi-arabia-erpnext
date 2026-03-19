@@ -1,0 +1,202 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-03-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "action_title",
+  "compliance_area",
+  "column_break_1",
+  "company",
+  "status",
+  "action_section",
+  "priority",
+  "action_date",
+  "column_break_2",
+  "assigned_to",
+  "due_date",
+  "reference_section",
+  "reference_doctype",
+  "reference_name",
+  "employee",
+  "execution_section",
+  "description",
+  "corrective_action",
+  "evidence_attachment",
+  "result_summary",
+  "completed_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-CAL-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "action_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Action Title / عنوان الإجراء",
+   "reqd": 1
+  },
+  {
+   "fieldname": "compliance_area",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Compliance Area / مجال الامتثال",
+   "options": "\nAttendance / الحضور\nLeave / الإجازات\nPayroll / الرواتب\nConduct / السلوك\nInvestigation / التحقيق\nGrievance / التظلمات\nTermination / إنهاء الخدمة\nHealth & Safety / السلامة والصحة\nGovernment Relations / العلاقات الحكومية\nOther / أخرى",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Open / مفتوح",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Open / مفتوح\nIn Progress / قيد التنفيذ\nBlocked / متعثر\nCompleted / مكتمل\nCancelled / ملغى"
+  },
+  {
+    "description": "Plan the action owner, date, priority, and deadline before execution starts.",
+   "fieldname": "action_section",
+   "fieldtype": "Section Break",
+   "label": "Action Planning / تخطيط الإجراء"
+  },
+  {
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Priority / الأولوية",
+   "options": "\nLow / منخفض\nMedium / متوسط\nHigh / مرتفع\nUrgent / عاجل"
+  },
+  {
+   "default": "Today",
+   "fieldname": "action_date",
+   "fieldtype": "Date",
+   "label": "Action Date / تاريخ الإجراء",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To / مكلّف إلى",
+   "options": "User"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date / تاريخ الاستحقاق"
+  },
+  {
+    "description": "Link this action to the source record or employee that triggered the compliance work.",
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference / المرجع"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference DocType / نوع المرجع",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "label": "Reference Name / اسم المرجع"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee / الموظف",
+   "options": "Employee"
+  },
+  {
+    "description": "Document the corrective action, supporting evidence, and the final result.",
+   "fieldname": "execution_section",
+   "fieldtype": "Section Break",
+   "label": "Execution / التنفيذ"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Issue Description / وصف الحالة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "corrective_action",
+   "fieldtype": "Text Editor",
+   "label": "Corrective Action / الإجراء التصحيحي"
+  },
+  {
+   "fieldname": "evidence_attachment",
+   "fieldtype": "Attach",
+   "label": "Evidence Attachment / مرفق الإثبات"
+  },
+  {
+   "fieldname": "result_summary",
+   "fieldtype": "Text Editor",
+   "label": "Result Summary / ملخص النتيجة"
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Date",
+   "label": "Completed On / تاريخ الإكمال"
+  }
+ ],
+ "icon": "fa fa-tasks",
+ "links": [],
+ "modified": "2026-03-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "HR Compliance Action Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+    "report": 1,
+   "role": "HR User",
+   "write": 1
+  }
+ ],
+ "search_fields": "action_title,compliance_area,reference_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "action_title",
+ "track_changes": 1
+}

@@ -125,11 +125,10 @@ def do_mobile_checkin(latitude, longitude):
 	if frappe.session.user == "Guest":
 		frappe.throw(_("يجب تسجيل الدخول أولاً."), frappe.PermissionError)
 
-	latitude = flt(latitude)
-	longitude = flt(longitude)
-
-	if latitude is None or longitude is None:
-		frappe.throw(_("تعذّر الحصول على إحداثيات GPS. يرجى السماح بإذن الموقع وإعادة المحاولة."))
+	raw_latitude = latitude
+	raw_longitude = longitude
+	latitude = flt(latitude) if latitude not in (None, "", "null", "undefined") else None
+	longitude = flt(longitude) if longitude not in (None, "", "null", "undefined") else None
 
 	employee = _get_employee_for_user()
 	branch = frappe.db.get_value("Employee", employee, "branch")
@@ -140,6 +139,8 @@ def do_mobile_checkin(latitude, longitude):
 		# No location configured — allow check-in without GPS restriction
 		pass
 	else:
+		if latitude is None or longitude is None:
+			frappe.throw(_("تعذّر الحصول على إحداثيات GPS. يرجى السماح بإذن الموقع وإعادة المحاولة."))
 		distance = _distance_meters(latitude, longitude, flt(location.latitude), flt(location.longitude))
 		allowed = location.allowed_radius_meters or 100
 		if distance > allowed:

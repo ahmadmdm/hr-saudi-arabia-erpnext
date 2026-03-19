@@ -12,8 +12,8 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/assets/frappe/images/frappe-logo.svg",
-      "sizes": "any",
+      "src": "/mobile-attendance-icon.svg",
+      "sizes": "256x256",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
