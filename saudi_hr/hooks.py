@@ -85,3 +85,6 @@ fixtures = [
 	},
 	"Attendance Location",
 ]
+
+# ─── Migration Hooks ───────────────────────────────────────────────────────
+after_migrate = ["saudi_hr.saudi_hr.install.after_migrate"]

@@ -7,13 +7,51 @@ import frappe
 
 
 def after_install():
-	create_saudi_leave_types()
-	create_eosb_gratuity_rule()
-	create_default_settings()
-	frappe.db.commit()
+        create_workflow_states()
+        create_saudi_leave_types()
+        create_eosb_gratuity_rule()
+        create_default_settings()
+        frappe.db.commit()
 
 
-# ─── Leave Types ────────────────────────────────────────────────────────────────
+def after_migrate():
+        """Called after every bench migrate — ensures workflow states always exist."""
+        create_workflow_states()
+
+
+# ─── Workflow States ──────────────────────────────────────────────────────────
+
+def create_workflow_states():
+        """إنشاء حالات سير العمل العربية المطلوبة لجميع workflows في saudi_hr."""
+        states = [
+                ("مسودة / Draft",                              "Warning"),
+                ("مفتوح / Open",                               "Warning"),
+                ("قيد المراجعة / Under Review",                "Primary"),
+                ("قيد التحقيق / In Progress",                  "Primary"),
+                ("قيد التنفيذ / In Progress",                  "Primary"),
+                ("بانتظار HR / Pending HR",                    "Primary"),
+                ("بانتظار موافقة المدير / Pending Manager",   "Primary"),
+                ("مراجعة HR / HR Review",                      "Primary"),
+                ("موافقة الإدارة / Management Approval",       "Primary"),
+                ("تم الإشعار / Notice Sent",                   "Primary"),
+                ("معتمد / Approved",                           "Success"),
+                ("تم البت / Decided",                          "Success"),
+                ("محلول / Resolved",                           "Success"),
+                ("مكتمل / Completed",                          "Success"),
+                ("مغلق / Closed",                              "Success"),
+                ("مرفوض / Rejected",                           "Danger"),
+                ("ملغى / Cancelled",                           "Danger"),
+        ]
+        for state_name, style in states:
+                if not frappe.db.exists("Workflow State", state_name):
+                        frappe.get_doc({
+                                "doctype": "Workflow State",
+                                "workflow_state_name": state_name,
+                                "style": style,
+                        }).insert(ignore_permissions=True)
+
+
+# ─── Leave Types ───────────────────────────────────────────────────────────────
 
 def create_saudi_leave_types():
 	"""إنشاء أنواع الإجازات السعودية الإلزامية إن لم تكن موجودة."""
