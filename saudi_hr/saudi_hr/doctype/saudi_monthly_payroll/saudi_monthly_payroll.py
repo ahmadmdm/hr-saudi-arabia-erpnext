@@ -50,12 +50,121 @@ def fetch_employees(doc_name: str):
 		order_by="employee_name",
 	)
 
+	if not employees:
+		doc.set("employees", [])
+		doc._recalculate_totals()
+		doc.save(ignore_permissions=True)
+		return {"count": 0, "total_net": 0.0}
+
+	emp_names = [e["name"] for e in employees]
+
+	# ── جلب الرواتب دفعةً واحدة (batch) لتجنب N+1 queries ──────────────────
+	sal_rows = frappe.db.sql(
+		"""SELECT employee, base FROM `tabSalary Structure Assignment`
+		   WHERE employee IN %(names)s AND docstatus=1
+		   ORDER BY from_date DESC""",
+		{"names": emp_names},
+		as_dict=True,
+	)
+	# أحدث راتب أساسي لكل موظف (القائمة مرتّبة تنازلياً، نأخذ أول ظهور)
+	salary_map = {}
+	for row in sal_rows:
+		if row["employee"] not in salary_map:
+			salary_map[row["employee"]] = flt(row["base"])
+
+	# ── جلب بدلات العقود دفعةً واحدة ──────────────────────────────────────
+	contract_rows = frappe.db.sql(
+		"""SELECT employee, housing_allowance, transport_allowance, other_allowances
+		   FROM `tabSaudi Employment Contract`
+		   WHERE employee IN %(names)s
+		     AND contract_status = 'Active / نشط'
+		     AND docstatus = 1
+		   ORDER BY start_date DESC""",
+		{"names": emp_names},
+		as_dict=True,
+	)
+	contract_map = {}
+	for row in contract_rows:
+		if row["employee"] not in contract_map:
+			contract_map[row["employee"]] = row
+
+	# ── حساب نطاق الشهر مرة واحدة ──────────────────────────────────────────
+	import calendar as _cal
+	month_num = _month_name_to_num(doc.month)
+	month_start = f"{doc.year}-{month_num:02d}-01"
+	last_day = _cal.monthrange(int(doc.year), month_num)[1]
+	month_end = f"{doc.year}-{month_num:02d}-{last_day:02d}"
+
+	# ── جلب الإجازات المرضية دفعةً واحدة ───────────────────────────────────
+	sick_rows = frappe.db.sql(
+		"""SELECT employee, leave_pay_amount, total_days
+		   FROM `tabSaudi Sick Leave`
+		   WHERE employee IN %(names)s AND docstatus=1
+		     AND from_date >= %(start)s AND to_date <= %(end)s""",
+		{"names": emp_names, "start": month_start, "end": month_end},
+		as_dict=True,
+	)
+	sick_map: dict = {}
+	for sr in sick_rows:
+		sick_map.setdefault(sr["employee"], []).append(sr)
+
+	# ── جلب العمل الإضافي المعتمد دفعةً واحدة ───────────────────────────────
+	ot_rows = frappe.db.sql(
+		"""SELECT employee, overtime_amount
+		   FROM `tabOvertime Request`
+		   WHERE employee IN %(names)s AND docstatus=1
+		     AND approval_status = 'Approved / موافق'
+		     AND date BETWEEN %(start)s AND %(end)s""",
+		{"names": emp_names, "start": month_start, "end": month_end},
+		as_dict=True,
+	)
+	ot_map: dict = {}
+	for ot in ot_rows:
+		ot_map[ot["employee"]] = ot_map.get(ot["employee"], 0.0) + flt(ot["overtime_amount"])
+
 	# مسح الجدول الحالي
 	doc.set("employees", [])
 
 	for emp in employees:
-		row = _build_employee_row(emp, doc.month, doc.year)
-		doc.append("employees", row)
+		basic = salary_map.get(emp["name"], 0.0)
+		contract = contract_map.get(emp["name"])
+		housing = flt(contract["housing_allowance"]) if contract else 0.0
+		transport = flt(contract["transport_allowance"]) if contract else 0.0
+		other = flt(contract["other_allowances"]) if contract else 0.0
+		gross = round(basic + housing + transport + other, 2)
+
+		nat = (emp.get("nationality") or "").lower()
+		is_saudi = nat in ("saudi", "سعودي", "sa", "saudi arabia")
+		gosi_rate = GOSI_SAUDI_EMP if is_saudi else GOSI_NON_SAUDI_EMP
+		gosi_base = min(basic, GOSI_MAX_BASE)
+		gosi_deduction = round(gosi_base * gosi_rate / 100, 2)
+
+		daily = round(basic / last_day, 2)
+		sick_deduction = 0.0
+		for sr in sick_map.get(emp["name"], []):
+			full_pay = flt(sr["total_days"]) * daily
+			actual_pay = flt(sr["leave_pay_amount"])
+			if full_pay > actual_pay:
+				sick_deduction += round(full_pay - actual_pay, 2)
+
+		overtime = round(ot_map.get(emp["name"], 0.0), 2)
+		net = round(gross - gosi_deduction - sick_deduction + overtime, 2)
+
+		doc.append("employees", {
+			"employee": emp["name"],
+			"employee_name": emp.get("employee_name", ""),
+			"department": emp.get("department", ""),
+			"nationality": emp.get("nationality", ""),
+			"basic_salary": basic,
+			"housing_allowance": housing,
+			"transport_allowance": transport,
+			"other_allowances": other,
+			"gross_salary": gross,
+			"gosi_employee_deduction": gosi_deduction,
+			"sick_leave_deduction": round(sick_deduction, 2),
+			"overtime_addition": overtime,
+			"net_salary": net,
+		})
 
 	doc._recalculate_totals()
 	doc.save(ignore_permissions=True)
@@ -80,18 +189,20 @@ def calculate_employee_row(employee: str, month: str, year: int):
 
 
 @frappe.whitelist()
-def create_payroll_entry(doc_name: str):
+def create_journal_entry_from_payroll(doc_name: str):
 	"""
-	إنشاء Payroll Entry في ERPNext من بيانات Saudi Monthly Payroll.
-	يُستدعى من زر "Create Payroll Entry".
+	إنشاء قيد يومي مباشر من بيانات Saudi Monthly Payroll
+	بدلاً من الاعتماد على Payroll Entry في ERPNext/HRMS.
+	يُستدعى من زر "Create Journal Entry".
 	"""
+	import calendar as _cal
 	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
 	frappe.has_permission("Saudi Monthly Payroll", "write", doc=doc, throw=True)
 
-	if doc.payroll_entry:
+	if doc.payroll_journal_entry:
 		frappe.throw(
-			_(f"Payroll Entry already created: {doc.payroll_entry}<br>"
-			  f"قسيمة الراتب موجودة بالفعل: {doc.payroll_entry}"),
+			_(f"Journal Entry already created: {doc.payroll_journal_entry}<br>"
+			  f"القيد اليومي موجود بالفعل: {doc.payroll_journal_entry}"),
 			title=_("Already Created / موجودة مسبقاً"),
 		)
 
@@ -102,37 +213,112 @@ def create_payroll_entry(doc_name: str):
 			title=_("No Employees / لا يوجد موظفون"),
 		)
 
-	# تحديد نطاق تاريخ الشهر
+	company = doc.company
 	month_num = _month_name_to_num(doc.month)
-	start_date = f"{doc.year}-{month_num:02d}-01"
-	import calendar
-	last_day = calendar.monthrange(int(doc.year), month_num)[1]
-	end_date = f"{doc.year}-{month_num:02d}-{last_day:02d}"
+	last_day = _cal.monthrange(int(doc.year), month_num)[1]
+	posting_date = f"{doc.year}-{month_num:02d}-{last_day:02d}"
 
-	# إنشاء Payroll Entry
-	pe = frappe.get_doc({
-		"doctype": "Payroll Entry",
-		"company": doc.company,
-		"start_date": start_date,
-		"end_date": end_date,
-		"payroll_frequency": "Monthly",
-		"posting_date": doc.posting_date or end_date,
-		"payroll_payable_account": _get_payable_account(doc.company),
+	# ── حسابات الإجمالي ─────────────────────────────────────────────────────
+	total_gross = flt(doc.total_gross)
+	total_gosi = flt(doc.total_gosi_deductions)
+	total_net = flt(doc.total_net_payable)
+
+	# ── الحسابات المحاسبية ───────────────────────────────────────────────────
+	expense_account = (
+		frappe.db.get_value(
+			"Account",
+			{"company": company, "account_name": ["like", "%Salary%"],
+			 "root_type": "Expense", "is_group": 0},
+			"name",
+		)
+		or frappe.db.get_value(
+			"Account",
+			{"company": company, "root_type": "Expense", "is_group": 0},
+			"name",
+		)
+	)
+	payable_account = (
+		frappe.db.get_value(
+			"Account",
+			{"company": company, "account_name": ["like", "%Salary Payable%"],
+			 "root_type": "Liability", "is_group": 0},
+			"name",
+		)
+		or frappe.db.get_value(
+			"Account",
+			{"company": company, "account_type": "Payable", "is_group": 0},
+			"name",
+		)
+	)
+	gosi_payable_account = (
+		frappe.db.get_value(
+			"Account",
+			{"company": company, "account_name": ["like", "%GOSI%"],
+			 "root_type": "Liability", "is_group": 0},
+			"name",
+		)
+		or payable_account
+	)
+
+	if not expense_account or not payable_account:
+		frappe.throw(
+			_("Could not find Salary expense/payable accounts. "
+			  "Please configure them in the Chart of Accounts.<br>"
+			  "تعذّر إيجاد حسابات الرواتب. يرجى إعداد شجرة الحسابات."),
+			title=_("Account Not Found / حساب غير موجود"),
+		)
+
+	# ── بناء قيود الحساب ────────────────────────────────────────────────────
+	# Dr. Salary Expense    → إجمالي الرواتب
+	# Cr. GOSI Payable      → اشتراكات GOSI للموظف
+	# Cr. Salary Payable    → صافي المستحق للموظفين
+	accounts = [
+		{
+			"account": expense_account,
+			"debit_in_account_currency": total_gross,
+			"reference_type": "Saudi Monthly Payroll",
+			"reference_name": doc.name,
+		},
+	]
+	if total_gosi > 0:
+		accounts.append({
+			"account": gosi_payable_account,
+			"credit_in_account_currency": total_gosi,
+			"reference_type": "Saudi Monthly Payroll",
+			"reference_name": doc.name,
+		})
+	accounts.append({
+		"account": payable_account,
+		"credit_in_account_currency": total_net,
+		"reference_type": "Saudi Monthly Payroll",
+		"reference_name": doc.name,
 	})
-	pe.flags.ignore_permissions = True
-	pe.insert()
 
-	# ربط قسيمة الرواتب بالسجل
-	doc.db_set("payroll_entry", pe.name)
-	doc.db_set("status", "Processing / قيد المعالجة")
+	je = frappe.get_doc({
+		"doctype": "Journal Entry",
+		"voucher_type": "Journal Entry",
+		"company": company,
+		"posting_date": posting_date,
+		"user_remark": (
+			f"Monthly Payroll — {doc.month} {doc.year} — "
+			f"{doc.total_employees} employees — Net: {total_net:,.2f} SAR"
+		),
+		"accounts": accounts,
+	})
+	je.flags.ignore_permissions = True
+	je.insert()
+	je.submit()
+
+	doc.db_set("payroll_journal_entry", je.name)
+	doc.db_set("status", "Completed / مكتمل")
 
 	frappe.msgprint(
-		_(f"Payroll Entry <b>{pe.name}</b> created successfully for {doc.month} {doc.year}.<br>"
-		  f"تم إنشاء قسيمة الراتب <b>{pe.name}</b> بنجاح لـ {doc.month} {doc.year}."),
-		title=_("Payroll Entry Created / تم إنشاء القسيمة"),
+		_(f"Journal Entry <b>{je.name}</b> created for {doc.month} {doc.year} payroll.<br>"
+		  f"تم إنشاء القيد اليومي <b>{je.name}</b> لرواتب {doc.month} {doc.year}."),
+		title=_("Journal Entry Created / تم إنشاء القيد"),
 		indicator="green",
 	)
-	return pe.name
+	return je.name
 
 
 # ─── Private Helpers ────────────────────────────────────────────────────────────
@@ -193,7 +379,7 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 	)
 	# الخصم = الفرق بين الأجر الكامل والأجر المستحق
 	sick_deduction = 0.0
-	daily = round(basic / 30, 2)
+	daily = round(basic / last_day, 2)  # الأجر اليومي يعتمد على أيام الشهر الفعلية
 	for sr in sick_rows:
 		full_pay = flt(sr.total_days) * daily
 		actual_pay = flt(sr.leave_pay_amount)

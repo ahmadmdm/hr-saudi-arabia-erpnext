@@ -144,11 +144,19 @@ def send_sick_leave_threshold_alerts():
 	""", (year,), as_dict=True)
 
 	for rec in results:
+		# Find the most recent sick leave record for the employee to use as doc link
+		latest_doc = frappe.db.sql(
+			"""SELECT name FROM `tabSaudi Sick Leave`
+			   WHERE employee=%s AND YEAR(from_date)=%s AND docstatus=1
+			   ORDER BY from_date DESC LIMIT 1""",
+			(rec.employee, year),
+			as_list=True,
+		)
 		_send_alert(
 			subject=f"تنبيه: {rec.employee_name} اقترب من الحد الأقصى للإجازة المرضية ({int(rec.total_sick)} يوم)",
 			message=f"الموظف {rec.employee_name} استنفد {int(rec.total_sick)} يوماً مرضياً هذا العام. الحد الأقصى 120 يوماً (م.117).",
 			doctype="Saudi Sick Leave",
-			docname="",
+			docname=latest_doc[0][0] if latest_doc else "",
 		)
 
 

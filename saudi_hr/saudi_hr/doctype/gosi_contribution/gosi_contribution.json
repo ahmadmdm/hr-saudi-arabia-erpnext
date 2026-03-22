@@ -37,6 +37,7 @@
   "payment_date",
   "column_break_5",
   "reference_number",
+  "journal_entry",
   "amended_from"
  ],
  "fields": [
@@ -234,6 +235,13 @@
    "label": "GOSI Reference No. / رقم مرجع GOSI"
   },
   {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Journal Entry / القيد اليومي",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -245,7 +253,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-03-17 00:00:00.000000",
+ "modified": "2026-03-22 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "GOSI Contribution",

@@ -15,7 +15,7 @@
   "posting_date",
   "column_break_2",
   "status",
-  "payroll_entry",
+  "payroll_journal_entry",
   "employees_section",
   "employees",
   "totals_section",
@@ -88,10 +88,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "payroll_entry",
+   "fieldname": "payroll_journal_entry",
    "fieldtype": "Link",
-   "label": "Payroll Entry / قسيمة الرواتب",
-   "options": "Payroll Entry",
+   "label": "Journal Entry / القيد اليومي",
+   "options": "Journal Entry",
    "read_only": 1
   },
   {

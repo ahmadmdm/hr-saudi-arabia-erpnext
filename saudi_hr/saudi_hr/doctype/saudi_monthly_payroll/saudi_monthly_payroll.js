@@ -57,18 +57,18 @@ function _add_buttons(frm) {
             _recalculate_all(frm);
         }, __('Actions / إجراءات'));
 
-        // زر إنشاء Payroll Entry
+        // زر إنشاء القيد اليومي
         if (frm.doc.employees && frm.doc.employees.length > 0) {
-            frm.add_custom_button(__('Create Payroll Entry / إنشاء قسيمة الرواتب'), function() {
-                _create_payroll_entry(frm);
+            frm.add_custom_button(__('Create Journal Entry / إنشاء قيد يومي'), function() {
+                _create_journal_entry(frm);
             }).addClass('btn-primary');
         }
     }
 
-    // زر فتح Payroll Entry الموجودة
-    if (frm.doc.payroll_entry) {
-        frm.add_custom_button(__('View Payroll Entry / عرض القسيمة'), function() {
-            frappe.set_route('Form', 'Payroll Entry', frm.doc.payroll_entry);
+    // زر فتح Journal Entry الموجود
+    if (frm.doc.payroll_journal_entry) {
+        frm.add_custom_button(__('View Journal Entry / عرض القيد اليومي'), function() {
+            frappe.set_route('Form', 'Journal Entry', frm.doc.payroll_journal_entry);
         });
     }
 }
@@ -134,15 +134,15 @@ function _recalculate_all(frm) {
 }
 
 
-function _create_payroll_entry(frm) {
+function _create_journal_entry(frm) {
     frappe.confirm(
-        __(`Create a Payroll Entry for <b>${frm.doc.month} ${frm.doc.year}</b> with <b>${frm.doc.total_employees}</b> employees?<br>إنشاء قسيمة راتب لـ <b>${frm.doc.month} ${frm.doc.year}</b> لـ <b>${frm.doc.total_employees}</b> موظف؟`),
+        __(`Create a Journal Entry for <b>${frm.doc.month} ${frm.doc.year}</b> with <b>${frm.doc.total_employees}</b> employees?<br>إنشاء قيد يومي لرواتب <b>${frm.doc.month} ${frm.doc.year}</b> لـ <b>${frm.doc.total_employees}</b> موظف؟`),
         function() {
             frappe.call({
-                method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.create_payroll_entry',
+                method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.create_journal_entry_from_payroll',
                 args: { doc_name: frm.doc.name },
                 freeze: true,
-                freeze_message: __('Creating Payroll Entry...<br>جاري إنشاء القسيمة...'),
+                freeze_message: __('Creating Journal Entry...<br>جاري إنشاء القيد اليومي...'),
                 callback(r) {
                     if (r.message) {
                         frm.reload_doc();

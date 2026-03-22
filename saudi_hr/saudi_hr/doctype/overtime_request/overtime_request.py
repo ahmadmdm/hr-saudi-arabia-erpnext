@@ -47,58 +47,119 @@ class OvertimeRequest(Document):
 		)
 
 	def on_submit(self):
-		"""عند الاعتماد: إنشاء Additional Salary في hrms."""
+		"""عند الاعتماد: إنشاء قيد يومي بدلاً من Additional Salary."""
 		if self.approval_status != "Approved / موافق":
 			frappe.throw(
 				_("Cannot submit unless Approval Status is 'Approved'.<br>"
 				  "لا يمكن الاعتماد إلا إذا كانت حالة الموافقة 'موافق'."),
 				title=_("Not Approved / لم يُوافق بعد"),
 			)
-		self._create_additional_salary()
+		self._create_overtime_journal_entry()
 
-	def _create_additional_salary(self):
-		"""إنشاء Additional Salary مرتبطة بقسيمة الرواتب."""
-		# التحقق من عدم إنشاء راتب إضافي مسبقاً
-		if self.additional_salary:
+	def _create_overtime_journal_entry(self):
+		"""إنشاء قيد يومي لتحميل مبلغ العمل الإضافي بدلاً من Additional Salary."""
+		if self.overtime_journal_entry:
 			return
 
-		# البحث عن مكوّن الراتب للعمل الإضافي
-		component = self._get_overtime_salary_component()
+		if not flt(self.overtime_amount) > 0:
+			return
 
-		addl = frappe.get_doc({
-			"doctype": "Additional Salary",
-			"employee": self.employee,
-			"salary_component": component,
-			"amount": self.overtime_amount,
-			"payroll_date": self.date,
-			"company": self.company,
-			"overwrite_salary_structure_amount": 0,
-			"deduct_full_tax_on_selected_payroll_date": 0,
+		company = self.company
+
+		# ── حساب مصاريف العمل الإضافي ────────────────────────────────────────
+		expense_account = (
+			frappe.db.get_value(
+				"Account",
+				{"company": company, "account_name": ["like", "%Overtime%"],
+				 "root_type": "Expense", "is_group": 0},
+				"name",
+			)
+			or frappe.db.get_value(
+				"Account",
+				{"company": company, "account_name": ["like", "%Salary%"],
+				 "root_type": "Expense", "is_group": 0},
+				"name",
+			)
+			or frappe.db.get_value(
+				"Account",
+				{"company": company, "root_type": "Expense", "is_group": 0},
+				"name",
+			)
+		)
+
+		payable_account = (
+			frappe.db.get_value(
+				"Account",
+				{"company": company, "account_name": ["like", "%Salary Payable%"],
+				 "root_type": "Liability", "is_group": 0},
+				"name",
+			)
+			or frappe.db.get_value(
+				"Account",
+				{"company": company, "account_type": "Payable", "is_group": 0},
+				"name",
+			)
+		)
+
+		if not expense_account or not payable_account:
+			frappe.msgprint(
+				_("Could not find accounts for Overtime Journal Entry. "
+				  "Please configure Salary/Overtime expense accounts in the Chart of Accounts.<br>"
+				  "تعذّر إيجاد حسابات لقيد العمل الإضافي."),
+				title=_("Account Not Found / حساب غير موجود"),
+				indicator="orange",
+			)
+			return
+
+		je = frappe.get_doc({
+			"doctype": "Journal Entry",
+			"voucher_type": "Journal Entry",
+			"company": company,
+			"posting_date": self.date or nowdate(),
+			"user_remark": (
+				f"Overtime Pay — {self.employee_name} — {self.date} — "
+				f"{self.overtime_hours}h × {self.overtime_rate} = {flt(self.overtime_amount):.2f} SAR"
+			),
+			"accounts": [
+				{
+					"account": expense_account,
+					"debit_in_account_currency": flt(self.overtime_amount),
+					"party_type": "Employee",
+					"party": self.employee,
+					"reference_type": "Overtime Request",
+					"reference_name": self.name,
+				},
+				{
+					"account": payable_account,
+					"credit_in_account_currency": flt(self.overtime_amount),
+					"reference_type": "Overtime Request",
+					"reference_name": self.name,
+				},
+			],
 		})
-		addl.insert(ignore_permissions=True)
-		addl.submit()
+		je.flags.ignore_permissions = True
+		je.insert()
+		je.submit()
 
-		self.db_set("additional_salary", addl.name)
-
-	def _get_overtime_salary_component(self) -> str:
-		"""الحصول على مكوّن "Overtime" من Salary Component أو إنشاؤه."""
-		component_name = "Overtime / عمل إضافي"
-		if not frappe.db.exists("Salary Component", component_name):
-			sc = frappe.get_doc({
-				"doctype": "Salary Component",
-				"salary_component": component_name,
-				"salary_component_abbr": "OT",
-				"type": "Earning",
-				"description": "Overtime pay per Saudi Labor Law Art. 107 (150%)",
-			})
-			sc.insert(ignore_permissions=True)
-		return component_name
+		self.db_set("overtime_journal_entry", je.name)
+		frappe.msgprint(
+			_("Journal Entry <b>{0}</b> created for overtime of {1} SAR.<br>"
+			  "تم إنشاء القيد اليومي <b>{0}</b> للعمل الإضافي بمبلغ {1} ريال.").format(
+				je.name, flt(self.overtime_amount)
+			),
+			title=_("Journal Entry Created / تم إنشاء القيد"),
+			indicator="green",
+		)
 
 
 @frappe.whitelist()
-def create_additional_salary(doc, method=None):
-	"""Hook called from hooks.py on_submit."""
-	pass  # handled inside on_submit
+def create_overtime_journal_entry(doc, method=None):
+	"""Hook called from hooks.py on_submit — delegates to document method."""
+	if isinstance(doc, str):
+		doc = frappe.get_doc("Overtime Request", doc)
+	# Guard: _create_overtime_journal_entry() already ran inside on_submit(); avoid double-creation
+	if not doc.overtime_journal_entry:
+		doc._create_overtime_journal_entry()
 
 
 @frappe.whitelist()

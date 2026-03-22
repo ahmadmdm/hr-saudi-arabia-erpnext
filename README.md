@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.1.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.3.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -339,7 +339,36 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.1.0 — ١٧ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.3.0 — ٢٢ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**إصلاح الأخطاء الحرجة | Critical Bug Fixes:**
+
+| الملف | الإصلاح |
+|-------|---------|
+| `gosi_contribution.py` | إنشاء قيد يومي تلقائي عند الاعتماد بدلاً من `pass` |
+| `end_of_service_benefit.py` | إضافة التحقق من ترتيب التواريخ + منطق الاستقالة الصحيح |
+| `overtime_request.py` | إنشاء قيد يومي بدلاً من Additional Salary |
+| `saudi_monthly_payroll.py` | استخدام أيام الشهر الفعلية بدلاً من الثابت 30 |
+| `tasks.py` | إصلاح خطأ `docname=""` في تنبيهات الإجازة المرضية |
+| `api.py` | تسجيل تحذير عند تجاوز فحص GPS |
+
+**فصل الاعتماد عن HRMS | Partial HRMS Decoupling:**
+
+| المكوّن | Component | التغيير |
+|---------|-----------|--------|
+| ★ Saudi Employee Checkin | حضور الموظف السعودي | DocType جديد يحل محل HRMS Employee Checkin |
+| ★ Saudi Daily Attendance | الحضور اليومي السعودي | DocType جديد يحل محل HRMS Attendance |
+| Overtime Request | طلب العمل الإضافي | قيد يومي مباشر بدلاً من Additional Salary |
+| Saudi Monthly Payroll | مسير الرواتب الشهري | قيد يومي مباشر بدلاً من Payroll Entry |
+
+**إصلاحات تقنية | Technical Fixes:**
+- إصلاح أسماء الـ classes: `GOSIContribution` و `EndofServiceBenefit` لتتوافق مع توقعات Frappe وتمنع حذفها عند كل `migrate`
+- إعادة تسمية دالة `create_additional_salary` → `create_overtime_journal_entry` في `hooks.py`
+- تحديث حقل `linked_payroll_entry` في Annual Leave ليشير إلى `Journal Entry`
+
+---
+
+### v1.1.0 — ١٧ مارس ٢٠٢٦
 
 **مكونات جديدة | New Components:**
 

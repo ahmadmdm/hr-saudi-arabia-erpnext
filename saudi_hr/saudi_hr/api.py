@@ -45,9 +45,9 @@ def _get_location_for_branch(branch):
 
 
 def _get_todays_checkins(employee):
-	"""Return today's Employee Checkin records for this employee, ordered by time."""
+	"""Return today's Saudi Employee Checkin records for this employee, ordered by time."""
 	return frappe.get_all(
-		"Employee Checkin",
+		"Saudi Employee Checkin",
 		filters={"employee": employee, "time": ["between", [nowdate() + " 00:00:00", nowdate() + " 23:59:59"]]},
 		fields=["name", "log_type", "time", "latitude", "longitude"],
 		order_by="time asc",
@@ -90,7 +90,7 @@ def get_attendance_status():
 
 	# Check if there is already attendance today (submitted)
 	today_attendance = frappe.db.get_value(
-		"Attendance",
+		"Saudi Daily Attendance",
 		{"employee": employee, "attendance_date": nowdate(), "docstatus": 1},
 		["name", "in_time", "out_time", "working_hours", "status"],
 		as_dict=True,
@@ -136,8 +136,12 @@ def do_mobile_checkin(latitude, longitude):
 	# ── Location validation ──────────────────────────────────────────────────
 	location = _get_location_for_branch(branch)
 	if not location:
-		# No location configured — allow check-in without GPS restriction
-		pass
+		# No location configured for this branch — log the bypass and allow check-in
+		# Administrators should configure Attendance Locations for all active branches.
+		frappe.logger("saudi_hr").warning(
+			f"GPS bypass: employee {employee} checked in without location validation "
+			f"(no Attendance Location configured for branch '{branch}')."
+		)
 	else:
 		if latitude is None or longitude is None:
 			frappe.throw(_("تعذّر الحصول على إحداثيات GPS. يرجى السماح بإذن الموقع وإعادة المحاولة."))
@@ -157,8 +161,10 @@ def do_mobile_checkin(latitude, longitude):
 
 	now = now_datetime()
 
-	# ── Create Employee Checkin ──────────────────────────────────────────────
-	checkin = frappe.new_doc("Employee Checkin")
+	# ── Create Saudi Employee Checkin ────────────────────────────────────────
+	# ignore_permissions is required because standard Employee role lacks "create"
+	# on Saudi Employee Checkin. The GPS/employee verification above is the auth guard.
+	checkin = frappe.new_doc("Saudi Employee Checkin")
 	checkin.update({
 		"employee": employee,
 		"log_type": log_type,
@@ -191,20 +197,21 @@ def do_mobile_checkin(latitude, longitude):
 
 			# Skip if attendance already exists for today
 			existing = frappe.db.get_value(
-				"Attendance",
+				"Saudi Daily Attendance",
 				{"employee": employee, "attendance_date": nowdate(), "docstatus": 1},
 				"name",
 			)
 			if not existing:
-				# Create and submit Attendance directly (ignore_permissions because employee
-				# is registering their own attendance through a validated GPS flow)
+				# ignore_permissions: employee is registering their own attendance through
+				# a validated GPS flow. The employee identity is verified at the top of this
+				# function via _get_employee_for_user().
 				all_log_names = [c.name for c in today_checkins] + [checkin.name]
 
-				attendance = frappe.new_doc("Attendance")
+				attendance = frappe.new_doc("Saudi Daily Attendance")
 				attendance.update({
 					"employee": employee,
 					"attendance_date": nowdate(),
-					"status": "Present",
+					"status": "Present / حاضر",
 					"working_hours": round(working_hours, 2),
 					"in_time": in_time,
 					"out_time": out_time,
@@ -212,9 +219,9 @@ def do_mobile_checkin(latitude, longitude):
 				attendance.insert(ignore_permissions=True)
 				attendance.submit()
 
-				# Link checkin records to this attendance
+				# Link checkin records to this Saudi Daily Attendance
 				for log_name in all_log_names:
-					frappe.db.set_value("Employee Checkin", log_name, "attendance", attendance.name)
+					frappe.db.set_value("Saudi Employee Checkin", log_name, "attendance", attendance.name)
 				frappe.db.commit()
 
 				result["attendance_name"] = attendance.name

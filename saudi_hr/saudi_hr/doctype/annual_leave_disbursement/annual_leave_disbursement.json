@@ -223,8 +223,8 @@
   {
    "fieldname": "linked_payroll_entry",
    "fieldtype": "Link",
-   "label": "Linked Payroll Entry",
-   "options": "Payroll Entry",
+   "label": "Linked Journal Entry",
+   "options": "Journal Entry",
    "read_only": 1
   },
   {

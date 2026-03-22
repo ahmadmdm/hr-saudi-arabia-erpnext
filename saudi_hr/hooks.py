@@ -4,7 +4,7 @@ app_publisher = "IdeaOrbit"
 app_description = "Saudi HR Management System per Saudi Labor Law (Royal Decree M/51)"
 app_email = "info@ideaorbit.net"
 app_license = "MIT"
-app_version = "1.2.0"
+app_version = "1.3.0"
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
 # Apps Screen
@@ -46,7 +46,7 @@ scheduler_events = {
 # ─── Document Events ────────────────────────────────────────────────────────────
 doc_events = {
 	"Overtime Request": {
-		"on_submit": "saudi_hr.saudi_hr.doctype.overtime_request.overtime_request.create_additional_salary",
+		"on_submit": "saudi_hr.saudi_hr.doctype.overtime_request.overtime_request.create_overtime_journal_entry",
 	},
 	"GOSI Contribution": {
 		"on_submit": "saudi_hr.saudi_hr.doctype.gosi_contribution.gosi_contribution.create_payroll_entries",

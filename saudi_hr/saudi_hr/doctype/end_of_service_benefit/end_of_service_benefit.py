@@ -4,7 +4,7 @@ from frappe.model.document import Document
 from frappe.utils import date_diff, getdate, flt, nowdate
 
 
-class EndOfServiceBenefit(Document):
+class EndofServiceBenefit(Document):
 
 	def validate(self):
 		self._fetch_joining_date()
@@ -23,6 +23,14 @@ class EndOfServiceBenefit(Document):
 		"""
 		if not self.joining_date or not self.termination_date:
 			return
+
+		# التحقق من ترتيب التواريخ
+		if getdate(self.termination_date) <= getdate(self.joining_date):
+			frappe.throw(
+				_("Termination date must be after the joining date.<br>"
+				  "تاريخ إنهاء الخدمة يجب أن يكون بعد تاريخ الالتحاق بالعمل."),
+				title=_("Invalid Date / تاريخ غير صحيح"),
+			)
 
 		total_days = date_diff(self.termination_date, self.joining_date)
 		years = total_days / 365.0
@@ -94,11 +102,8 @@ class EndOfServiceBenefit(Document):
 		)
 
 	def on_submit(self):
-		"""تحديث حالة الموظف عند الاعتماد."""
-		if self.termination_reason not in ("Resignation / استقالة",):
-			frappe.db.set_value(
-				"Employee", self.employee, "status", "Left"
-			)
+		"""تحديث حالة الموظف عند الاعتماد — دائماً يُعيَّن إلى 'Left'."""
+		frappe.db.set_value("Employee", self.employee, "status", "Left")
 
 
 @frappe.whitelist()

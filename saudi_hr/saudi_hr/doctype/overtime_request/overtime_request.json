@@ -32,7 +32,7 @@
   "column_break_4",
   "rejection_reason",
   "payroll_section",
-  "additional_salary",
+  "overtime_journal_entry",
   "payroll_period",
   "amended_from"
  ],
@@ -196,10 +196,10 @@
    "label": "Payroll Integration / ربط الرواتب"
   },
   {
-   "fieldname": "additional_salary",
+   "fieldname": "overtime_journal_entry",
    "fieldtype": "Link",
-   "label": "Additional Salary / راتب إضافي",
-   "options": "Additional Salary",
+   "label": "Journal Entry / القيد اليومي",
+   "options": "Journal Entry",
    "read_only": 1
   },
   {
