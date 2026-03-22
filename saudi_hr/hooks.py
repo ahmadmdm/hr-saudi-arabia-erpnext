@@ -11,13 +11,13 @@ required_apps = ["frappe/erpnext", "frappe/hrms"]
 add_to_apps_screen = [
 	{
 		"name": "saudi_hr",
-		"logo": "/assets/saudi_hr/images/logo.png",
+		"logo": "/assets/saudi_hr/images/logo.svg",
 		"title": "Saudi HR / الموارد البشرية",
 		"route": "/app/saudi-hr",
 	},
 	{
 		"name": "saudi_hr_mobile",
-		"logo": "/assets/saudi_hr/images/logo.png",
+		"logo": "/assets/saudi_hr/images/logo.svg",
 		"title": "حضور الموظفين / Attendance",
 		"route": "/mobile-attendance",
 	},
@@ -87,4 +87,4 @@ fixtures = [
 ]
 
 # ─── Migration Hooks ───────────────────────────────────────────────────────
-after_migrate = ["saudi_hr.saudi_hr.install.after_migrate"]
+after_migrate = ["saudi_hr.install.after_migrate"]
