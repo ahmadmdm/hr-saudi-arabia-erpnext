@@ -7,16 +7,36 @@ import frappe
 
 
 def after_install():
-        create_workflow_states()
-        create_saudi_leave_types()
-        create_eosb_gratuity_rule()
-        create_default_settings()
-        frappe.db.commit()
+	create_workflow_states()
+	sync_dashboard_chart_configs()
+	create_saudi_leave_types()
+	create_eosb_gratuity_rule()
+	create_default_settings()
+	frappe.db.commit()
 
 
 def after_migrate():
-        """Called after every bench migrate — ensures workflow states always exist."""
-        create_workflow_states()
+	"""Called after every bench migrate — ensures workflow states always exist."""
+	create_workflow_states()
+	sync_dashboard_chart_configs()
+
+
+def sync_dashboard_chart_configs():
+	"""Keep standard Saudi HR dashboard charts on the correct Frappe code path."""
+	chart_updates = {
+		"Nationality Distribution": {"chart_type": "Group By"},
+		"Active Contracts by Type": {"chart_type": "Group By"},
+	}
+
+	for chart_name, values in chart_updates.items():
+		if not frappe.db.exists("Dashboard Chart", chart_name):
+			continue
+
+		for fieldname, value in values.items():
+			if frappe.db.get_value("Dashboard Chart", chart_name, fieldname) == value:
+				continue
+
+			frappe.db.set_value("Dashboard Chart", chart_name, fieldname, value, update_modified=False)
 
 
 # ─── Workflow States ──────────────────────────────────────────────────────────

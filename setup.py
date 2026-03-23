@@ -1,8 +1,10 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
+from saudi_hr import __version__
 
 setup(
 	name="saudi_hr",
-	version="1.2.0",
+	version=__version__,
 	description="Saudi HR Management System — نظام إدارة شؤون الموظفين وفق نظام العمل السعودي",
 	author="IdeaOrbit",
 	author_email="info@ideaorbit.net",

@@ -1,10 +1,12 @@
+from . import __version__ as app_version
+
+
 app_name = "saudi_hr"
 app_title = "Saudi HR / نظام الموارد البشرية السعودي"
 app_publisher = "IdeaOrbit"
 app_description = "Saudi HR Management System per Saudi Labor Law (Royal Decree M/51)"
 app_email = "info@ideaorbit.net"
 app_license = "MIT"
-app_version = "1.3.0"
 required_apps = ["frappe/erpnext", "frappe/hrms"]
 
 # Apps Screen
@@ -68,6 +70,8 @@ jinja = {
 
 # ─── Override Whitelisted Methods ───────────────────────────────────────────────
 override_whitelisted_methods = {}
+
+after_install = "saudi_hr.install.after_install"
 
 # ─── Fixtures ───────────────────────────────────────────────────────────────────
 fixtures = [
