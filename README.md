@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.4.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.4.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.4.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -361,7 +361,19 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.4.0 — ٢٥ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.4.1 — ٢٥ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**تحسين مساحة العمل والتكامل مع الترجمة | Workspace & Translation Integration:**
+
+| الملف | التحديث |
+|-------|---------|
+| `saudi_hr/workspace/saudi_hr/saudi_hr.json` | إضافة مساحة عمل عامة لتطبيق Saudi HR حتى يظهر `/app/saudi-hr` داخل Desk بدل صفحة Not Found |
+| `saudi_hr/workspace/saudi_hr/saudi_hr.json` | توسيع مساحة العمل بأقسام مختصرة وروابط تشغيلية وتقارير وshortcuts مناسبة للاستخدام اليومي |
+| Desk Integration | تحسين جاهزية التطبيق للعمل مع ترجمة `arabic_pro` داخل الواجهة دون فقدان مدخل التطبيق |
+
+---
+
+### v1.4.0 — ٢٥ مارس ٢٠٢٦
 
 **تجربة الجوال والحضور الذكي | Mobile Attendance & Smart Check-in:**
 
