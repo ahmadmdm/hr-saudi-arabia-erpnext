@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.3.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.4.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -112,8 +112,30 @@ bench build --app saudi_hr
 bench --site <your-site-name> clear-cache
 ```
 
-> **ملاحظة:** يجب تثبيت `frappe`, `erpnext`, و`hrms` قبل هذا التطبيق.  
-> **Note:** `frappe`, `erpnext`, and `hrms` must be installed first.
+> **ملاحظة:** يجب تثبيت `frappe`, `erpnext`, و`hrms` قبل هذا التطبيق. كما يعتمد التطبيق الآن على `openpyxl` لقالب فروع الموظفين و`openlocationcode` لدعم Plus Code، وسيتم تثبيتهما تلقائياً عبر بيانات الحزمة عند استخدام `bench get-app` أو `pip install -e apps/saudi_hr`.  
+> **Note:** `frappe`, `erpnext`, and `hrms` must be installed first. The app now also depends on `openpyxl` for the employee-branch template flow and `openlocationcode` for Plus Code support; both are installed automatically from the package metadata when using `bench get-app` or `pip install -e apps/saudi_hr`.
+
+### نقل التطبيق إلى نظام آخر | Moving the App to Another System
+
+```bash
+# 1. داخل بيئة bench الجديدة | Inside the new bench environment
+bench get-app https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
+
+# 2. ثبّت التطبيق على الموقع | Install the app on the target site
+bench --site <your-site-name> install-app saudi_hr
+
+# 3. طبّق الترقيات | Apply schema changes
+bench --site <your-site-name> migrate
+
+# 4. تحقق من التبعيات الأساسية | Verify runtime dependencies
+./env/bin/python -c "import openpyxl, openlocationcode; print('dependencies ok')"
+
+# 5. تحقّق من أهم المسارات بعد التثبيت | Validate the key app flows after install
+bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_hr.doctype.special_leave.test_special_leave --module saudi_hr.saudi_hr.doctype.annual_leave_disbursement.test_annual_leave_disbursement --module saudi_hr.saudi_hr.report.saudi_labor_coverage_matrix.test_saudi_labor_coverage_matrix
+```
+
+> **توصية تشغيلية:** إذا كنت ستستخدم صفحة الحضور بالجوال أو مواقع Plus Code مباشرة بعد النقل، شغّل `bench restart` أو أعد تشغيل خدمات الويب والـ workers بعد `migrate` لضمان تحميل الأصول وملفات الخدمة الحديثة.  
+> **Operational note:** If you will use the mobile attendance page or Plus Code locations immediately after migration, run `bench restart` or restart the web and worker processes after `migrate` so the latest assets and service worker are loaded.
 
 ---
 
@@ -147,7 +169,7 @@ bench --site <your-site-name> clear-cache
 |---------|-------|--------|-------|
 | Saudi Sick Leave | الإجازة المرضية | م.117 | 100% ← 75% ← 0% حسب المدة — Tiered pay: 100%/75%/0% |
 | Maternity Paternity Leave | إجازة الأمومة والأبوة | م.151، م.160 | 10 أسابيع للأم، 3 أيام للأب — 10 weeks mother / 3 days father |
-| Special Leave | الإجازة الخاصة | م.113 | حج (15 يوم)، وفاة (5)، زواج (5) — Hajj/Bereavement/Marriage |
+| Special Leave | الإجازة الخاصة | م.113 | حج (15 يوم، مرة واحدة بعد سنتين خدمة)، وفاة (5)، زواج (5) — Hajj/Bereavement/Marriage |
 
 #### 🏛️ الامتثال | Compliance
 
@@ -339,7 +361,43 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.3.1 — ٢٢ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.4.0 — ٢٥ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**تجربة الجوال والحضور الذكي | Mobile Attendance & Smart Check-in:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|---------|
+| ★ Mobile Attendance PWA | تطبيق حضور الجوال | صفحة حضور مستقلة تعمل كتجربة PWA مع بوابة تثبيت وصلاحيات الموقع والإشعارات |
+| ★ Mobile Self Service API | واجهات الخدمة الذاتية | واجهات للحضور والانصراف، إحصائيات الحضور، طلبات الإجازة، والمواقع المتاحة |
+| ★ Face / Voice Verification | التحقق بالصورة والصوت | دعم مرفقات صورة الوجه والتسجيل الصوتي مع كل حركة حضور |
+| ★ Runtime Language Switching | تبديل اللغة وقت التشغيل | عرض الصفحة بالإنجليزية عندما تكون جلسة النظام باللغة الإنجليزية |
+
+**إدارة الفروع ورفع الموظفين | Branch Directory & Bulk Import:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|---------|
+| ★ Saudi HR Settings | إعدادات الموارد البشرية | إضافة دليل الموظفين والفروع داخل صفحة الإعدادات |
+| ★ Branch Employee Directory Row | جدول الموظفين والفروع | Child DocType جديد لعرض الموظف وفرعه وإدارته وشركته |
+| ★ Employee Branch Template | قالب رفع جماعي | تنزيل قالب Excel/HTML ورفع أسماء الموظفين وفروعهم دفعة واحدة |
+
+**تحسينات الامتثال والتجهيز للنقل | Compliance & Packaging Improvements:**
+
+| الملف | التحديث |
+|-------|---------|
+| `special_leave.py/js/json` | تصحيح إجازة الحج والزواج وربط الأهلية بمدة الخدمة والاستخدام لمرة واحدة |
+| `tasks.py` + `hooks.py` | إضافة دورة تنبيه GOSI الشهرية وربطها بالمجدول |
+| `pyproject.toml` + `setup.py` + `requirements.txt` | إعلان التبعيات التشغيلية الجديدة: `openpyxl` و`openlocationcode` |
+| `README.md` | إضافة خطوات نقل التطبيق إلى نظام آخر والتحقق من التبعيات بعد التثبيت |
+
+**اختبارات مضافة | Added Tests:**
+- تغطية لاستخراج أنواع الإجازة السنوية المدعومة وحساب الأيام المستهلكة
+- تغطية لأهلية إجازة الحج
+- تغطية لمصفوفة التغطية القانونية
+- تغطية لبناء قالب فروع الموظفين في الإعدادات
+
+---
+
+### v1.3.1 — ٢٢ مارس ٢٠٢٦
 
 **إصلاح الأخطاء الحرجة | Critical Bug Fixes:**
 

@@ -9,6 +9,8 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     # Managed by bench
+    "openpyxl>=3.1.0",
+    "openlocationcode>=1.0.1",
 ]
 
 [build-system]

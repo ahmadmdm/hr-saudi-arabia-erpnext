@@ -30,7 +30,11 @@
   "contract_expiry_alert_days",
   "column_break_alerts",
   "work_permit_expiry_alert_days",
-  "send_email_alerts"
+ "send_email_alerts",
+ "branch_employee_import_section",
+ "branch_employee_import_help",
+ "employee_branch_import_file",
+ "branch_employee_directory"
  ],
  "fields": [
   {
@@ -187,6 +191,32 @@
    "fieldname": "send_email_alerts",
    "fieldtype": "Check",
    "label": "Send Email Alerts / إرسال تنبيهات بالبريد"
+    },
+    {
+     "fieldname": "branch_employee_import_section",
+     "fieldtype": "Section Break",
+     "label": "Branch Employees & Bulk Import / موظفو الفروع والاستيراد الجماعي"
+    },
+    {
+     "fieldname": "branch_employee_import_help",
+     "fieldtype": "Small Text",
+     "label": "Instructions / التعليمات",
+     "read_only": 1,
+     "default": "Download the Excel template, update the target branch for each employee, attach the file here, then click Import Employee Branches. / نزّل قالب الإكسل، حدّث فرع كل موظف، أرفق الملف هنا، ثم اضغط استيراد موظفي الفروع."
+    },
+    {
+     "fieldname": "employee_branch_import_file",
+     "fieldtype": "Attach",
+     "label": "Excel Import File / ملف الإكسل للاستيراد"
+    },
+    {
+     "fieldname": "branch_employee_directory",
+     "fieldtype": "Table",
+     "label": "Employee Branch Directory / دليل الموظفين والفروع",
+     "options": "Branch Employee Directory Row",
+     "read_only": 1,
+     "cannot_add_rows": 1,
+     "cannot_delete_rows": 1
   }
  ],
  "issingle": 1,

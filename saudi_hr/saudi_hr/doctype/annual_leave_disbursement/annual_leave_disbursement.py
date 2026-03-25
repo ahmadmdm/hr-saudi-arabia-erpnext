@@ -1,7 +1,15 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
-from frappe.utils import date_diff, getdate
+from frappe.utils import date_diff, getdate, flt
+
+from saudi_hr.saudi_hr.utils import get_annual_leave_entitlement
+
+
+ANNUAL_LEAVE_TYPE_CANDIDATES = (
+    "Saudi Annual Leave / إجازة سنوية",
+    "Annual Leave",
+)
 
 
 class AnnualLeaveDisbursement(Document):
@@ -56,17 +64,13 @@ class AnnualLeaveDisbursement(Document):
         if not join_date:
             return
 
-        years_service = (getdate(f"{self.leave_year}-12-31") - getdate(join_date)).days / 365.25
-        entitled = 30 if years_service > 5 else 21
+        reference_date = f"{self.leave_year}-12-31"
+        years_service = (getdate(reference_date) - getdate(join_date)).days / 365.25
+        entitled = get_annual_leave_entitlement(self.employee, reference_date)
         self.leave_days_entitled = entitled
 
         # Days already taken this year from Leave Applications
-        taken = frappe.db.sql("""
-            SELECT COALESCE(SUM(total_leave_days), 0)
-            FROM `tabLeave Application`
-            WHERE employee=%s AND leave_type='Annual Leave'
-            AND YEAR(from_date)=%s AND docstatus=1
-        """, (self.employee, self.leave_year))[0][0] or 0
+        taken = _get_taken_annual_leave_days(self.employee, self.leave_year)
         self.leave_days_taken = taken
         self.leave_days_balance = entitled - taken
 
@@ -116,15 +120,10 @@ def get_leave_balance(employee, leave_year):
     if not join_date:
         return {}
 
-    years_service = (getdate(f"{leave_year}-12-31") - getdate(join_date)).days / 365.25
-    entitled = 30 if years_service > 5 else 21
-
-    taken = frappe.db.sql("""
-        SELECT COALESCE(SUM(total_leave_days), 0)
-        FROM `tabLeave Application`
-        WHERE employee=%s AND leave_type='Annual Leave'
-        AND YEAR(from_date)=%s AND docstatus=1
-    """, (employee, leave_year))[0][0] or 0
+    reference_date = f"{leave_year}-12-31"
+    years_service = (getdate(reference_date) - getdate(join_date)).days / 365.25
+    entitled = get_annual_leave_entitlement(employee, reference_date)
+    taken = _get_taken_annual_leave_days(employee, leave_year)
 
     return {
         "entitled": entitled,
@@ -132,3 +131,27 @@ def get_leave_balance(employee, leave_year):
         "balance": entitled - taken,
         "years_service": round(years_service, 1),
     }
+
+
+def _get_supported_annual_leave_types():
+	leave_types = frappe.get_all(
+		"Leave Type",
+		filters={"name": ["in", list(ANNUAL_LEAVE_TYPE_CANDIDATES)]},
+		pluck="name",
+	)
+	return leave_types or list(ANNUAL_LEAVE_TYPE_CANDIDATES)
+
+
+def _get_taken_annual_leave_days(employee, leave_year):
+	leave_types = _get_supported_annual_leave_types()
+	rows = frappe.get_all(
+		"Leave Application",
+		filters={
+			"employee": employee,
+			"leave_type": ["in", leave_types],
+			"from_date": ["between", [f"{leave_year}-01-01", f"{leave_year}-12-31"]],
+			"docstatus": 1,
+		},
+		fields=["total_leave_days"],
+	)
+	return sum(flt(row.total_leave_days) for row in rows)

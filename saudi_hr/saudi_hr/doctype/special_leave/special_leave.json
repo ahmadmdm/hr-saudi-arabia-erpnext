@@ -87,7 +87,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Leave Type / نوع الإجازة",
-   "options": "\nHajj Leave / إجازة حج (م.113 – 5 أيام)\nBereavement Leave / إجازة وفاة (م.113 – 5 أيام)\nMarriage Leave / إجازة زواج (م.113 – 3 أيام)",
+    "options": "\nHajj Leave / إجازة حج (م.113 – 15 يوم)\nBereavement Leave / إجازة وفاة (م.113 – 5 أيام)\nMarriage Leave / إجازة زواج (م.113 – 5 أيام)",
    "reqd": 1
   },
   {

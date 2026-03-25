@@ -6,10 +6,12 @@ from frappe.utils import date_diff, getdate
 
 # Days entitlement per م.113
 LEAVE_ENTITLEMENT = {
-    "Hajj": 5,
+    "Hajj": 15,
     "Bereavement": 5,
-    "Marriage": 3,
+    "Marriage": 5,
 }
+
+MIN_HAJJ_SERVICE_DAYS = 730
 
 
 class SpecialLeave(Document):
@@ -56,12 +58,12 @@ class SpecialLeave(Document):
         if self.leave_start_date and self.leave_end_date:
             self.actual_days = date_diff(self.leave_end_date, self.leave_start_date) + 1
             if self.actual_days > self.entitled_days:
-                frappe.msgprint(
+                frappe.throw(
                     _(
-                        "Actual days ({0}) exceed the entitled days ({1}) for {2} per م.113"
+                        "Actual days ({0}) exceed the entitled days ({1}) for {2} per م.113.<br>"
+                        "عدد الأيام الفعلية ({0}) يتجاوز الأيام المستحقة ({1}) لنوع الإجازة {2} وفقاً للمادة 113."
                     ).format(self.actual_days, self.entitled_days, self.leave_type),
-                    indicator="orange",
-                    title=_("Days Exceeded")
+                    title=_("Days Exceeded / تجاوز عدد الأيام")
                 )
 
     def _check_eligibility(self):
@@ -73,6 +75,16 @@ class SpecialLeave(Document):
         self.eligibility_notes = ""
 
         if key == "Hajj":
+            joining_date = frappe.db.get_value("Employee", self.employee, "date_of_joining")
+            if joining_date:
+                service_days = date_diff(getdate(self.leave_start_date or getdate()), getdate(joining_date))
+                if service_days < MIN_HAJJ_SERVICE_DAYS:
+                    self.is_eligible = 0
+                    self.eligibility_notes = _(
+                        "Hajj Leave requires at least 2 years of service. "
+                        "مدة الخدمة الحالية لا تحقق الحد الأدنى المطلوب لإجازة الحج."
+                    )
+
             prior = frappe.db.count(
                 "Special Leave",
                 filters={
@@ -128,6 +140,13 @@ class SpecialLeave(Document):
 @frappe.whitelist()
 def check_hajj_eligibility(employee):
     """Return True if employee has not previously taken Hajj leave"""
+    joining_date = frappe.db.get_value("Employee", employee, "date_of_joining")
+    minimum_service_met = True
+    years_service = 0.0
+    if joining_date:
+        years_service = round(date_diff(getdate(), getdate(joining_date)) / 365.0, 2)
+        minimum_service_met = date_diff(getdate(), getdate(joining_date)) >= MIN_HAJJ_SERVICE_DAYS
+
     prior = frappe.db.count(
         "Special Leave",
         filters={
@@ -136,4 +155,9 @@ def check_hajj_eligibility(employee):
             "docstatus": 1,
         }
     )
-    return {"eligible": prior == 0, "prior_count": prior}
+    return {
+        "eligible": prior == 0 and minimum_service_met,
+        "prior_count": prior,
+        "minimum_service_met": minimum_service_met,
+        "years_service": years_service,
+    }

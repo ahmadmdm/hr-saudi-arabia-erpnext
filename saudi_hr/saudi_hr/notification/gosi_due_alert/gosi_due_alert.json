@@ -10,7 +10,7 @@
  "value_changed": "payment_status",
  "message": "<p dir=\"rtl\">تحديث اشتراك التأمينات الاجتماعية:</p>\n<ul dir=\"rtl\">\n  <li>الموظف: <b>{{ doc.employee_name }}</b></li>\n  <li>الفترة: {{ doc.month }}/{{ doc.year }}</li>\n  <li>الإجمالي: {{ doc.total_contribution }} ريال</li>\n  <li>الحالة: {{ doc.payment_status }}</li>\n</ul>",
  "module": "Saudi HR",
- "name": "GOSI Due Alert",
+ "name": "GOSI Status Update Alert",
  "recipients": [
   {
    "cc": "",
@@ -19,5 +19,5 @@
   }
  ],
  "send_system_notification": 1,
- "subject": "تحديث اشتراك GOSI — {{ doc.employee_name }} — {{ doc.month }}/{{ doc.year }}"
+ "subject": "تحديث حالة اشتراك GOSI — {{ doc.employee_name }} — {{ doc.month }}/{{ doc.year }}"
 }

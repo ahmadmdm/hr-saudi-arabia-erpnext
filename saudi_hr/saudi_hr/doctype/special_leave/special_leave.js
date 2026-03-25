@@ -16,7 +16,7 @@ frappe.ui.form.on("Special Leave", {
         // Set entitled days
         let days = 0;
         if (frm.doc.leave_type.includes("Hajj")) {
-            days = 5;
+            days = 15;
             // Check if Hajj leave has been taken before
             if (frm.doc.employee) {
                 frappe.call({
@@ -24,12 +24,20 @@ frappe.ui.form.on("Special Leave", {
                     args: { employee: frm.doc.employee },
                     callback: function (r) {
                         if (r.message && !r.message.eligible) {
+                            const reasons = [];
+                            if (!r.message.minimum_service_met) {
+                                reasons.push(
+                                    __("Hajj Leave requires at least 2 years of service. Current service: {0} years.", [r.message.years_service || 0])
+                                );
+                            }
+                            if (r.message.prior_count) {
+                                reasons.push(
+                                    __("This employee has already taken Hajj Leave once during the current employment.")
+                                );
+                            }
                             frappe.msgprint({
                                 title: __("Hajj Leave Not Eligible"),
-                                message: __(
-                                    "This employee has already taken Hajj Leave. " +
-                                    "م.113 Saudi Labor Law grants Hajj leave only once per employment."
-                                ),
+                                message: reasons.join("<br>"),
                                 indicator: "red"
                             });
                         }
@@ -39,7 +47,7 @@ frappe.ui.form.on("Special Leave", {
         } else if (frm.doc.leave_type.includes("Bereavement")) {
             days = 5;
         } else if (frm.doc.leave_type.includes("Marriage")) {
-            days = 3;
+            days = 5;
         }
         frm.set_value("entitled_days", days);
 
@@ -65,7 +73,7 @@ frappe.ui.form.on("Special Leave", {
                 frappe.msgprint({
                     title: __("Days Exceeded"),
                     message: __("Actual days ({0}) exceed the entitled days ({1}) per م.113", [diff, frm.doc.entitled_days]),
-                    indicator: "orange"
+                    indicator: "red"
                 });
             }
         }
@@ -91,8 +99,8 @@ frappe.ui.form.on("Special Leave", {
 
         // Law reference
         frm.set_intro(
-            __("Special Leaves per Saudi Labor Law م.113: Hajj (5 days, once per employment), " +
-               "Bereavement (5 days), Marriage (3 days). Paid at full basic salary."),
+            __("Special Leaves per Saudi Labor Law م.113: Hajj (15 days, once per employment after 2 years of service), " +
+               "Bereavement (5 days), Marriage (5 days). Paid at full basic salary."),
             "blue"
         );
     }

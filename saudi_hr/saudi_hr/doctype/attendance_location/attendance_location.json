@@ -12,6 +12,12 @@
   "branch",
   "column_break_1",
   "is_active",
+    "section_reference",
+    "location_input_method",
+    "plus_code",
+    "column_break_reference",
+    "address_reference",
+    "location_source",
   "section_gps",
   "latitude",
   "column_break_gps",
@@ -49,6 +55,40 @@
    "in_list_view": 1,
    "label": "Active / نشط"
   },
+    {
+     "fieldname": "section_reference",
+     "fieldtype": "Section Break",
+     "label": "Reference Options / خيارات تحديد الموقع"
+    },
+    {
+     "default": "Coordinates / إحداثيات",
+     "fieldname": "location_input_method",
+     "fieldtype": "Select",
+     "label": "Input Method / طريقة الإدخال",
+     "options": "Coordinates / إحداثيات\nPlus Code / بلص كود\nMap Pin / دبوس الخريطة"
+    },
+    {
+     "fieldname": "plus_code",
+     "fieldtype": "Data",
+     "label": "Plus Code / بلص كود",
+     "search_index": 1
+    },
+    {
+     "fieldname": "column_break_reference",
+     "fieldtype": "Column Break"
+    },
+    {
+     "description": "Optional city, district, or nearby landmark to resolve short Plus Codes. / مرجع اختياري لحل البلص كود المختصر.",
+     "fieldname": "address_reference",
+     "fieldtype": "Data",
+     "label": "Address Reference / مرجع العنوان"
+    },
+    {
+     "fieldname": "location_source",
+     "fieldtype": "Data",
+     "label": "Resolved From / مصدر الاعتماد",
+     "read_only": 1
+    },
   {
    "fieldname": "section_gps",
    "fieldtype": "Section Break",
@@ -58,8 +98,7 @@
    "fieldname": "latitude",
    "fieldtype": "Float",
    "label": "Latitude / خط العرض",
-   "precision": "8",
-   "reqd": 1
+     "precision": "8"
   },
   {
    "fieldname": "column_break_gps",
@@ -69,8 +108,7 @@
    "fieldname": "longitude",
    "fieldtype": "Float",
    "label": "Longitude / خط الطول",
-   "precision": "8",
-   "reqd": 1
+    "precision": "8"
   },
   {
    "fieldname": "section_settings",
@@ -89,11 +127,10 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Auto-generated from Latitude & Longitude. / يتم توليده تلقائياً من الإحداثيات.",
+    "description": "يمكنك تثبيت النقطة من الخريطة أو سيتم تحديثها تلقائياً من الإحداثيات. / Pick a point on the map or let the system sync it from coordinates.",
    "fieldname": "geolocation",
    "fieldtype": "Geolocation",
-   "label": "Map Preview / معاينة الموقع على الخريطة",
-   "read_only": 1
+    "label": "Map Preview / معاينة الموقع على الخريطة"
   }
  ],
  "in_create": 0,

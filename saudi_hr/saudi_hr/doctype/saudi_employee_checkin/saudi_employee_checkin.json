@@ -13,10 +13,12 @@
   "log_type",
   "time",
   "device_id",
+    "verification_mode",
   "attendance",
   "location_section",
   "latitude",
-  "longitude"
+    "longitude",
+    "verification_note"
  ],
  "fields": [
   {
@@ -65,6 +67,12 @@
    "fieldtype": "Data",
    "label": "Device ID"
   },
+    {
+     "fieldname": "verification_mode",
+     "fieldtype": "Data",
+     "label": "Verification Mode / طريقة التحقق",
+     "read_only": 1
+    },
   {
    "fieldname": "attendance",
    "fieldtype": "Link",
@@ -88,6 +96,12 @@
    "fieldtype": "Float",
    "label": "Longitude / خط الطول",
    "precision": "6"
+    },
+    {
+     "fieldname": "verification_note",
+     "fieldtype": "Small Text",
+     "label": "Verification Note / ملاحظة التحقق",
+     "read_only": 1
   }
  ],
  "is_submittable": 0,
@@ -113,7 +127,6 @@
    "write": 1
   },
   {
-   "create": 1,
    "read": 1,
    "role": "Employee",
    "write": 0

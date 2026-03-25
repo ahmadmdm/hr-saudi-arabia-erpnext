@@ -1,1207 +1,2123 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0f3460" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="حضور" />
-  <title>{{ title }}</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="/mobile-attendance-icon.svg" />
-  <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+{% extends "templates/web.html" %}
 
-  <style>
-    /* ─── Reset & Base ───────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --primary:   #0f3460;
-      --accent:    #e94560;
-      --green:     #1db954;
-      --green-dk:  #158a3e;
-      --red:       #e94560;
-      --red-dk:    #b71c40;
-      --orange:    #f0a500;
-      --bg:        #0a0e1a;
-      --card-bg:   #111827;
-      --card-bd:   #1e2a3a;
-      --text:      #e8eaf0;
-      --muted:     #7b8ca0;
-      --radius:    16px;
-      --shadow:    0 4px 24px rgba(0,0,0,.45);
-    }
-    html, body {
-      height: 100%;
-      font-family: 'Tajawal', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-    body { display: flex; flex-direction: column; min-height: 100svh; }
+{% block title %}{{ title }}{% endblock %}
 
-    /* ─── Header ─────────────────────────────────────────────────────── */
-    .header {
-      background: var(--primary);
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 10px rgba(0,0,0,.5);
-      position: sticky; top: 0; z-index: 100;
-    }
-    .header-logo { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: -0.5px; }
-    .header-logo span { color: #e2b714; }
-    .header-user { font-size: 13px; color: rgba(255,255,255,.75); max-width: 55%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+{% block head_include %}
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#17684f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Saudi HR Attendance">
+<style>
+	:root {
+		--mobile-bg: linear-gradient(180deg, #f3efe5 0%, #f9fbf8 46%, #eef5f1 100%);
+		--mobile-surface: rgba(255, 255, 255, 0.92);
+		--mobile-surface-strong: #ffffff;
+		--mobile-ink: #193028;
+		--mobile-muted: #60746a;
+		--mobile-accent: #17684f;
+		--mobile-accent-soft: #dcefe7;
+		--mobile-gold: #c78c2d;
+		--mobile-danger: #9f3e2c;
+		--mobile-border: rgba(25, 48, 40, 0.1);
+		--mobile-shadow: 0 22px 44px rgba(23, 58, 45, 0.08);
+		--mobile-radius: 24px;
+		--mobile-font: "IBM Plex Sans Arabic", "DIN Next LT Arabic", "Segoe UI", Tahoma, sans-serif;
+	}
 
-    /* ─── Main scroll area ───────────────────────────────────────────── */
-    .main { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+	body {
+		background: var(--mobile-bg);
+		color: var(--mobile-ink);
+		font-family: var(--mobile-font);
+	}
 
-    /* ─── Clock ─────────────────────────────────────────────────────── */
-    .clock-bar {
-      text-align: center;
-      padding: 10px 0;
-    }
-    .clock-time { font-size: 52px; font-weight: 300; letter-spacing: -2px; line-height: 1; }
-    .clock-date { font-size: 14px; color: var(--muted); margin-top: 4px; }
+	.page_content {
+		padding: 0;
+	}
 
-    /* ─── Status Card ────────────────────────────────────────────────── */
-    .status-card {
-      border-radius: var(--radius);
-      padding: 20px 22px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      transition: background .4s, box-shadow .4s;
-      box-shadow: var(--shadow);
-    }
-    .status-card.present { background: linear-gradient(135deg, var(--green-dk), var(--green)); }
-    .status-card.absent  { background: linear-gradient(135deg, #1a1f2e, #242840); border: 1px solid var(--card-bd); }
-    .status-card.checked-out { background: linear-gradient(135deg, #3a1a2e, var(--red-dk)); }
-    .status-icon { font-size: 38px; flex-shrink: 0; }
-    .status-info h2 { font-size: 20px; font-weight: 700; }
-    .status-info p  { font-size: 13px; opacity: .8; margin-top: 3px; }
+	.mobile-attendance-shell {
+		max-width: 1180px;
+		margin: 0 auto;
+		padding: 20px 16px 56px;
+	}
 
-    /* ─── Location Card ──────────────────────────────────────────────── */
-    .location-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-bd);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      box-shadow: var(--shadow);
-    }
-    .location-header {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 10px;
-    }
-    .location-header .loc-icon { font-size: 22px; }
-    .location-header .loc-title { font-size: 15px; font-weight: 700; }
-    .location-rows { display: flex; flex-direction: column; gap: 8px; }
-    .location-row {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 13px;
-    }
-    .location-row .label { color: var(--muted); }
-    .location-row .value { font-weight: 500; }
-    .distance-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 13px; font-weight: 700;
-    }
-    .distance-pill.ok      { background: rgba(29,185,84,.18); color: var(--green); }
-    .distance-pill.warning { background: rgba(240,165,0,.18);  color: var(--orange); }
-    .distance-pill.error   { background: rgba(233,69,96,.18);  color: var(--red); }
-    .gps-status {
-      margin-top: 10px;
-      font-size: 12px; color: var(--muted);
-      display: flex; align-items: center; gap: 6px;
-    }
-    .gps-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--muted);
-      animation: none;
-    }
-    .gps-dot.active { background: var(--green); animation: pulse 1.5s infinite; }
-    @keyframes pulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%     { opacity: .5; transform: scale(1.4); }
-    }
+	.mobile-banner {
+		display: none;
+		padding: 14px 16px;
+		border-radius: 18px;
+		margin-bottom: 16px;
+		font-size: 14px;
+		box-shadow: var(--mobile-shadow);
+	}
 
-    /* ─── Map Card ───────────────────────────────────────────────────── */
-    .map-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-bd);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-    .map-head {
-      padding: 14px 18px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .map-title {
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .map-link {
-      color: #8fc6ff;
-      font-size: 12px;
-      text-decoration: none;
-    }
-    .map-link.hidden { display: none; }
-    .map-frame {
-      width: 100%;
-      height: 220px;
-      border: 0;
-      display: block;
-      background: #0c1525;
-    }
-    #mapCanvas {
-      width: 100%;
-      height: 220px;
-      display: none;
-      background: #0c1525;
-    }
-    .map-empty {
-      min-height: 220px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      padding: 24px;
-      line-height: 1.8;
-      background:
-        radial-gradient(circle at top right, rgba(15,52,96,.35), transparent 35%),
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
-    }
-    .map-caption {
-      padding: 10px 18px 16px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .leaflet-control-attribution { font-size: 10px; }
+	.mobile-banner.is-visible {
+		display: block;
+	}
 
-    /* ─── Action Button ──────────────────────────────────────────────── */
-    .action-btn {
-      width: 100%;
-      padding: 22px;
-      border: none; border-radius: var(--radius);
-      font-family: 'Tajawal', sans-serif;
-      font-size: 22px; font-weight: 900;
-      cursor: pointer;
-      transition: all .25s;
-      display: flex; align-items: center; justify-content: center; gap: 12px;
-      box-shadow: var(--shadow);
-    }
-    .action-btn.checkin  { background: linear-gradient(135deg, var(--green-dk), var(--green)); color: #fff; }
-    .action-btn.checkout { background: linear-gradient(135deg, var(--red-dk), var(--red));    color: #fff; }
-    .action-btn:disabled {
-      background: #1e2a3a !important;
-      color: var(--muted) !important;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    .action-btn:not(:disabled):active { transform: scale(.97); }
-    .action-btn .btn-icon { font-size: 28px; }
+	.mobile-banner.is-success {
+		background: #e4f4eb;
+		color: #14513d;
+	}
 
-    /* ─── History Table ──────────────────────────────────────────────── */
-    .history-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-bd);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-    .history-title {
-      padding: 14px 18px;
-      font-size: 14px; font-weight: 700;
-      border-bottom: 1px solid var(--card-bd);
-      display: flex; align-items: center; gap: 8px;
-    }
-    .history-empty {
-      padding: 24px; text-align: center;
-      color: var(--muted); font-size: 13px;
-    }
-    .history-row {
-      display: flex; align-items: center;
-      padding: 12px 18px;
-      border-bottom: 1px solid var(--card-bd);
-    }
-    .history-row:last-child { border-bottom: none; }
-    .history-badge {
-      padding: 4px 12px; border-radius: 12px;
-      font-size: 12px; font-weight: 700; margin-left: 12px;
-      flex-shrink: 0;
-    }
-    .history-badge.in  { background: rgba(29,185,84,.18); color: var(--green); }
-    .history-badge.out { background: rgba(233,69,96,.18);  color: var(--red); }
-    .history-time { font-size: 15px; font-weight: 500; flex: 1; }
-    .history-meta { font-size: 12px; color: var(--muted); }
+	.mobile-banner.is-error {
+		background: #fbe6e2;
+		color: var(--mobile-danger);
+	}
 
-    /* ─── Attendance Summary ─────────────────────────────────────────── */
-    .summary-card {
-      background: linear-gradient(135deg, #0f3460, #16213e);
-      border: 1px solid #1e3a5f;
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      box-shadow: var(--shadow);
-    }
-    .summary-title {
-      font-size: 13px; color: var(--muted);
-      margin-bottom: 12px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .summary-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .summary-key { font-size: 13px; color: var(--muted); }
-    .summary-val { font-size: 13px; font-weight: 700; color: var(--text); }
+	.mobile-hero {
+		background:
+			radial-gradient(circle at top right, rgba(199, 140, 45, 0.22), transparent 34%),
+			radial-gradient(circle at bottom left, rgba(23, 104, 79, 0.18), transparent 30%),
+			#f8f6ef;
+		border: 1px solid rgba(199, 140, 45, 0.2);
+		border-radius: 32px;
+		padding: 24px;
+		box-shadow: var(--mobile-shadow);
+		position: relative;
+		overflow: hidden;
+	}
 
-    /* ─── Toast ──────────────────────────────────────────────────────── */
-    #toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-      background: #1c2e40; border: 1px solid var(--card-bd);
-      color: var(--text); padding: 14px 22px;
-      border-radius: 12px; font-size: 14px; font-weight: 500;
-      box-shadow: 0 8px 32px rgba(0,0,0,.6);
-      z-index: 9999; max-width: calc(100vw - 40px); text-align: center;
-      transition: transform .3s cubic-bezier(.175,.885,.32,1.275), opacity .3s;
-      opacity: 0;
-      pointer-events: none;
-    }
-    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-    #toast.success { border-color: var(--green); }
-    #toast.error   { border-color: var(--red); }
+	.mobile-hero::after {
+		content: "";
+		position: absolute;
+		inset: auto -50px -70px auto;
+		width: 180px;
+		height: 180px;
+		background: rgba(23, 104, 79, 0.08);
+		border-radius: 50%;
+	}
 
-    /* ─── Loading overlay ────────────────────────────────────────────── */
-    #loading {
-      position: fixed; inset: 0;
-      background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9990;
-      transition: opacity .4s;
-    }
-    #loading.hidden { opacity: 0; pointer-events: none; }
-    .spinner {
-      width: 44px; height: 44px;
-      border: 4px solid var(--card-bd);
-      border-top-color: var(--green);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+	.mobile-hero-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+		gap: 18px;
+		position: relative;
+		z-index: 1;
+	}
 
-    /* ─── Spinner inside button ──────────────────────────────────────── */
-    .btn-spinner {
-      width: 24px; height: 24px;
-      border: 3px solid rgba(255,255,255,.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .6s linear infinite;
-      display: none;
-    }
-    .loading-btn .btn-spinner { display: block; }
-    .loading-btn .btn-icon,
-    .loading-btn .btn-label { display: none; }
+	.mobile-kicker {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 12px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.84);
+		font-size: 13px;
+		color: var(--mobile-muted);
+		margin-bottom: 14px;
+	}
 
-    /* ─── Location Permission Modal ─────────────────────────────────────── */
-    #locationModal {
-      position: fixed; inset: 0; z-index: 9995;
-      background: rgba(5,8,18,.96);
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-      transition: opacity .3s;
-    }
-    #locationModal.hidden { opacity: 0; pointer-events: none; }
-    .perm-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-bd);
-      border-radius: 24px;
-      padding: 32px 24px;
-      max-width: 360px; width: 100%;
-      text-align: center;
-      box-shadow: 0 16px 48px rgba(0,0,0,.7);
-    }
-    .perm-icon { font-size: 64px; margin-bottom: 16px; }
-    .perm-title { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
-    .perm-desc  { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
-    .perm-btn {
-      width: 100%; padding: 16px;
-      background: linear-gradient(135deg, var(--green-dk), var(--green));
-      border: none; border-radius: 14px;
-      color: #fff; font-family: 'Tajawal', sans-serif;
-      font-size: 18px; font-weight: 900; cursor: pointer;
-      transition: transform .2s;
-    }
-    .perm-btn:active { transform: scale(.97); }
-    .perm-btn.deny {
-      background: transparent;
-      border: 1px solid var(--card-bd);
-      color: var(--muted);
-      margin-top: 10px;
-      font-size: 14px; padding: 12px;
-    }
-    .perm-error { color: var(--red); font-size: 13px; margin-top: 12px; display: none; }
+	.mobile-kicker strong {
+		color: var(--mobile-accent);
+	}
 
-    /* ─── PWA Install Banner ─────────────────────────────────────────────── */
-    #installBanner {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9980;
-      background: linear-gradient(135deg, #0f3460, #16213e);
-      border-top: 1px solid #1e3a5f;
-      padding: 16px 18px 24px;
-      transform: translateY(100%);
-      transition: transform .4s cubic-bezier(.175,.885,.32,1.275);
-      box-shadow: 0 -8px 32px rgba(0,0,0,.5);
-    }
-    #installBanner.visible { transform: translateY(0); }
-    .install-row {
-      display: flex; align-items: center; gap: 14px;
-      margin-bottom: 14px;
-    }
-    .install-app-icon {
-      width: 52px; height: 52px; border-radius: 14px;
-      background: linear-gradient(135deg, var(--green-dk), var(--green));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 26px; flex-shrink: 0;
-    }
-    .install-text h3 { font-size: 16px; font-weight: 900; margin-bottom: 3px; }
-    .install-text p  { font-size: 12px; color: var(--muted); line-height: 1.5; }
-    .install-close {
-      margin-right: auto; background: none; border: none;
-      color: var(--muted); font-size: 22px; cursor: pointer;
-      padding: 4px 8px; flex-shrink: 0;
-    }
-    .install-btn {
-      width: 100%; padding: 15px;
-      background: linear-gradient(135deg, var(--green-dk), var(--green));
-      border: none; border-radius: 12px;
-      color: #fff; font-family: 'Tajawal', sans-serif;
-      font-size: 17px; font-weight: 900; cursor: pointer;
-      transition: transform .2s;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-    }
-    .install-btn:active { transform: scale(.97); }
-    /* iOS instructions (shown instead of button on Safari) */
-    .ios-steps {
-      background: rgba(255,255,255,.05);
-      border-radius: 12px; padding: 14px;
-      font-size: 13px; line-height: 2;
-      display: none;
-    }
-    .ios-steps span { color: var(--green); font-weight: 700; }
-  </style>
-</head>
-<body>
+	.mobile-hero h1 {
+		margin: 0;
+		font-size: clamp(28px, 4vw, 44px);
+		line-height: 1.1;
+		letter-spacing: -0.03em;
+	}
 
-<!-- ── Loading overlay ──────────────────────────────────────── -->
-<div id="loading"><div class="spinner"></div></div>
+	.mobile-hero p {
+		margin: 12px 0 0;
+		font-size: 15px;
+		line-height: 1.8;
+		color: var(--mobile-muted);
+		max-width: 56ch;
+	}
 
-<!-- ── Location Permission Modal ────────────────────────────── -->
-<div id="locationModal">
-  <div class="perm-box">
-    <div class="perm-icon">📍</div>
-    <div class="perm-title">تفعيل خدمة الموقع</div>
-    <div class="perm-desc">
-      يحتاج التطبيق لإذن الوصول إلى موقعك الجغرافي للتحقق من وجودك داخل نطاق الفرع قبل تسجيل الحضور.
-    </div>
-    <button class="perm-btn" id="allowLocationBtn">
-      📍 السماح بالوصول للموقع
-    </button>
-    <button class="perm-btn deny" id="skipLocationBtn">تخطي الآن</button>
-    <div class="perm-error" id="permError">
-      ❌ تم رفض إذن الموقع. يرجى تفعيله من إعدادات المتصفح ثم إعادة فتح الصفحة.
-    </div>
-  </div>
+	.mobile-user-card,
+	.mobile-panel {
+		background: var(--mobile-surface);
+		backdrop-filter: blur(12px);
+		border: 1px solid var(--mobile-border);
+		border-radius: var(--mobile-radius);
+		box-shadow: var(--mobile-shadow);
+	}
+
+	.mobile-user-card {
+		padding: 18px;
+		display: grid;
+		gap: 16px;
+	}
+
+	.mobile-user-row {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+	}
+
+	.mobile-avatar {
+		width: 64px;
+		height: 64px;
+		border-radius: 18px;
+		background: linear-gradient(135deg, #e8eee9, #d4e5dd);
+		object-fit: cover;
+		flex: none;
+	}
+
+	.mobile-avatar-fallback {
+		display: grid;
+		place-items: center;
+		font-size: 24px;
+		font-weight: 700;
+		color: var(--mobile-accent);
+	}
+
+	.mobile-user-meta h2 {
+		margin: 0;
+		font-size: 20px;
+	}
+
+	.mobile-user-meta p {
+		margin: 4px 0 0;
+		font-size: 13px;
+		color: var(--mobile-muted);
+	}
+
+	.mobile-pill-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.mobile-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 9px 12px;
+		border-radius: 999px;
+		background: #eef4f1;
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--mobile-ink);
+	}
+
+	.mobile-pill.is-accent {
+		background: var(--mobile-accent-soft);
+		color: var(--mobile-accent);
+	}
+
+	.mobile-pill.is-warning {
+		background: #fff2dd;
+		color: #8a5a14;
+	}
+
+	.mobile-pill.is-danger {
+		background: #fbe6e2;
+		color: var(--mobile-danger);
+	}
+
+	.mobile-main-grid {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		gap: 18px;
+		margin-top: 18px;
+	}
+
+	.mobile-panel {
+		padding: 20px;
+	}
+
+	.mobile-panel h3 {
+		margin: 0 0 6px;
+		font-size: 20px;
+	}
+
+	.mobile-panel > p,
+	.mobile-panel .panel-hint {
+		margin: 0;
+		font-size: 13px;
+		color: var(--mobile-muted);
+		line-height: 1.7;
+	}
+
+	.mobile-panel--status {
+		grid-column: span 5;
+	}
+
+	.mobile-panel--location {
+		grid-column: span 7;
+	}
+
+	.mobile-panel--verification,
+	.mobile-panel--leave {
+		grid-column: span 6;
+	}
+
+	.mobile-panel--insights,
+	.mobile-panel--history {
+		grid-column: span 12;
+	}
+
+	.mobile-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-top: 18px;
+	}
+
+	.mobile-button,
+	.mobile-secondary-button,
+	.mobile-ghost-button {
+		border: 0;
+		border-radius: 18px;
+		font-family: inherit;
+		font-size: 14px;
+		font-weight: 700;
+		cursor: pointer;
+		transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+	}
+
+	.mobile-button:hover,
+	.mobile-secondary-button:hover,
+	.mobile-ghost-button:hover {
+		transform: translateY(-1px);
+	}
+
+	.mobile-button:disabled,
+	.mobile-secondary-button:disabled,
+	.mobile-ghost-button:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.mobile-button {
+		padding: 16px 18px;
+		background: linear-gradient(135deg, #17684f, #238261);
+		color: #fff;
+		box-shadow: 0 18px 28px rgba(23, 104, 79, 0.2);
+		flex: 1 1 220px;
+	}
+
+	.mobile-secondary-button {
+		padding: 13px 16px;
+		background: #fff7ea;
+		color: #7a5319;
+	}
+
+	.mobile-ghost-button {
+		padding: 13px 16px;
+		background: #eef4f1;
+		color: var(--mobile-accent);
+	}
+
+	.mobile-stat-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 12px;
+		margin-top: 18px;
+	}
+
+	.mobile-stat {
+		padding: 16px;
+		border-radius: 18px;
+		background: var(--mobile-surface-strong);
+		border: 1px solid var(--mobile-border);
+	}
+
+	.mobile-stat-label {
+		display: block;
+		font-size: 12px;
+		color: var(--mobile-muted);
+		margin-bottom: 8px;
+	}
+
+	.mobile-stat-value {
+		display: block;
+		font-size: 28px;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.mobile-stat-note {
+		display: block;
+		font-size: 12px;
+		margin-top: 10px;
+		color: var(--mobile-muted);
+	}
+
+	.mobile-location-grid,
+	.mobile-payroll-grid,
+	.mobile-insight-grid,
+	.mobile-form-grid {
+		display: grid;
+		gap: 12px;
+		margin-top: 18px;
+	}
+
+	.mobile-location-grid,
+	.mobile-payroll-grid,
+	.mobile-insight-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.mobile-form-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.mobile-card-lite {
+		background: var(--mobile-surface-strong);
+		border: 1px solid var(--mobile-border);
+		border-radius: 18px;
+		padding: 14px;
+	}
+
+	.mobile-card-lite strong,
+	.mobile-card-lite span {
+		display: block;
+	}
+
+	.mobile-card-lite span {
+		font-size: 12px;
+		color: var(--mobile-muted);
+		margin-bottom: 6px;
+	}
+
+	.mobile-field {
+		display: grid;
+		gap: 8px;
+	}
+
+	.mobile-field--full {
+		grid-column: 1 / -1;
+	}
+
+	.mobile-field label {
+		font-size: 13px;
+		font-weight: 700;
+	}
+
+	.mobile-field input,
+	.mobile-field select,
+	.mobile-field textarea {
+		width: 100%;
+		border: 1px solid rgba(25, 48, 40, 0.14);
+		border-radius: 16px;
+		padding: 12px 14px;
+		font: inherit;
+		background: #fff;
+		color: var(--mobile-ink);
+	}
+
+	.mobile-field textarea {
+		min-height: 104px;
+		resize: vertical;
+	}
+
+	.mobile-checkbox {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: 13px;
+		margin-top: 10px;
+		color: var(--mobile-muted);
+	}
+
+	.mobile-checkbox input {
+		width: 18px;
+		height: 18px;
+	}
+
+	.mobile-helper-grid {
+		display: grid;
+		gap: 10px;
+		margin-top: 16px;
+	}
+
+	.mobile-attachment-list,
+	.mobile-history-list,
+	.mobile-location-list {
+		display: grid;
+		gap: 10px;
+		margin-top: 14px;
+	}
+
+	.mobile-attachment,
+	.mobile-history-item,
+	.mobile-location-item {
+		padding: 12px 14px;
+		border: 1px solid var(--mobile-border);
+		border-radius: 16px;
+		background: #fff;
+	}
+
+	.mobile-attachment strong,
+	.mobile-history-item strong,
+	.mobile-location-item strong {
+		display: block;
+		font-size: 14px;
+	}
+
+	.mobile-attachment span,
+	.mobile-history-item span,
+	.mobile-location-item span {
+		display: block;
+		font-size: 12px;
+		margin-top: 4px;
+		color: var(--mobile-muted);
+	}
+
+	.mobile-history-item {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 10px;
+		align-items: start;
+	}
+
+	.mobile-chip-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 14px;
+	}
+
+	.mobile-chip {
+		padding: 7px 10px;
+		border-radius: 999px;
+		background: #f2f5f3;
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	.mobile-empty {
+		padding: 18px;
+		text-align: center;
+		border-radius: 18px;
+		border: 1px dashed rgba(25, 48, 40, 0.16);
+		color: var(--mobile-muted);
+		margin-top: 14px;
+	}
+
+	.mobile-inline-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		flex-wrap: wrap;
+		margin-top: 14px;
+	}
+
+	.mobile-timestamp {
+		font-size: 13px;
+		color: var(--mobile-muted);
+	}
+
+	.mobile-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: currentColor;
+	}
+
+	.mobile-link {
+		color: var(--mobile-accent);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	.mobile-link:hover {
+		text-decoration: underline;
+	}
+
+	.mobile-hidden {
+		display: none !important;
+	}
+
+	body.mobile-pwa-locked {
+		overflow: hidden;
+	}
+
+	.mobile-pwa-gate {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		background: rgba(18, 33, 28, 0.74);
+		backdrop-filter: blur(10px);
+		display: grid;
+		place-items: center;
+		padding: 20px;
+	}
+
+	.mobile-pwa-card {
+		width: min(520px, 100%);
+		background: #fffdf8;
+		border-radius: 28px;
+		padding: 24px;
+		box-shadow: 0 28px 60px rgba(0, 0, 0, 0.2);
+		border: 1px solid rgba(23, 104, 79, 0.12);
+	}
+
+	.mobile-pwa-card h2 {
+		margin: 0 0 10px;
+		font-size: 28px;
+	}
+
+	.mobile-pwa-card p {
+		margin: 0;
+		line-height: 1.8;
+		color: var(--mobile-muted);
+	}
+
+	.mobile-pwa-checklist {
+		display: grid;
+		gap: 10px;
+		margin: 18px 0 0;
+	}
+
+	.mobile-pwa-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 12px 14px;
+		border-radius: 16px;
+		background: #f5f7f5;
+		font-size: 14px;
+	}
+
+	.mobile-pwa-item strong {
+		color: var(--mobile-accent);
+	}
+
+	.mobile-camera-tray {
+		margin-top: 14px;
+		padding: 14px;
+		border-radius: 18px;
+		border: 1px solid var(--mobile-border);
+		background: #f8fbf9;
+	}
+
+	.mobile-camera-video {
+		width: 100%;
+		border-radius: 16px;
+		background: #0f1714;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+	}
+
+	.mobile-camera-note {
+		margin-top: 10px;
+		font-size: 12px;
+		color: var(--mobile-muted);
+	}
+
+	@media (max-width: 980px) {
+		.mobile-hero-grid,
+		.mobile-main-grid,
+		.mobile-form-grid,
+		.mobile-location-grid,
+		.mobile-payroll-grid,
+		.mobile-insight-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.mobile-panel--status,
+		.mobile-panel--location,
+		.mobile-panel--verification,
+		.mobile-panel--leave,
+		.mobile-panel--insights,
+		.mobile-panel--history {
+			grid-column: span 12;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.mobile-attendance-shell {
+			padding: 14px 12px 44px;
+		}
+
+		.mobile-hero,
+		.mobile-panel,
+		.mobile-user-card {
+			border-radius: 22px;
+		}
+
+		.mobile-hero {
+			padding: 18px;
+		}
+
+		.mobile-panel,
+		.mobile-user-card {
+			padding: 16px;
+		}
+
+		.mobile-stat-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="mobile-attendance-shell" dir="{{ text_direction or 'rtl' }}">
+	<div id="mobile-banner" class="mobile-banner" role="status" aria-live="polite"></div>
+	<div id="pwa-gate" class="mobile-pwa-gate mobile-hidden">
+		<div class="mobile-pwa-card">
+			<h2 id="pwa-title">تثبيت تطبيق الحضور مطلوب</h2>
+			<p id="pwa-description">صفحة الحضور تعمل كتطبيق جوال مستقل. ثبّت التطبيق، ثم اسمح بالموقع والإشعارات لاستخدامه.</p>
+			<div class="mobile-pwa-checklist">
+				<div class="mobile-pwa-item"><span id="pwa-install-label">تثبيت التطبيق</span><strong id="pwa-install-status">قيد الانتظار</strong></div>
+				<div class="mobile-pwa-item"><span id="pwa-location-label">إذن الموقع</span><strong id="pwa-location-status">قيد الانتظار</strong></div>
+				<div class="mobile-pwa-item"><span id="pwa-notification-label">الإشعارات</span><strong id="pwa-notification-status">قيد الانتظار</strong></div>
+			</div>
+			<div class="mobile-actions">
+				<button type="button" class="mobile-button" id="pwa-install-action">تثبيت التطبيق</button>
+				<button type="button" class="mobile-secondary-button" id="pwa-permission-action">السماح بالصلاحيات</button>
+			</div>
+			<p id="pwa-hint" style="margin-top: 14px;">على iPhone استخدم Share ثم Add to Home Screen. على Android سيظهر لك زر التثبيت مباشرة عندما يكون متاحًا.</p>
+		</div>
+	</div>
+
+	<section class="mobile-hero">
+		<div class="mobile-hero-grid">
+			<div>
+				<div class="mobile-kicker">
+					<span class="mobile-dot"></span>
+					<strong>Saudi HR Mobile</strong>
+					<span>حضور ذكي وربط مباشر مع الإجازات</span>
+				</div>
+				<h1>الحضور والانصراف وطلبات الإجازة من شاشة واحدة</h1>
+				<p>
+					الصفحة تعتمد على GPS، وتعرض موقع الفرع المعتمد، وتدعم إرفاق صورة الوجه أو تسجيل صوتي
+					كتحقق إضافي، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.
+				</p>
+			</div>
+			<div class="mobile-user-card">
+				<div class="mobile-user-row">
+					<div id="employee-avatar" class="mobile-avatar mobile-avatar-fallback">{{ ((full_name if full_name is defined else 'U') or 'U')[:1] | upper }}</div>
+					<div class="mobile-user-meta">
+						<h2 id="employee-name">{{ (full_name if full_name is defined else '') | e }}</h2>
+						<p id="employee-role">جاري تحميل بياناتك الوظيفية...</p>
+					</div>
+				</div>
+				<div class="mobile-pill-row" id="employee-pills">
+					<span class="mobile-pill is-accent">جاهز للمزامنة</span>
+				</div>
+				<div class="mobile-inline-row">
+					<span class="mobile-timestamp" id="live-clock">--:--</span>
+					<button type="button" class="mobile-ghost-button" id="reload-dashboard">تحديث البيانات</button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<div class="mobile-main-grid">
+		<section class="mobile-panel mobile-panel--status">
+			<h3>سجل اليوم</h3>
+			<p>تبديل الحضور والانصراف يعتمد على آخر حركة مسجلة اليوم وعلى موقعك الحالي.</p>
+			<div class="mobile-stat-grid">
+				<div class="mobile-stat">
+					<span class="mobile-stat-label">الحالة الحالية</span>
+					<span class="mobile-stat-value" id="attendance-mode">--</span>
+					<span class="mobile-stat-note" id="attendance-last-event">لا توجد حركة بعد</span>
+				</div>
+				<div class="mobile-stat">
+					<span class="mobile-stat-label">ساعات اليوم</span>
+					<span class="mobile-stat-value" id="attendance-hours">0</span>
+					<span class="mobile-stat-note" id="attendance-summary">سيتم احتسابها عند تسجيل الانصراف</span>
+				</div>
+			</div>
+			<div class="mobile-chip-row" id="today-checkin-chip-row"></div>
+			<div class="mobile-actions">
+				<button type="button" class="mobile-button" id="attendance-action">جاري التحميل...</button>
+				<button type="button" class="mobile-secondary-button" id="gps-refresh">تحديث موقعي</button>
+			</div>
+		</section>
+
+		<section class="mobile-panel mobile-panel--location">
+			<h3>موقع الفرع المعتمد</h3>
+			<p>يعرض موقع الفرع وحدود المسافة المسموحة، مع قائمة المواقع المتاحة للموظف حسب فرعه وصلاحياته.</p>
+			<div class="mobile-location-grid" id="branch-location-grid"></div>
+			<div class="mobile-inline-row">
+				<span class="panel-hint" id="gps-status">GPS غير محدد بعد</span>
+				<a id="location-map-link" class="mobile-link mobile-hidden" href="#" target="_blank" rel="noopener">فتح على الخريطة</a>
+			</div>
+			<div id="available-locations" class="mobile-location-list"></div>
+		</section>
+
+		<section class="mobile-panel mobile-panel--verification">
+			<h3>تحقق إضافي</h3>
+			<p>يمكنك إرفاق صورة وجه، أو تسجيل صوتي، أو ملفات داعمة مع حركة الحضور. جاهزية بصمة الجهاز تظهر كمؤشر تقني فقط.</p>
+			<div class="mobile-helper-grid">
+				<div class="mobile-card-lite">
+					<span>جاهزية بصمة/وجه الجهاز</span>
+					<strong id="biometric-status">جاري الفحص...</strong>
+				</div>
+				<div class="mobile-card-lite">
+					<span>ملاحظات التحقق</span>
+					<strong id="verification-note-status">بدون ملاحظة</strong>
+				</div>
+			</div>
+			<div class="mobile-form-grid">
+				<div class="mobile-field mobile-field--full">
+					<label for="attendance-note">ملاحظة الحضور</label>
+					<textarea id="attendance-note" placeholder="مثال: حضور من بوابة المستودع، أو ملاحظة عن التحقق الصوتي"></textarea>
+				</div>
+				<div class="mobile-field">
+					<label for="attendance-face-input">صورة وجه / صورة إثبات</label>
+					<input id="attendance-face-input" type="file" accept="image/*" capture="user">
+				</div>
+				<div class="mobile-field">
+					<label for="attendance-files-input">ملفات داعمة إضافية</label>
+					<input id="attendance-files-input" type="file" multiple>
+				</div>
+			</div>
+			<div class="mobile-actions">
+				<button type="button" class="mobile-secondary-button" id="open-face-camera">فتح كاميرا الوجه</button>
+				<button type="button" class="mobile-secondary-button" id="record-audio">بدء تسجيل صوتي</button>
+				<button type="button" class="mobile-ghost-button" id="clear-attendance-attachments">مسح المرفقات</button>
+			</div>
+			<div id="face-camera-tray" class="mobile-camera-tray mobile-hidden">
+				<video id="face-camera-preview" class="mobile-camera-video" autoplay playsinline muted></video>
+				<div class="mobile-actions">
+					<button type="button" class="mobile-button" id="capture-face-photo">التقاط الصورة</button>
+					<button type="button" class="mobile-ghost-button" id="close-face-camera">إغلاق الكاميرا</button>
+				</div>
+				<div id="face-camera-note" class="mobile-camera-note">سيتم حفظ الصورة مباشرة كمرفق تحقق للوجه.</div>
+			</div>
+			<div id="attendance-attachments" class="mobile-attachment-list"></div>
+		</section>
+
+		<section class="mobile-panel mobile-panel--leave">
+			<h3>طلب إجازة من الجوال</h3>
+			<p>يدعم الإجازة السنوية والمرضية والخاصة والأمومة/الأبوة مع المرفقات والحقول النظامية ذات الصلة.</p>
+			<form id="leave-request-form">
+				<div class="mobile-form-grid">
+					<div class="mobile-field">
+						<label for="leave-request-type">نوع الطلب</label>
+						<select id="leave-request-type" required>
+							<option value="annual">Annual Leave / إجازة سنوية</option>
+							<option value="sick">Sick Leave / إجازة مرضية</option>
+							<option value="special">Special Leave / إجازة خاصة</option>
+							<option value="maternity_paternity">Maternity / Paternity / أمومة وأبوة</option>
+						</select>
+					</div>
+					<div class="mobile-field">
+						<label for="leave-subtype">التصنيف الفرعي</label>
+						<select id="leave-subtype"></select>
+					</div>
+					<div class="mobile-field">
+						<label for="leave-start-date">من تاريخ</label>
+						<input id="leave-start-date" type="date" required>
+					</div>
+					<div class="mobile-field">
+						<label for="leave-end-date">إلى تاريخ</label>
+						<input id="leave-end-date" type="date">
+					</div>
+					<div class="mobile-field mobile-field--full">
+						<label for="leave-reason">المبرر / الوصف</label>
+						<textarea id="leave-reason" placeholder="أضف وصفًا مختصرًا للطلب أو المرفق"></textarea>
+					</div>
+					<div class="mobile-field mobile-field--full mobile-hidden" id="leave-balance-wrapper">
+						<label>رصيد الإجازة السنوية</label>
+						<div class="mobile-card-lite"><strong id="leave-balance">--</strong></div>
+					</div>
+					<div class="mobile-field mobile-hidden" id="medical-certificate-wrapper">
+						<label for="medical-certificate-no">رقم التقرير الطبي</label>
+						<input id="medical-certificate-no" type="text">
+					</div>
+					<div class="mobile-field mobile-hidden" id="hospital-name-wrapper">
+						<label for="hospital-name">اسم المستشفى</label>
+						<input id="hospital-name" type="text">
+					</div>
+					<div class="mobile-field mobile-hidden" id="relationship-wrapper">
+						<label for="relationship-to-deceased">صلة القرابة</label>
+						<input id="relationship-to-deceased" type="text">
+					</div>
+					<div class="mobile-field mobile-hidden" id="expected-delivery-wrapper">
+						<label for="expected-delivery-date">تاريخ الولادة المتوقع</label>
+						<input id="expected-delivery-date" type="date">
+					</div>
+					<div class="mobile-field mobile-hidden" id="actual-delivery-wrapper">
+						<label for="actual-delivery-date">تاريخ الولادة الفعلي</label>
+						<input id="actual-delivery-date" type="date">
+					</div>
+				</div>
+				<label class="mobile-checkbox" id="half-day-wrapper">
+					<input id="leave-half-day" type="checkbox">
+					<span>نصف يوم</span>
+				</label>
+				<div class="mobile-field mobile-field--full" style="margin-top: 12px;">
+					<label for="leave-files-input">مرفقات الطلب</label>
+					<input id="leave-files-input" type="file" multiple>
+				</div>
+				<div class="mobile-actions">
+					<button type="submit" class="mobile-button" id="submit-leave-request">إرسال الطلب</button>
+					<button type="button" class="mobile-ghost-button" id="clear-leave-attachments">مسح المرفقات</button>
+				</div>
+			</form>
+			<div id="leave-attachments" class="mobile-attachment-list"></div>
+		</section>
+
+		<section class="mobile-panel mobile-panel--insights">
+			<div class="mobile-inline-row">
+				<div>
+					<h3>إحصائيات الحضور والخصومات</h3>
+					<p>لوحة شهرية سريعة للدوام، ساعات العمل، التأخير، والعمل الإضافي والخصومات المرتبطة بالراتب.</p>
+				</div>
+				<div class="mobile-field" style="min-width: 180px;">
+					<label for="insights-month">الشهر</label>
+					<input id="insights-month" type="month">
+				</div>
+			</div>
+			<div id="insights-grid" class="mobile-insight-grid"></div>
+			<div id="payroll-grid" class="mobile-payroll-grid"></div>
+		</section>
+
+		<section class="mobile-panel mobile-panel--history">
+			<h3>آخر طلبات الإجازة</h3>
+			<p>يتم تحديث القائمة مباشرة بعد إنشاء الطلب لإعطاء الموظف صورة واضحة عن حالة المتابعة.</p>
+			<div id="recent-leave-requests" class="mobile-history-list"></div>
+		</section>
+	</div>
 </div>
 
-<!-- ── PWA Install Banner ────────────────────────────────────── -->
-<div id="installBanner">
-  <div class="install-row">
-    <div class="install-app-icon">🏢</div>
-    <div class="install-text">
-      <h3>حضور الموظفين — Saudi HR</h3>
-      <p>ثبّت التطبيق على شاشتك الرئيسية للوصول السريع بدون متصفح</p>
-    </div>
-    <button class="install-close" id="installClose" aria-label="إغلاق">✕</button>
-  </div>
-  <!-- Android/Chrome: install button -->
-  <button class="install-btn" id="installBtn">
-    <span>📲</span> <span>تثبيت التطبيق</span>
-  </button>
-  <!-- iOS/Safari: manual steps -->
-  <div class="ios-steps" id="iosSteps">
-    لتثبيت التطبيق على iPhone:<br>
-    ١. اضغط على زر <span>المشاركة ↑</span> في شريط المتصفح<br>
-    ٢. اختر <span>"إضافة إلى الشاشة الرئيسية"</span><br>
-    ٣. اضغط <span>إضافة</span>
-  </div>
-</div>
-
-<!-- ── Header ──────────────────────────────────────────────── -->
-<header class="header">
-  <div class="header-logo">Saudi <span>HR</span></div>
-  <div class="header-user" id="headerUser">جارٍ التحميل...</div>
-</header>
-
-<!-- ── Main Content ─────────────────────────────────────────── -->
-<main class="main">
-
-  <!-- Clock -->
-  <div class="clock-bar">
-    <div class="clock-time" id="clockTime">--:--</div>
-    <div class="clock-date" id="clockDate"></div>
-  </div>
-
-  <!-- Status Card -->
-  <div class="status-card absent" id="statusCard">
-    <div class="status-icon" id="statusIcon">🕐</div>
-    <div class="status-info">
-      <h2 id="statusTitle">جارٍ التحميل...</h2>
-      <p id="statusSub"></p>
-    </div>
-  </div>
-
-  <!-- Location Card -->
-  <div class="location-card" id="locationCard">
-    <div class="location-header">
-      <span class="loc-icon">📍</span>
-      <span class="loc-title" id="branchName">جارٍ تحديد الموقع...</span>
-    </div>
-    <div class="location-rows">
-      <div class="location-row">
-        <span class="label">المسافة عن الفرع</span>
-        <span class="distance-pill warning" id="distancePill">
-          <span id="distanceText">جارٍ القياس...</span>
-        </span>
-      </div>
-      <div class="location-row">
-        <span class="label">النطاق المسموح</span>
-        <span class="value" id="radiusText">--</span>
-      </div>
-    </div>
-    <div class="gps-status">
-      <div class="gps-dot" id="gpsDot"></div>
-      <span id="gpsStatusText">في انتظار GPS...</span>
-    </div>
-  </div>
-
-  <!-- Map -->
-  <div class="map-card" id="mapCard">
-    <div class="map-head">
-      <div class="map-title">🗺️ الخريطة</div>
-      <a class="map-link hidden" id="mapLink" href="#" target="_blank" rel="noopener">فتح في الخريطة</a>
-    </div>
-    <div class="map-frame" id="mapCanvas"></div>
-    <div class="map-empty" id="mapEmpty">سيتم عرض موقع الفرع أو موقعك الحالي هنا عند توفره.</div>
-    <div class="map-caption" id="mapCaption">عرض بصري لموقع الحضور للتحقق السريع.</div>
-  </div>
-
-  <!-- Action Button -->
-  <button class="action-btn checkin" id="actionBtn" disabled>
-    <span class="btn-spinner"></span>
-    <span class="btn-icon" id="btnIcon">✅</span>
-    <span class="btn-label" id="btnLabel">تسجيل الحضور</span>
-  </button>
-
-  <!-- Today's Summary (shown after attendance is submitted) -->
-  <div class="summary-card" id="summaryCard" style="display:none">
-    <div class="summary-title">📊 ملخص اليوم</div>
-    <div class="summary-row">
-      <span class="summary-key">وقت الحضور</span>
-      <span class="summary-val" id="sumIn">--</span>
-    </div>
-    <div class="summary-row">
-      <span class="summary-key">وقت الانصراف</span>
-      <span class="summary-val" id="sumOut">--</span>
-    </div>
-    <div class="summary-row">
-      <span class="summary-key">ساعات العمل</span>
-      <span class="summary-val" id="sumHours">--</span>
-    </div>
-  </div>
-
-  <!-- History -->
-  <div class="history-card">
-    <div class="history-title">🗓 سجل اليوم</div>
-    <div id="historyList"><div class="history-empty">لا يوجد سجل اليوم</div></div>
-  </div>
-
-</main>
-
-<!-- ── Toast ─────────────────────────────────────────────────── -->
-<div id="toast"></div>
-
-<script>window.frappe = window.frappe || {};</script>
-<!-- csrf_token -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-/* ────────────────────────────────────────────────────────────────────
-   Saudi HR Mobile Attendance PWA
-   All logic is self-contained here — no external JS dependencies.
-──────────────────────────────────────────────────────────────────── */
-
-const API_BASE = "/api/method/saudi_hr.saudi_hr.api";
-let state = {
-  loading: true,
-  gpsReady: false,
-  withinRadius: false,
-  canCheckinWithoutGPS: false,
-  lat: null,
-  lon: null,
-  location: null,     // branch location record
-  lastLogType: null,  // "IN" | "OUT" | null
-  attendance: null,   // today's submitted attendance
-  watchId: null,
-  map: null,
-  branchMarker: null,
-  currentMarker: null,
-  pathLine: null,
-};
-
-// ─── CSRF token from cookie ───────────────────────────────────────
-function getCsrf() {
-  const m = document.cookie.match(/csrftoken=([^;]+)/);
-  if (m) {
-    return decodeURIComponent(m[1]);
-  }
-  if (typeof frappe !== "undefined" && frappe.csrf_token) {
-    return frappe.csrf_token;
-  }
-  return "";
-}
-
-// ─── Frappe API call ──────────────────────────────────────────────
-async function callApi(method, params = {}, options = {}) {
-  const httpMethod = options.httpMethod || "POST";
-  const csrfToken = getCsrf();
-  const form = new FormData();
-  Object.entries(params).forEach(([k, v]) => form.append(k, v));
-  if (csrfToken && httpMethod !== "GET") {
-    form.append("csrf_token", csrfToken);
-  }
-  const res = await fetch(`${API_BASE}.${method}`, {
-    method: httpMethod,
-    headers: csrfToken ? { "X-Frappe-CSRF-Token": csrfToken } : {},
-    body: httpMethod === "GET" ? undefined : form,
-    credentials: "same-origin",
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const msg = err?._server_messages
-      ? JSON.parse(JSON.parse(err._server_messages)[0]).message
-      : (res.status === 403
-        ? "انتهت الجلسة أو تم رفض الطلب. حدّث الصفحة وسجّل الدخول مرة أخرى إذا لزم الأمر."
-        : (err?.exc_type || "خطأ في الاتصال بالخادم"));
-    throw new Error(msg);
-  }
-  const data = await res.json();
-  return data.message;
-}
-
-// ─── Clock ────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  document.getElementById("clockTime").textContent =
-    now.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", hour12: false });
-  document.getElementById("clockDate").textContent =
-    now.toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// ─── Toast ────────────────────────────────────────────────────────
-let toastTimer = null;
-function showToast(msg, type = "info") {
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.className = `show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.className = ""; }, 4000);
-}
-
-// ─── Update UI from state ─────────────────────────────────────────
-function renderStatus() {
-  const card  = document.getElementById("statusCard");
-  const icon  = document.getElementById("statusIcon");
-  const title = document.getElementById("statusTitle");
-  const sub   = document.getElementById("statusSub");
-  const btn   = document.getElementById("actionBtn");
-  const btnIc = document.getElementById("btnIcon");
-  const btnLb = document.getElementById("btnLabel");
-
-  // Status card
-  if (state.attendance) {
-    card.className = "status-card checked-out";
-    icon.textContent = "✅";
-    title.textContent = "تم تسجيل الحضور والانصراف";
-    sub.textContent = "يمكنك مغادرة الصفحة";
-  } else if (state.lastLogType === "IN") {
-    card.className = "status-card present";
-    icon.textContent = "🟢";
-    title.textContent = "أنت حاضر الآن";
-    sub.textContent = "لا تنسَ تسجيل الانصراف عند المغادرة";
-  } else {
-    card.className = "status-card absent";
-    icon.textContent = "🕐";
-    title.textContent = "لم تسجّل حضورك بعد";
-    sub.textContent  = "اضغط الزر عند وصولك للفرع";
-  }
-
-  // Button
-  const isNextIn = (state.lastLogType !== "IN");
-  if (state.attendance) {
-    btn.className = "action-btn checkin";
-    btnIc.textContent = "✅";
-    btnLb.textContent = "تم إغلاق الدوام";
-    btn.disabled = true;
-  } else {
-    btn.className  = isNextIn ? "action-btn checkin" : "action-btn checkout";
-    btnIc.textContent = isNextIn ? "✅" : "🚪";
-    btnLb.textContent = isNextIn ? "تسجيل الحضور" : "تسجيل الانصراف";
-    // Enable immediately if no location restriction exists; otherwise require GPS inside radius.
-    btn.disabled = !(state.canCheckinWithoutGPS || (state.gpsReady && state.withinRadius));
-  }
-}
-
-function hasClosedAttendance() {
-  return Boolean(state.attendance);
-}
-
-function updateLocationMessaging() {
-  const gpsText = document.getElementById("gpsStatusText");
-  const modal = document.getElementById("locationModal");
-  const error = document.getElementById("permError");
-  const allowBtn = document.getElementById("allowLocationBtn");
-
-  if (hasClosedAttendance()) {
-    gpsText.textContent = "تم إغلاق الدوام، ولا حاجة للوصول إلى الموقع الآن";
-    if (modal && !modal.classList.contains("hidden")) {
-      hideLocationModal();
-    }
-    if (error) {
-      error.style.display = "none";
-    }
-    if (allowBtn) {
-      allowBtn.textContent = "📍 السماح بالوصول للموقع";
-      allowBtn.disabled = false;
-    }
-    return;
-  }
-
-  if (!state.location) {
-    gpsText.textContent = state.gpsReady ? gpsText.textContent : "الموقع اختياري حالياً لعدم وجود فرع مقيّد";
-    return;
-  }
-}
-
-function ensureMap() {
-  if (state.map || typeof L === "undefined") {
-    return state.map;
-  }
-  state.map = L.map("mapCanvas", { zoomControl: false });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors",
-  }).addTo(state.map);
-  return state.map;
-}
-
-function setMapView({ branchLat = null, branchLon = null, currentLat = null, currentLon = null, label = "", source = "" } = {}) {
-  const frame = document.getElementById("mapCanvas");
-  const empty = document.getElementById("mapEmpty");
-  const caption = document.getElementById("mapCaption");
-  const link = document.getElementById("mapLink");
-
-  const hasBranch = branchLat !== null && branchLon !== null && !Number.isNaN(Number(branchLat)) && !Number.isNaN(Number(branchLon));
-  const hasCurrent = currentLat !== null && currentLon !== null && !Number.isNaN(Number(currentLat)) && !Number.isNaN(Number(currentLon));
-
-  if (!hasBranch && !hasCurrent) {
-    frame.style.display = "none";
-    empty.style.display = "flex";
-    link.classList.add("hidden");
-    caption.textContent = source || "سيتم عرض موقع الفرع أو موقعك الحالي هنا عند توفره.";
-    return;
-  }
-
-  const map = ensureMap();
-  if (!map) {
-    empty.style.display = "flex";
-    caption.textContent = "تعذّر تحميل مكتبة الخريطة حالياً.";
-    return;
-  }
-
-  frame.style.display = "block";
-  empty.style.display = "none";
-
-  const points = [];
-  if (hasBranch) {
-    const latNum = Number(branchLat);
-    const lonNum = Number(branchLon);
-    points.push([latNum, lonNum]);
-    if (!state.branchMarker) {
-      state.branchMarker = L.marker([latNum, lonNum]).addTo(map).bindPopup("موقع الفرع");
-    } else {
-      state.branchMarker.setLatLng([latNum, lonNum]);
-    }
-  } else if (state.branchMarker) {
-    state.branchMarker.remove();
-    state.branchMarker = null;
-  }
-
-  if (hasCurrent) {
-    const latNum = Number(currentLat);
-    const lonNum = Number(currentLon);
-    points.push([latNum, lonNum]);
-    if (!state.currentMarker) {
-      const currentIcon = L.divIcon({
-        className: "",
-        html: '<div style="width:18px;height:18px;border-radius:999px;background:#e94560;border:3px solid #fff;box-shadow:0 0 0 4px rgba(233,69,96,.2)"></div>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
-      });
-      state.currentMarker = L.marker([latNum, lonNum], { icon: currentIcon }).addTo(map).bindPopup("موقعك الحالي");
-    } else {
-      state.currentMarker.setLatLng([latNum, lonNum]);
-    }
-  } else if (state.currentMarker) {
-    state.currentMarker.remove();
-    state.currentMarker = null;
-  }
-
-  if (state.pathLine) {
-    state.pathLine.remove();
-    state.pathLine = null;
-  }
-
-  if (hasBranch && hasCurrent) {
-    state.pathLine = L.polyline([
-      [Number(branchLat), Number(branchLon)],
-      [Number(currentLat), Number(currentLon)],
-    ], { color: "#f0a500", weight: 3, dashArray: "6,6" }).addTo(map);
-  }
-
-  if (points.length === 1) {
-    map.setView(points[0], 16);
-  } else {
-    map.fitBounds(points, { padding: [28, 28] });
-  }
-
-  setTimeout(() => map.invalidateSize(), 50);
-
-  const targetLat = hasCurrent ? Number(currentLat) : Number(branchLat);
-  const targetLon = hasCurrent ? Number(currentLon) : Number(branchLon);
-  link.href = `https://www.openstreetmap.org/?mlat=${targetLat}&mlon=${targetLon}#map=16/${targetLat}/${targetLon}`;
-  link.classList.remove("hidden");
-  caption.textContent = label || source || "موقع العرض الحالي على الخريطة.";
-}
-
-// ─── Render history list ──────────────────────────────────────────
-function renderHistory(checkins) {
-  const list = document.getElementById("historyList");
-  if (!checkins || checkins.length === 0) {
-    list.innerHTML = '<div class="history-empty">لا يوجد سجل اليوم</div>';
-    return;
-  }
-  list.innerHTML = checkins.map(c => {
-    const t = new Date(c.time);
-    const timeStr = t.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
-    const isIn = c.log_type === "IN";
-    return `
-      <div class="history-row">
-        <span class="history-badge ${isIn ? "in" : "out"}">${isIn ? "حضور" : "انصراف"}</span>
-        <span class="history-time">${timeStr}</span>
-      </div>`;
-  }).join("");
-}
-
-// ─── Render summary ───────────────────────────────────────────────
-function renderSummary(att) {
-  const card = document.getElementById("summaryCard");
-  if (!att) { card.style.display = "none"; return; }
-  card.style.display = "block";
-  document.getElementById("sumIn").textContent    = att.in_time  ? new Date(att.in_time).toLocaleTimeString("ar-SA", { hour:"2-digit", minute:"2-digit", hour12:false }) : "--";
-  document.getElementById("sumOut").textContent   = att.out_time ? new Date(att.out_time).toLocaleTimeString("ar-SA", { hour:"2-digit", minute:"2-digit", hour12:false }) : "--";
-  document.getElementById("sumHours").textContent = att.working_hours ? att.working_hours + " ساعة" : "--";
-}
-
-// ─── Update distance display ──────────────────────────────────────
-function updateDistanceUI(distanceM) {
-  const pill  = document.getElementById("distancePill");
-  const text  = document.getElementById("distanceText");
-  const loc   = state.location;
-  const allowed = loc ? (loc.allowed_radius_meters || 100) : 100;
-
-  if (distanceM === null) {
-    if (!loc) {
-      pill.className = "distance-pill ok";
-      text.textContent = "بدون قيود";
-      state.withinRadius = true;
-    } else {
-      pill.className = "distance-pill warning";
-      text.textContent = "جارٍ القياس...";
-      state.withinRadius = false;
-    }
-    renderStatus();
-    return;
-  }
-
-  const d = Math.round(distanceM);
-  if (!loc) {
-    // No location restriction
-    pill.className = "distance-pill ok";
-    text.textContent = "بدون قيود";
-    state.withinRadius = true;
-    return;
-  }
-
-  text.textContent = d + " متر";
-  if (d <= allowed) {
-    pill.className = "distance-pill ok";
-    state.withinRadius = true;
-  } else if (d <= allowed * 2) {
-    pill.className = "distance-pill warning";
-    state.withinRadius = false;
-  } else {
-    pill.className = "distance-pill error";
-    state.withinRadius = false;
-  }
-  renderStatus();  // re-enable/disable button
-}
-
-// ─── Haversine (client side for display) ─────────────────────────
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371000, p = Math.PI / 180;
-  const a = 0.5 - Math.cos((lat2 - lat1) * p) / 2
-    + Math.cos(lat1 * p) * Math.cos(lat2 * p)
-    * (1 - Math.cos((lon2 - lon1) * p)) / 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-
-// ─── GPS watch ───────────────────────────────────────────────────
-function startGPS() {
-  if (!navigator.geolocation) {
-    document.getElementById("gpsStatusText").textContent = "GPS غير مدعوم في هذا المتصفح";
-    setMapView({
-      branchLat: state.location ? state.location.latitude : null,
-      branchLon: state.location ? state.location.longitude : null,
-      label: state.location ? `موقع الفرع: ${state.location.location_name}` : "GPS غير مدعوم، ولا يوجد موقع فرع معروض.",
-      source: state.location ? "موقع الفرع المعتمد" : "GPS غير مدعوم في هذا المتصفح",
-    });
-    updateLocationMessaging();
-    return;
-  }
-  const dot   = document.getElementById("gpsDot");
-  const gtext = document.getElementById("gpsStatusText");
-
-  const opts = { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 };
-
-  state.watchId = navigator.geolocation.watchPosition(
-    pos => {
-      state.lat     = pos.coords.latitude;
-      state.lon     = pos.coords.longitude;
-      state.gpsReady = true;
-      dot.classList.add("active");
-      gtext.textContent = `دقة GPS: ±${Math.round(pos.coords.accuracy)} متر`;
-
-      setMapView({
-        branchLat: state.location ? state.location.latitude : null,
-        branchLon: state.location ? state.location.longitude : null,
-        currentLat: state.lat,
-        currentLon: state.lon,
-        label: state.location ? `الفرع وموقعك الحالي على الخريطة` : "موقعك الحالي",
-        source: state.location ? "يعرض موقع الفرع مع موقعك الحالي" : "موقعك الحالي على الخريطة",
-      });
-
-      if (state.location) {
-        const d = haversine(state.lat, state.lon, state.location.latitude, state.location.longitude);
-        updateDistanceUI(d);
-      } else {
-        updateDistanceUI(null);
-        state.withinRadius = true;
-      }
-      updateLocationMessaging();
-      renderStatus();
-    },
-    err => {
-      dot.classList.remove("active");
-      gtext.textContent = hasClosedAttendance()
-        ? "تم إغلاق الدوام، ولا حاجة للوصول إلى الموقع الآن"
-        : (!state.location ? "الموقع اختياري حالياً" : (err.code === 1 ? "❌ يرجى السماح بإذن الموقع" : "⚠️ تعذّر تحديد الموقع"));
-      setMapView({
-        branchLat: state.location ? state.location.latitude : null,
-        branchLon: state.location ? state.location.longitude : null,
-        label: state.location ? `موقع الفرع: ${state.location.location_name}` : "لا يوجد موقع متاح للعرض حالياً",
-        source: state.location ? "موقع الفرع المعتمد" : "لا يوجد فرع محدد ولا موقع حالي",
-      });
-      if (!state.location) {
-        state.canCheckinWithoutGPS = true;
-        state.withinRadius = true;
-      }
-      updateLocationMessaging();
-      renderStatus();
-    },
-    opts
-  );
-}
-
-// ─── Load status from server ──────────────────────────────────────
-async function loadStatus() {
-  try {
-    const data = await callApi("get_attendance_status", {}, { httpMethod: "GET" });
-    state.lastLogType = data.last_log_type;
-    state.location    = data.location || null;
-    state.attendance  = data.today_attendance || null;
-    state.canCheckinWithoutGPS = !state.location;
-
-    // Update header with employee name
-    document.getElementById("headerUser").textContent = data.employee_name || "";
-
-    // Branch name
-    document.getElementById("branchName").textContent =
-      data.location ? data.location.location_name : (data.branch || "لم يُحدَّد الفرع");
-    document.getElementById("radiusText").textContent =
-      data.location ? (data.location.allowed_radius_meters || 100) + " متر" : "بدون قيود";
-
-    setMapView({
-      branchLat: data.location ? data.location.latitude : null,
-      branchLon: data.location ? data.location.longitude : null,
-      label: data.location ? `موقع الفرع: ${data.location.location_name}` : "لا يوجد فرع محدد، وسيُعرض موقعك الحالي عند السماح بالوصول للموقع.",
-      source: data.location ? "موقع الفرع المعتمد" : "لا يوجد موقع فرع معتمد لهذا الموظف",
-    });
-
-    renderHistory(data.today_checkins);
-    renderSummary(data.today_attendance);
-    updateLocationMessaging();
-    renderStatus();
-  } catch (e) {
-    showToast(e.message || "خطأ في تحميل البيانات", "error");
-    // Update status card to show error state
-    const card  = document.getElementById("statusCard");
-    const icon  = document.getElementById("statusIcon");
-    const title = document.getElementById("statusTitle");
-    const sub   = document.getElementById("statusSub");
-    card.className = "status-card absent";
-    icon.textContent = "⚠️";
-    title.textContent = e.message || "خطأ في تحميل البيانات";
-    sub.textContent = "يرجى التواصل مع المسؤول";
-    document.getElementById("headerUser").textContent = "";
-  }
-}
-
-// ─── Check-in / Check-out handler ────────────────────────────────
-async function doCheckin() {
-  const btn = document.getElementById("actionBtn");
-  if (btn.disabled) return;
-
-  if (!state.gpsReady || state.lat === null) {
-    if (state.canCheckinWithoutGPS) {
-      state.lat = null;
-      state.lon = null;
-    } else {
-      showToast("في انتظار GPS... يرجى الانتظار لحظة", "error");
-      return;
-    }
-  }
-
-  // Loading state
-  btn.classList.add("loading-btn");
-  btn.disabled = true;
-
-  try {
-    const result = await callApi("do_mobile_checkin", {
-      latitude:  state.lat,
-      longitude: state.lon,
-    });
-
-    showToast(result.message, "success");
-    state.lastLogType = result.log_type === "IN" ? "IN" : "OUT";
-    if (result.attendance_name) {
-      // Reload full status to get attendance details
-      await loadStatus();
-    } else {
-      // Just update history
-      await loadStatus();
-    }
-  } catch (e) {
-    showToast(e.message || "فشل تسجيل الحضور", "error");
-    btn.disabled = false;
-  } finally {
-    btn.classList.remove("loading-btn");
-    renderStatus();
-  }
-}
-
-document.getElementById("actionBtn").addEventListener("click", doCheckin);
-
-// ─── PWA Install Prompt ───────────────────────────────────────────
-let deferredInstallPrompt = null;
-
-window.addEventListener("beforeinstallprompt", e => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  // Show banner after short delay (after location modal)
-  setTimeout(showInstallBanner, 1500);
-});
-
-window.addEventListener("appinstalled", () => {
-  hideInstallBanner();
-  deferredInstallPrompt = null;
-});
-
-function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
-}
-function isInStandaloneMode() {
-  return window.matchMedia("(display-mode: standalone)").matches
-    || window.navigator.standalone === true;
-}
-
-function showInstallBanner() {
-  // Don't show if already installed as PWA
-  if (isInStandaloneMode()) return;
-  // Don't show if modal is still visible (may have been removed from DOM already)
-  const modal = document.getElementById("locationModal");
-  if (modal && !modal.classList.contains("hidden")) return;
-  const banner = document.getElementById("installBanner");
-  const installBtn = document.getElementById("installBtn");
-  const iosSteps   = document.getElementById("iosSteps");
-  if (isIOS()) {
-    installBtn.style.display = "none";
-    iosSteps.style.display   = "block";
-  }
-  banner.classList.add("visible");
-}
-
-function hideInstallBanner() {
-  document.getElementById("installBanner").classList.remove("visible");
-}
-
-document.getElementById("installClose").addEventListener("click", hideInstallBanner);
-
-document.getElementById("installBtn").addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  const { outcome } = await deferredInstallPrompt.userChoice;
-  if (outcome === "accepted") hideInstallBanner();
-  deferredInstallPrompt = null;
-});
-
-// ─── Location Permission Modal ────────────────────────────────────
-function hideLocationModal() {
-  const modal = document.getElementById("locationModal");
-  if (!modal) return;
-  modal.classList.add("hidden");
-  setTimeout(() => modal.remove(), 300);
-  // After modal closes, show install banner if deferred
-  if (deferredInstallPrompt && !isInStandaloneMode()) {
-    setTimeout(showInstallBanner, 800);
-  } else if (isIOS() && !isInStandaloneMode()) {
-    setTimeout(showInstallBanner, 800);
-  }
-}
-
-async function requestLocation() {
-  if (hasClosedAttendance()) {
-    hideLocationModal();
-    return;
-  }
-  const btn = document.getElementById("allowLocationBtn");
-  const errEl = document.getElementById("permError");
-  btn.textContent = "⏳ جارٍ التفعيل...";
-  btn.disabled = true;
-  errEl.style.display = "none";
-
-  if (!navigator.geolocation) {
-    errEl.textContent = "⚠️ المتصفح لا يدعم خدمة الموقع";
-    errEl.style.display = "block";
-    btn.textContent = "📍 السماح بالوصول للموقع";
-    btn.disabled = false;
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    () => {
-      // Permission granted
-      hideLocationModal();
-    },
-    err => {
-      btn.textContent = "📍 المحاولة مجدداً";
-      btn.disabled = false;
-      if (err.code === 1) {
-        errEl.textContent = "❌ تم رفض إذن الموقع. افتح إعدادات المتصفح ← المواقع ← السماح لهذا الموقع.";
-      } else {
-        errEl.textContent = "⚠️ تعذّر تحديد الموقع. تأكد من تفعيل GPS.";
-      }
-      errEl.style.display = "block";
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-}
-
-document.getElementById("allowLocationBtn").addEventListener("click", requestLocation);
-document.getElementById("skipLocationBtn").addEventListener("click", hideLocationModal);
-
-// ─── Boot ────────────────────────────────────────────────────────
-async function boot() {
-  updateClock();
-
-  await loadStatus();
-
-  if (hasClosedAttendance()) {
-    hideLocationModal();
-    const overlay = document.getElementById("loading");
-    overlay.classList.add("hidden");
-    setTimeout(() => overlay.remove(), 500);
-    if (isIOS() && !isInStandaloneMode()) {
-      setTimeout(showInstallBanner, 2000);
-    }
-    return;
-  }
-
-  // Check if location permission already granted → skip modal
-  if (navigator.permissions) {
-    try {
-      const perm = await navigator.permissions.query({ name: "geolocation" });
-      if (perm.state === "granted") {
-        hideLocationModal();
-      }
-      // If denied or prompt → keep modal visible
-      if (perm.state === "denied") {
-        document.getElementById("permError").textContent =
-          "❌ تم رفض إذن الموقع. افتح إعدادات المتصفح ← المواقع ← السماح لهذا الموقع.";
-        document.getElementById("permError").style.display = "block";
-        document.getElementById("allowLocationBtn").textContent = "⚙️ فتح الإعدادات";
-      }
-    } catch(_) {
-      // permissions API not available → show modal
-    }
-  }
-
-  startGPS();
-  // Hide loading overlay
-  const overlay = document.getElementById("loading");
-  overlay.classList.add("hidden");
-  setTimeout(() => overlay.remove(), 500);
-
-  // Show iOS install banner if on iOS Safari (not installed)
-  if (isIOS() && !isInStandaloneMode()) {
-    setTimeout(showInstallBanner, 2000);
-  }
-}
-
-boot();
+	(() => {
+		const CURRENT_USER = {{ (frappe.session.user if frappe and frappe.session else "Guest") | tojson }};
+		const LANG_CODE = {{ (lang_code or "ar") | tojson }};
+		let IS_ENGLISH = LANG_CODE.startsWith("en");
+		let IS_RTL = !IS_ENGLISH;
+		let LOCALE = IS_ENGLISH ? "en-US" : "ar-SA";
+		const TEXT = {
+			ar: {
+				pageTitle: "حضور الموظفين | Saudi HR",
+				kickerBody: "حضور ذكي وربط مباشر مع الإجازات",
+				heroTitle: "الحضور والانصراف وطلبات الإجازة من شاشة واحدة",
+				heroBody: "الصفحة تعتمد على GPS، وتعرض موقع الفرع المعتمد، وتدعم إرفاق صورة الوجه أو تسجيل صوتي كتحقق إضافي، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.",
+				reloadData: "تحديث البيانات",
+				statusTitle: "سجل اليوم",
+				statusBody: "تبديل الحضور والانصراف يعتمد على آخر حركة مسجلة اليوم وعلى موقعك الحالي.",
+				currentStatus: "الحالة الحالية",
+				todayHours: "ساعات اليوم",
+				refreshLocation: "تحديث موقعي",
+				locationTitle: "موقع الفرع المعتمد",
+				locationBody: "يعرض موقع الفرع وحدود المسافة المسموحة، مع قائمة المواقع المتاحة للموظف حسب فرعه وصلاحياته.",
+				openMap: "فتح على الخريطة",
+				verificationTitle: "تحقق إضافي",
+				verificationBody: "يمكنك إرفاق صورة وجه، أو تسجيل صوتي، أو ملفات داعمة مع حركة الحضور. جاهزية بصمة الجهاز تظهر كمؤشر تقني فقط.",
+				biometricReady: "جاهزية بصمة/وجه الجهاز",
+				verificationNote: "ملاحظات التحقق",
+				attendanceNote: "ملاحظة الحضور",
+				attendanceNotePlaceholder: "مثال: حضور من بوابة المستودع، أو ملاحظة عن التحقق الصوتي",
+				faceProof: "صورة وجه / صورة إثبات",
+				supportFiles: "ملفات داعمة إضافية",
+				openCamera: "فتح كاميرا الوجه",
+				recordAudio: "بدء تسجيل صوتي",
+				stopAudio: "إيقاف التسجيل الصوتي",
+				clearAttachments: "مسح المرفقات",
+				capturePhoto: "التقاط الصورة",
+				closeCamera: "إغلاق الكاميرا",
+				cameraNote: "سيتم حفظ الصورة مباشرة كمرفق تحقق للوجه.",
+				leaveTitle: "طلب إجازة من الجوال",
+				leaveBody: "يدعم الإجازة السنوية والمرضية والخاصة والأمومة/الأبوة مع المرفقات والحقول النظامية ذات الصلة.",
+				requestType: "نوع الطلب",
+				subtype: "التصنيف الفرعي",
+				fromDate: "من تاريخ",
+				toDate: "إلى تاريخ",
+				reason: "المبرر / الوصف",
+				reasonPlaceholder: "أضف وصفًا مختصرًا للطلب أو المرفق",
+				annualBalance: "رصيد الإجازة السنوية",
+				medicalCertificate: "رقم التقرير الطبي",
+				hospitalName: "اسم المستشفى",
+				relationship: "صلة القرابة",
+				expectedDelivery: "تاريخ الولادة المتوقع",
+				actualDelivery: "تاريخ الولادة الفعلي",
+				halfDay: "نصف يوم",
+				leaveAttachments: "مرفقات الطلب",
+				submitRequest: "إرسال الطلب",
+				insightsTitle: "إحصائيات الحضور والخصومات",
+				insightsBody: "لوحة شهرية سريعة للدوام، ساعات العمل، التأخير، والعمل الإضافي والخصومات المرتبطة بالراتب.",
+				month: "الشهر",
+				historyTitle: "آخر طلبات الإجازة",
+				historyBody: "يتم تحديث القائمة مباشرة بعد إنشاء الطلب لإعطاء الموظف صورة واضحة عن حالة المتابعة.",
+				cameraAttachment: "صورة وجه / صورة تحقق",
+				voiceAttachment: "تسجيل صوتي",
+				fileAttachment: "مرفق داعم",
+				voicePending: "سيضاف كتسجيل صوتي",
+				readyToSend: "جاهز للإرسال",
+				remove: "إزالة",
+				noAttendanceAttachments: "لا توجد مرفقات لحركة الحضور.",
+				noLeaveAttachments: "لا توجد مرفقات لطلب الإجازة.",
+				loginRequired: "يجب تسجيل الدخول للوصول إلى خدمة الحضور عبر الجوال.",
+				genericFailure: "تعذر إتمام العملية. حاول مرة أخرى.",
+				noEmployeeTitle: "الحساب غير مربوط بموظف",
+				noEmployeeBody: "اربط المستخدم الحالي بسجل Employee نشط لاستخدام صفحة الحضور.",
+				noEmployeePill: "يلزم ربط حساب المستخدم بسجل موظف نشط",
+				employeeDefault: "الموظف",
+				noJobTitle: "بدون مسمى وظيفي",
+				profileIncomplete: "الملف الوظيفي يحتاج استكمال بيانات",
+				statusUnavailable: "غير متاح",
+				statusBlocked: "لا يمكن تحميل الحضور قبل ربط الحساب بسجل موظف.",
+				statusAutoAfterLink: "بعد ربط المستخدم بموظف نشط ستظهر حركات اليوم تلقائيًا.",
+				linkEmployeeNeeded: "ربط موظف مطلوب",
+				cannotVerifyWithoutEmployee: "لا يمكن إتمام التحقق دون ملف موظف مرتبط.",
+				insideWork: "داخل الدوام",
+				outsideWork: "خارج الدوام",
+				lastMovement: "آخر حركة: {value}",
+				noMovementToday: "لم تسجل أي حركة اليوم",
+				attendanceStatusLine: "الحالة: {value}",
+				attendancePending: "سيتم إنشاء سجل الدوام عند أول دورة حضور/انصراف مكتملة",
+				noTodayMovements: "لا توجد حركات اليوم حتى الآن.",
+				checkInNow: "تسجيل الحضور الآن",
+				checkOutNow: "تسجيل الانصراف الآن",
+				noBranchLocation: "لا يوجد موقع حضور مفعّل لهذا الفرع حتى الآن.",
+				locationName: "اسم الموقع",
+				allowedRadius: "نطاق السماح",
+				locationSource: "مصدر التحديد",
+				noExtraLocations: "لا توجد مواقع إضافية متاحة ضمن صلاحياتك.",
+				noPayroll: "لا توجد بيانات رواتب معتمدة لعرض الاستقطاعات الحالية.",
+				noRecentLeaves: "لا توجد طلبات إجازة حديثة.",
+				chooseSubtype: "اختر التصنيف",
+				noOptions: "لا يوجد",
+				balanceUnavailable: "غير متاح",
+				dayUnit: "يوم",
+				noNote: "بدون ملاحظة",
+				gpsNotSet: "GPS غير محدد بعد",
+				gpsUpdated: "تم تحديث موقع الجهاز بنجاح.",
+				geolocationUnsupported: "المتصفح لا يدعم تحديد الموقع الجغرافي.",
+				geolocationFailed: "تعذر قراءة موقع الجهاز الحالي. فعّل إذن الموقع ثم أعد المحاولة.",
+				fileReadFailed: "تعذر قراءة الملف المحدد.",
+				maxAttachments: "الحد الأقصى للمرفقات في كل عملية هو ثلاثة ملفات فقط.",
+				audioUnsupported: "المتصفح الحالي لا يدعم تسجيل الصوت المباشر.",
+				audioMax: "لا يمكن إضافة تسجيل صوتي لأن الحد الأعلى للمرفقات وصل إلى ثلاثة.",
+				audioSaved: "تم حفظ التسجيل الصوتي كمرفق تحقق.",
+				audioStarted: "بدأ التسجيل الصوتي. اضغط مرة أخرى للإيقاف.",
+				cameraStarted: "تم فتح الكاميرا الأمامية. التقط صورة واضحة للوجه.",
+				cameraUnsupported: "تعذر فتح كاميرا الجوال مباشرة. استخدم اختيار الملف من الكاميرا كبديل.",
+				faceSaved: "تم التقاط صورة الوجه وإضافتها للمرفقات.",
+				attendanceSaved: "تم تسجيل الحركة بنجاح.",
+				startDateRequired: "حدد تاريخ بداية الإجازة أولاً.",
+				subtypeRequired: "اختر التصنيف الفرعي المطلوب لهذا النوع من الإجازات.",
+				leaveSaved: "تم إرسال الطلب بنجاح.",
+				bioAvailable: "متوفر على الجهاز كمؤشر جاهزية",
+				bioDisabled: "غير متوفر أو غير مفعل",
+				bioCheckFailed: "تعذر التحقق من جاهزية الجهاز",
+				bioUnsupported: "المتصفح لا يدعم فحص بصمة الجهاز",
+				dashboardUpdated: "تم تحديث لوحة الحضور والطلبات.",
+				installTitle: "تثبيت تطبيق الحضور مطلوب",
+				installDescription: "صفحة الحضور تعمل كتطبيق جوال مستقل. ثبّت التطبيق، ثم اسمح بالموقع والإشعارات لاستخدامه.",
+				installApp: "تثبيت التطبيق",
+				allowPermissions: "السماح بالصلاحيات",
+				pending: "قيد الانتظار",
+				granted: "مسموح",
+				blocked: "مرفوض",
+				installHint: "على iPhone استخدم Share ثم Add to Home Screen. على Android سيظهر لك زر التثبيت مباشرة عندما يكون متاحًا.",
+				installOnlyInApp: "يجب فتح صفحة الحضور من التطبيق المثبت على الجوال، وليس من المتصفح العادي.",
+				installReady: "جاهز للتثبيت",
+				installActive: "التطبيق مثبت",
+				notificationsEnabled: "تم طلب إذن الإشعارات.",
+			},
+			en: {
+				pageTitle: "Mobile Attendance | Saudi HR",
+				kickerBody: "Smart attendance with direct leave workflows",
+				heroTitle: "Attendance, checkout, and leave requests from one screen",
+				heroBody: "This page uses GPS, shows the approved branch location, supports face image or voice verification attachments, and provides a quick dashboard for attendance insights and deductions.",
+				reloadData: "Refresh data",
+				statusTitle: "Today log",
+				statusBody: "Check-in and check-out are based on your latest movement today and your current location.",
+				currentStatus: "Current status",
+				todayHours: "Today's hours",
+				refreshLocation: "Refresh my location",
+				locationTitle: "Approved branch location",
+				locationBody: "Shows the approved branch location, allowed radius, and available locations for the employee branch and permissions.",
+				openMap: "Open on map",
+				verificationTitle: "Additional verification",
+				verificationBody: "You can attach a face photo, voice recording, or supporting files to each attendance movement. Device biometric readiness is shown as a technical indicator only.",
+				biometricReady: "Device biometric readiness",
+				verificationNote: "Verification note",
+				attendanceNote: "Attendance note",
+				attendanceNotePlaceholder: "Example: Checked in from warehouse gate, or a note about voice verification",
+				faceProof: "Face photo / proof photo",
+				supportFiles: "Additional supporting files",
+				openCamera: "Open face camera",
+				recordAudio: "Start voice recording",
+				stopAudio: "Stop voice recording",
+				clearAttachments: "Clear attachments",
+				capturePhoto: "Capture photo",
+				closeCamera: "Close camera",
+				cameraNote: "The captured image will be saved directly as a face verification attachment.",
+				leaveTitle: "Mobile leave request",
+				leaveBody: "Supports annual, sick, special, and maternity/paternity leave with attachments and the related statutory fields.",
+				requestType: "Request type",
+				subtype: "Subtype",
+				fromDate: "From date",
+				toDate: "To date",
+				reason: "Reason / description",
+				reasonPlaceholder: "Add a short description for the request or attachment",
+				annualBalance: "Annual leave balance",
+				medicalCertificate: "Medical certificate no.",
+				hospitalName: "Hospital name",
+				relationship: "Relationship",
+				expectedDelivery: "Expected delivery date",
+				actualDelivery: "Actual delivery date",
+				halfDay: "Half day",
+				leaveAttachments: "Request attachments",
+				submitRequest: "Submit request",
+				insightsTitle: "Attendance insights and deductions",
+				insightsBody: "Quick monthly dashboard for workdays, hours, lateness, overtime, and payroll-related deductions.",
+				month: "Month",
+				historyTitle: "Recent leave requests",
+				historyBody: "The list updates immediately after creation so the employee can follow request status clearly.",
+				cameraAttachment: "Face photo / face verification",
+				voiceAttachment: "Voice recording",
+				fileAttachment: "Supporting attachment",
+				voicePending: "Will be attached as a voice recording",
+				readyToSend: "Ready to send",
+				remove: "Remove",
+				noAttendanceAttachments: "No attendance attachments yet.",
+				noLeaveAttachments: "No leave request attachments yet.",
+				loginRequired: "You must log in to use mobile attendance.",
+				genericFailure: "The action could not be completed. Please try again.",
+				noEmployeeTitle: "This account is not linked to an employee",
+				noEmployeeBody: "Link the current user to an active Employee record to use mobile attendance.",
+				noEmployeePill: "An active employee link is required",
+				employeeDefault: "Employee",
+				noJobTitle: "No job title",
+				profileIncomplete: "The employee profile needs more data",
+				statusUnavailable: "Unavailable",
+				statusBlocked: "Attendance cannot be loaded until the account is linked to an employee.",
+				statusAutoAfterLink: "Once the user is linked to an active employee, today's movements will appear automatically.",
+				linkEmployeeNeeded: "Employee link required",
+				cannotVerifyWithoutEmployee: "Verification cannot continue without a linked employee record.",
+				insideWork: "Checked in",
+				outsideWork: "Checked out",
+				lastMovement: "Last movement: {value}",
+				noMovementToday: "No movement recorded today",
+				attendanceStatusLine: "Status: {value}",
+				attendancePending: "The daily attendance record will be created after the first complete in/out cycle.",
+				noTodayMovements: "No movements recorded today yet.",
+				checkInNow: "Check in now",
+				checkOutNow: "Check out now",
+				noBranchLocation: "No active attendance location is configured for this branch yet.",
+				locationName: "Location name",
+				allowedRadius: "Allowed radius",
+				locationSource: "Resolved from",
+				noExtraLocations: "No additional locations are available within your permissions.",
+				noPayroll: "No approved payroll data is available to display current deductions.",
+				noRecentLeaves: "No recent leave requests.",
+				chooseSubtype: "Choose a subtype",
+				noOptions: "None",
+				balanceUnavailable: "Unavailable",
+				dayUnit: "day",
+				noNote: "No note",
+				gpsNotSet: "GPS not set yet",
+				gpsUpdated: "Device location updated successfully.",
+				geolocationUnsupported: "This browser does not support geolocation.",
+				geolocationFailed: "Unable to read the device location. Enable location permission and try again.",
+				fileReadFailed: "Unable to read the selected file.",
+				maxAttachments: "You can attach up to three files per action.",
+				audioUnsupported: "This browser does not support direct voice recording.",
+				audioMax: "You cannot add a voice recording because the maximum attachment count was reached.",
+				audioSaved: "The voice recording was saved as a verification attachment.",
+				audioStarted: "Voice recording started. Press again to stop.",
+				cameraStarted: "Front camera is open. Capture a clear face photo.",
+				cameraUnsupported: "Unable to open the device camera directly. Use the file picker camera fallback instead.",
+				faceSaved: "The face image was captured and added to attachments.",
+				attendanceSaved: "Attendance movement saved successfully.",
+				startDateRequired: "Select a leave start date first.",
+				subtypeRequired: "Choose the required subtype for this leave request.",
+				leaveSaved: "The request was submitted successfully.",
+				bioAvailable: "Available on the device as a readiness indicator",
+				bioDisabled: "Unavailable or not enabled",
+				bioCheckFailed: "Unable to verify device readiness",
+				bioUnsupported: "This browser does not support device biometric checks",
+				dashboardUpdated: "Attendance dashboard refreshed.",
+				installTitle: "Installing the attendance app is required",
+				installDescription: "Mobile attendance must run as a standalone app. Install it first, then allow location and notifications.",
+				installApp: "Install app",
+				allowPermissions: "Allow permissions",
+				pending: "Pending",
+				granted: "Granted",
+				blocked: "Blocked",
+				installHint: "On iPhone, use Share then Add to Home Screen. On Android, the install button will appear when supported.",
+				installOnlyInApp: "Open mobile attendance from the installed app on the phone, not from the regular browser.",
+				installReady: "Ready to install",
+				installActive: "App installed",
+				notificationsEnabled: "Notification permission was requested.",
+			},
+		};
+		const t = (key, vars = {}) => {
+			let message = (IS_ENGLISH ? TEXT.en : TEXT.ar)[key] || key;
+			Object.entries(vars).forEach(([name, value]) => {
+				message = message.replaceAll(`{${name}}`, value);
+			});
+			return message;
+		};
+		const state = {
+			status: null,
+			availableLocations: [],
+			attendanceAttachments: [],
+			leaveAttachments: [],
+			lastPosition: null,
+			isSubmittingAttendance: false,
+			isSubmittingLeave: false,
+			recorder: null,
+			recordingStream: null,
+			audioChunks: [],
+			deviceBiometricAvailable: false,
+			hasEmployeeAccess: true,
+			cameraStream: null,
+			deferredInstallPrompt: null,
+			csrfToken: null,
+		};
+
+		const METHOD_ROOT = "saudi_hr.saudi_hr.api.";
+		const $ = (selector) => document.querySelector(selector);
+		const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+		function showBanner(message, type = "success") {
+			const banner = $("#mobile-banner");
+			banner.textContent = message;
+			banner.className = `mobile-banner is-visible ${type === "error" ? "is-error" : "is-success"}`;
+			window.clearTimeout(showBanner.timeoutId);
+			showBanner.timeoutId = window.setTimeout(() => {
+				banner.className = "mobile-banner";
+			}, 5000);
+		}
+
+		function parseError(error) {
+			if (error && typeof error === "object") {
+				if (typeof error.message === "string") {
+					try {
+						const parsedMessage = JSON.parse(error.message);
+						if (parsedMessage?.message) {
+							return parsedMessage.message;
+						}
+					} catch (jsonError) {
+						return error.message;
+					}
+				}
+				if (typeof error._server_messages === "string") {
+					try {
+						const parsedServerMessages = JSON.parse(error._server_messages);
+						if (Array.isArray(parsedServerMessages) && parsedServerMessages.length) {
+							const firstMessage = JSON.parse(parsedServerMessages[0]);
+							if (firstMessage?.message) {
+								return firstMessage.message;
+							}
+						}
+					} catch (jsonError) {
+						return error._server_messages;
+					}
+				}
+			}
+
+			const message = error?.message || error?._server_messages || error?.exc || error;
+			if (typeof message === "string") {
+				if (message.includes("Login to access") || message.includes("Not permitted") || message.includes("403")) {
+					return t("loginRequired");
+				}
+				try {
+					const parsed = JSON.parse(message);
+					if (Array.isArray(parsed) && parsed.length) {
+						return parsed[0];
+					}
+				} catch (jsonError) {
+					return message.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+				}
+				return message;
+			}
+			return t("genericFailure");
+		}
+
+		function applyStaticTranslations() {
+			document.title = t("pageTitle");
+			document.documentElement.lang = LANG_CODE;
+			document.documentElement.dir = IS_RTL ? "rtl" : "ltr";
+			document.body.classList.toggle("mobile-ltr", !IS_RTL);
+			$(".mobile-attendance-shell").setAttribute("dir", IS_RTL ? "rtl" : "ltr");
+			$(".mobile-kicker span:last-child").textContent = t("kickerBody");
+			$(".mobile-hero h1").textContent = t("heroTitle");
+			$(".mobile-hero p").textContent = t("heroBody");
+			$("#reload-dashboard").textContent = t("reloadData");
+			$(".mobile-panel--status h3").textContent = t("statusTitle");
+			$(".mobile-panel--status > p").textContent = t("statusBody");
+			$(".mobile-panel--status .mobile-stat:first-child .mobile-stat-label").textContent = t("currentStatus");
+			$(".mobile-panel--status .mobile-stat:last-child .mobile-stat-label").textContent = t("todayHours");
+			$("#gps-refresh").textContent = t("refreshLocation");
+			$(".mobile-panel--location h3").textContent = t("locationTitle");
+			$(".mobile-panel--location > p").textContent = t("locationBody");
+			$("#location-map-link").textContent = t("openMap");
+			$(".mobile-panel--verification h3").textContent = t("verificationTitle");
+			$(".mobile-panel--verification > p").textContent = t("verificationBody");
+			$(".mobile-helper-grid .mobile-card-lite:first-child span").textContent = t("biometricReady");
+			$(".mobile-helper-grid .mobile-card-lite:last-child span").textContent = t("verificationNote");
+			$("label[for='attendance-note']").textContent = t("attendanceNote");
+			$("#attendance-note").placeholder = t("attendanceNotePlaceholder");
+			$("label[for='attendance-face-input']").textContent = t("faceProof");
+			$("label[for='attendance-files-input']").textContent = t("supportFiles");
+			$("#open-face-camera").textContent = t("openCamera");
+			$("#record-audio").textContent = t("recordAudio");
+			$("#clear-attendance-attachments").textContent = t("clearAttachments");
+			$("#capture-face-photo").textContent = t("capturePhoto");
+			$("#close-face-camera").textContent = t("closeCamera");
+			$("#face-camera-note").textContent = t("cameraNote");
+			$(".mobile-panel--leave h3").textContent = t("leaveTitle");
+			$(".mobile-panel--leave > p").textContent = t("leaveBody");
+			$("label[for='leave-request-type']").textContent = t("requestType");
+			$("label[for='leave-subtype']").textContent = t("subtype");
+			$("label[for='leave-start-date']").textContent = t("fromDate");
+			$("label[for='leave-end-date']").textContent = t("toDate");
+			$("label[for='leave-reason']").textContent = t("reason");
+			$("#leave-reason").placeholder = t("reasonPlaceholder");
+			$("#leave-balance-wrapper > label").textContent = t("annualBalance");
+			$("label[for='medical-certificate-no']").textContent = t("medicalCertificate");
+			$("label[for='hospital-name']").textContent = t("hospitalName");
+			$("label[for='relationship-to-deceased']").textContent = t("relationship");
+			$("label[for='expected-delivery-date']").textContent = t("expectedDelivery");
+			$("label[for='actual-delivery-date']").textContent = t("actualDelivery");
+			$("#half-day-wrapper span").textContent = t("halfDay");
+			$("label[for='leave-files-input']").textContent = t("leaveAttachments");
+			$("#submit-leave-request").textContent = t("submitRequest");
+			$("#clear-leave-attachments").textContent = t("clearAttachments");
+			$(".mobile-panel--insights h3").textContent = t("insightsTitle");
+			$(".mobile-panel--insights p").textContent = t("insightsBody");
+			$("label[for='insights-month']").textContent = t("month");
+			$(".mobile-panel--history h3").textContent = t("historyTitle");
+			$(".mobile-panel--history p").textContent = t("historyBody");
+			$("#pwa-title").textContent = t("installTitle");
+			$("#pwa-description").textContent = t("installDescription");
+			$("#pwa-install-label").textContent = t("installApp");
+			$("#pwa-location-label").textContent = t("refreshLocation");
+			$("#pwa-notification-label").textContent = IS_ENGLISH ? "Notifications" : "الإشعارات";
+			$("#pwa-install-action").textContent = t("installApp");
+			$("#pwa-permission-action").textContent = t("allowPermissions");
+			$("#pwa-hint").textContent = t("installHint");
+
+			const leaveTypeSelect = $("#leave-request-type");
+			leaveTypeSelect.querySelector('option[value="annual"]').textContent = IS_ENGLISH ? "Annual Leave" : "Annual Leave / إجازة سنوية";
+			leaveTypeSelect.querySelector('option[value="sick"]').textContent = IS_ENGLISH ? "Sick Leave" : "Sick Leave / إجازة مرضية";
+			leaveTypeSelect.querySelector('option[value="special"]').textContent = IS_ENGLISH ? "Special Leave" : "Special Leave / إجازة خاصة";
+			leaveTypeSelect.querySelector('option[value="maternity_paternity"]').textContent = IS_ENGLISH ? "Maternity / Paternity" : "Maternity / Paternity / أمومة وأبوة";
+		}
+
+		async function resolveRuntimeLanguage() {
+			try {
+				const appHtml = await fetch("/app", { credentials: "same-origin" }).then((response) => response.text());
+				const matchedLang = appHtml.match(/<html[^>]*lang=["']?([a-z-]+)/i)?.[1]?.toLowerCase();
+				const shouldUseEnglish = (matchedLang || LANG_CODE).startsWith("en");
+				IS_ENGLISH = shouldUseEnglish;
+				IS_RTL = !shouldUseEnglish;
+				LOCALE = shouldUseEnglish ? "en-US" : "ar-SA";
+			} catch (error) {
+				IS_ENGLISH = LANG_CODE.startsWith("en");
+				IS_RTL = !IS_ENGLISH;
+				LOCALE = IS_ENGLISH ? "en-US" : "ar-SA";
+			}
+		}
+
+		async function getCsrfToken() {
+			if (state.csrfToken) {
+				return state.csrfToken;
+			}
+
+			const cookieToken = document.cookie
+				.split(";")
+				.map((entry) => entry.trim())
+				.find((entry) => entry.startsWith("csrf_token="))
+				?.split("=", 2)[1];
+			state.csrfToken = window.csrf_token || window.frappe?.csrf_token || cookieToken || null;
+			if (!state.csrfToken || state.csrfToken === "None") {
+				const response = await fetch("/app", {
+					credentials: "same-origin",
+				});
+				const html = await response.text();
+				const matchedToken = html.match(/csrf_token\s*[:=]\s*["']([^"']+)["']/i)
+					|| html.match(/frappe\.csrf_token\s*=\s*["']([^"']+)["']/i);
+				state.csrfToken = matchedToken?.[1] || null;
+				if (window.frappe) {
+					window.frappe.csrf_token = state.csrfToken;
+				}
+			}
+			return state.csrfToken || "";
+		}
+
+		async function apiCall(method, args = {}) {
+			const csrfToken = await getCsrfToken();
+			const response = await fetch(`/api/method/${METHOD_ROOT}${method}`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-Frappe-CSRF-Token": csrfToken,
+				},
+				credentials: "same-origin",
+				body: JSON.stringify(args),
+			});
+
+			const payload = await response.json();
+			if (!response.ok) {
+				throw payload;
+			}
+			return payload.message;
+		}
+
+		function formatDateTime(value) {
+			if (!value) {
+				return "--";
+			}
+			const date = new Date(value);
+			if (Number.isNaN(date.getTime())) {
+				return value;
+			}
+			return new Intl.DateTimeFormat(LOCALE, {
+				dateStyle: "medium",
+				timeStyle: "short",
+			}).format(date);
+		}
+
+		function formatNumber(value, digits = 0) {
+			const numeric = Number(value || 0);
+			return new Intl.NumberFormat(LOCALE, {
+				minimumFractionDigits: digits,
+				maximumFractionDigits: digits,
+			}).format(numeric);
+		}
+
+		function escapeHtml(value) {
+			return String(value || "")
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#39;");
+		}
+
+		function attachmentKindLabel(type) {
+			if (type === "face") return t("cameraAttachment");
+			if (type === "voice") return t("voiceAttachment");
+			return t("fileAttachment");
+		}
+
+		function buildAttachmentMarkup(item, index) {
+			return `
+				<div class="mobile-attachment">
+					<strong>${escapeHtml(item.filename)}</strong>
+					<span>${attachmentKindLabel(item.kind)} · ${formatNumber((item.size || 0) / 1024, 1)} KB</span>
+					<div class="mobile-inline-row">
+						<span class="mobile-timestamp">${item.kind === "voice" ? t("voicePending") : t("readyToSend")}</span>
+						<button type="button" class="mobile-ghost-button" data-index="${index}" data-group="${item.group}">${t("remove")}</button>
+					</div>
+				</div>
+			`;
+		}
+
+		function renderEmptyState(selector, message) {
+			$(selector).innerHTML = `<div class="mobile-empty">${message}</div>`;
+		}
+
+		function renderCardLiteItems(selector, items, emptyMessage) {
+			if (!items.length) {
+				renderEmptyState(selector, emptyMessage);
+				return;
+			}
+
+			$(selector).innerHTML = items.map((item) => `
+				<div class="mobile-card-lite">
+					<span>${escapeHtml(item.label)}</span>
+					<strong>${escapeHtml(item.value)}</strong>
+					${item.note ? `<span>${escapeHtml(item.note)}</span>` : ""}
+				</div>
+			`).join("");
+		}
+
+		function refreshDashboardView() {
+			renderEmployeeCard();
+			renderStatusPanel();
+			renderLocationPanel();
+			renderInsightsPanel();
+			renderRecentLeaves();
+			populateLeaveSubtypeOptions();
+		}
+
+		function applyNoEmployeeState() {
+			state.hasEmployeeAccess = false;
+			state.status = null;
+			state.availableLocations = [];
+			refreshDashboardView();
+			renderEmptyState("#recent-leave-requests", IS_ENGLISH
+				? "Link the current user to an active employee record to view requests and movements."
+				: "اربط المستخدم الحالي بسجل موظف نشط لعرض الطلبات والحركات.");
+			renderEmptyState("#insights-grid", IS_ENGLISH
+				? "Insights are unavailable until the account is linked to an employee record."
+				: "الإحصائيات غير متاحة قبل ربط الحساب بسجل موظف.");
+			$("#payroll-grid").innerHTML = "";
+		}
+
+		function renderAttachmentLists() {
+			const attendanceEl = $("#attendance-attachments");
+			const leaveEl = $("#leave-attachments");
+			attendanceEl.innerHTML = state.attendanceAttachments.length
+				? state.attendanceAttachments.map((item, index) => buildAttachmentMarkup(item, index)).join("")
+				: `<div class="mobile-empty">${t("noAttendanceAttachments")}</div>`;
+			leaveEl.innerHTML = state.leaveAttachments.length
+				? state.leaveAttachments.map((item, index) => buildAttachmentMarkup(item, index)).join("")
+				: `<div class="mobile-empty">${t("noLeaveAttachments")}</div>`;
+
+			$$('[data-group="attendance"]').forEach((button) => {
+				button.addEventListener("click", () => {
+					state.attendanceAttachments.splice(Number(button.dataset.index), 1);
+					renderAttachmentLists();
+				});
+			});
+
+			$$('[data-group="leave"]').forEach((button) => {
+				button.addEventListener("click", () => {
+					state.leaveAttachments.splice(Number(button.dataset.index), 1);
+					renderAttachmentLists();
+				});
+			});
+		}
+
+		function renderEmployeeCard() {
+			const status = state.status;
+			if (!status) {
+				if (!state.hasEmployeeAccess) {
+					$("#employee-name").textContent = t("noEmployeeTitle");
+					$("#employee-role").textContent = t("noEmployeeBody");
+					$("#employee-pills").innerHTML = `<span class="mobile-pill is-danger">${t("noEmployeePill")}</span>`;
+				}
+				return;
+			}
+
+			$("#employee-name").textContent = status.employee_name || t("employeeDefault");
+			$("#employee-role").textContent = [status.designation, status.department].filter(Boolean).join(" · ") || t("noJobTitle");
+
+			const avatarEl = $("#employee-avatar");
+			if (status.image) {
+				avatarEl.outerHTML = `<img id="employee-avatar" class="mobile-avatar" src="${escapeHtml(status.image)}" alt="${escapeHtml(status.employee_name)}">`;
+			} else {
+				avatarEl.textContent = (status.employee_name || "U").trim().charAt(0).toUpperCase();
+			}
+
+			$("#employee-pills").innerHTML = [
+				status.branch ? `<span class="mobile-pill is-accent">${IS_ENGLISH ? "Branch" : "الفرع"}: ${escapeHtml(status.branch)}</span>` : "",
+				status.department ? `<span class="mobile-pill">${IS_ENGLISH ? "Department" : "الإدارة"}: ${escapeHtml(status.department)}</span>` : "",
+				status.designation ? `<span class="mobile-pill">${IS_ENGLISH ? "Designation" : "الوظيفة"}: ${escapeHtml(status.designation)}</span>` : "",
+			].filter(Boolean).join("") || `<span class="mobile-pill is-warning">${t("profileIncomplete")}</span>`;
+		}
+
+		function renderStatusPanel() {
+			const status = state.status;
+			if (!status) {
+				if (!state.hasEmployeeAccess) {
+					$("#attendance-mode").textContent = t("statusUnavailable");
+					$("#attendance-last-event").textContent = t("statusBlocked");
+					$("#attendance-summary").textContent = t("statusAutoAfterLink");
+					const actionButton = $("#attendance-action");
+					actionButton.textContent = t("linkEmployeeNeeded");
+					actionButton.disabled = true;
+					$("#gps-refresh").disabled = true;
+					$("#today-checkin-chip-row").innerHTML = `<span class="mobile-empty">${t("cannotVerifyWithoutEmployee")}</span>`;
+				}
+				return;
+			}
+
+			const isCheckedIn = status.last_log_type === "IN";
+			$("#attendance-mode").textContent = isCheckedIn ? t("insideWork") : t("outsideWork");
+			$("#attendance-last-event").textContent = status.last_checkin_time
+				? t("lastMovement", { value: formatDateTime(status.last_checkin_time) })
+				: t("noMovementToday");
+			$("#attendance-hours").textContent = formatNumber(status.today_attendance?.working_hours || 0, 2);
+			$("#attendance-summary").textContent = status.today_attendance
+				? t("attendanceStatusLine", { value: status.today_attendance.status || "Present" })
+				: t("attendancePending");
+
+			const chips = [];
+			(status.today_checkins || []).forEach((entry) => {
+				chips.push(`<span class="mobile-chip">${escapeHtml(entry.log_type)} · ${escapeHtml(formatDateTime(entry.time))}</span>`);
+			});
+			$("#today-checkin-chip-row").innerHTML = chips.length ? chips.join("") : `<span class="mobile-empty">${t("noTodayMovements")}</span>`;
+
+			const actionButton = $("#attendance-action");
+			actionButton.textContent = isCheckedIn ? t("checkOutNow") : t("checkInNow");
+			actionButton.disabled = state.isSubmittingAttendance;
+			$("#gps-refresh").disabled = false;
+		}
+
+		function renderLocationPanel() {
+			const branchLocation = state.status?.location;
+			const locationGrid = $("#branch-location-grid");
+			const mapLink = $("#location-map-link");
+			if (!branchLocation) {
+				renderEmptyState("#branch-location-grid", t("noBranchLocation"));
+				mapLink.classList.add("mobile-hidden");
+			} else {
+				renderCardLiteItems("#branch-location-grid", [
+					{ label: t("locationName"), value: branchLocation.location_name || branchLocation.name },
+					{ label: t("allowedRadius"), value: `${formatNumber(branchLocation.allowed_radius_meters || 100)} ${IS_ENGLISH ? "meters" : "متر"}` },
+					{ label: "Plus Code", value: branchLocation.plus_code || "--" },
+					{ label: t("locationSource"), value: branchLocation.location_source || "Coordinates" },
+				], t("noBranchLocation"));
+
+				mapLink.href = `https://www.google.com/maps/search/?api=1&query=${branchLocation.latitude},${branchLocation.longitude}`;
+				mapLink.classList.remove("mobile-hidden");
+			}
+
+			const listEl = $("#available-locations");
+			listEl.innerHTML = state.availableLocations.length
+				? state.availableLocations.map((location) => `
+					<div class="mobile-location-item">
+						<strong>${escapeHtml(location.location_name || location.name)}</strong>
+						<span>${escapeHtml(location.branch || "")}</span>
+						<span>Plus Code: ${escapeHtml(location.plus_code || "--")} · ${formatNumber(location.allowed_radius_meters || 100)} متر</span>
+					</div>
+				`).join("")
+				: `<div class="mobile-empty">${t("noExtraLocations")}</div>`;
+		}
+
+		function renderInsightsPanel(insights) {
+			const data = insights || state.status?.insights;
+			if (!data) {
+				return;
+			}
+
+			renderCardLiteItems("#insights-grid", [
+				{ label: "أيام الحضور", value: formatNumber(data.present_days), note: data.period_label },
+				{ label: "أيام الغياب", value: formatNumber(data.absent_days), note: "المسجلة للشهر" },
+				{ label: "أيام التأخير", value: formatNumber(data.late_days), note: `${formatNumber(data.late_minutes_total)} دقيقة تأخير` },
+				{ label: "إجمالي الساعات", value: formatNumber(data.total_hours, 2), note: `متوسط ${formatNumber(data.average_hours, 2)} ساعة يوميًا` },
+				{ label: "خروج مبكر", value: formatNumber(data.early_exit_days), note: `أيام نقص ساعات: ${formatNumber(data.shortfall_days)}` },
+				{ label: "عمل إضافي", value: formatNumber(data.overtime_hours_total, 2), note: `الهدف اليومي ${formatNumber(data.target_hours_per_day, 2)} ساعة` },
+				{ label: "إجازة سنوية", value: formatNumber(data.leave_days?.annual || 0, 1), note: "أيام" },
+				{ label: "إجازة مرضية/خاصة", value: formatNumber((data.leave_days?.sick || 0) + (data.leave_days?.special || 0), 1), note: "أيام" },
+			], "");
+
+			const payroll = data.payroll;
+			if (!payroll) {
+				renderEmptyState("#payroll-grid", t("noPayroll"));
+				return;
+			}
+
+			renderCardLiteItems("#payroll-grid", [
+					{ label: "فترة الرواتب", value: payroll.period, note: payroll.status || "" },
+					{ label: "استقطاع GOSI", value: `${formatNumber(payroll.gosi_deduction, 2)} ر.س`, note: "حصة الموظف" },
+					{ label: "خصم الإجازات المرضية", value: `${formatNumber(payroll.sick_leave_deduction, 2)} ر.س`, note: "آخر كشف" },
+					{ label: "إضافة العمل الإضافي", value: `${formatNumber(payroll.overtime_addition, 2)} ر.س`, note: "آخر كشف" },
+					{ label: "صافي الراتب", value: `${formatNumber(payroll.net_salary, 2)} ر.س`, note: "بعد المعالجة" },
+				], t("noPayroll"));
+		}
+
+		function renderRecentLeaves() {
+			const listEl = $("#recent-leave-requests");
+			const rows = state.status?.recent_leave_requests || [];
+			if (!rows.length) {
+				renderEmptyState("#recent-leave-requests", t("noRecentLeaves"));
+				return;
+			}
+
+			listEl.innerHTML = rows.map((row) => `
+					<div class="mobile-history-item">
+						<div>
+							<strong>${escapeHtml(row.category)}</strong>
+							<span>${escapeHtml(row.name)}${row.subtype ? ` · ${escapeHtml(row.subtype)}` : ""}</span>
+							<span>${escapeHtml(row.status || "")}</span>
+						</div>
+						<div>
+							<strong>${formatNumber(row.days || 0, 1)} يوم</strong>
+							<span>${escapeHtml(row.from_date || "")} → ${escapeHtml(row.to_date || "")}</span>
+						</div>
+					</div>
+				`).join("");
+		}
+
+		function getLeaveTypeFlags(requestType) {
+			return {
+				isAnnual: requestType === "annual",
+				isSick: requestType === "sick",
+				isSpecial: requestType === "special",
+				isMaternity: requestType === "maternity_paternity",
+			};
+		}
+
+		function populateLeaveSubtypeOptions() {
+			const requestType = $("#leave-request-type").value;
+			const subtypeSelect = $("#leave-subtype");
+			const leaveOptions = state.status?.leave_options || {};
+			const optionSet = leaveOptions[requestType]?.options || [];
+			subtypeSelect.innerHTML = optionSet.length
+				? [`<option value="">${t("chooseSubtype")}</option>`]
+					.concat(optionSet.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`))
+					.join("")
+				: `<option value="">${t("noOptions")}</option>`;
+
+			const { isAnnual, isSick, isSpecial, isMaternity } = getLeaveTypeFlags(requestType);
+			$("#leave-balance-wrapper").classList.toggle("mobile-hidden", !isAnnual);
+			$("#half-day-wrapper").classList.toggle("mobile-hidden", !isAnnual);
+			$("#medical-certificate-wrapper").classList.toggle("mobile-hidden", !isSick);
+			$("#hospital-name-wrapper").classList.toggle("mobile-hidden", !(isSick || isMaternity));
+			$("#relationship-wrapper").classList.toggle("mobile-hidden", !isSpecial);
+			$("#expected-delivery-wrapper").classList.toggle("mobile-hidden", !isMaternity);
+			$("#actual-delivery-wrapper").classList.toggle("mobile-hidden", !isMaternity);
+
+			const annualBalance = leaveOptions.annual?.balance;
+			$("#leave-balance").textContent = annualBalance == null ? t("balanceUnavailable") : `${formatNumber(annualBalance, 1)} ${t("dayUnit")}`;
+		}
+
+		function updateVerificationNotePreview() {
+			const note = $("#attendance-note").value.trim();
+			$("#verification-note-status").textContent = note || t("noNote");
+		}
+
+		async function getCurrentPosition() {
+			if (!navigator.geolocation) {
+				throw new Error(t("geolocationUnsupported"));
+			}
+
+			return new Promise((resolve, reject) => {
+				navigator.geolocation.getCurrentPosition(
+					(position) => resolve(position.coords),
+					() => reject(new Error(t("geolocationFailed"))),
+					{ enableHighAccuracy: true, maximumAge: 0, timeout: 12000 }
+				);
+			});
+		}
+
+		async function refreshGpsStatus() {
+			try {
+				const coords = await getCurrentPosition();
+				state.lastPosition = coords;
+				$("#gps-status").textContent = `GPS: ${formatNumber(coords.latitude, 5)}, ${formatNumber(coords.longitude, 5)}`;
+				showBanner(t("gpsUpdated"));
+			} catch (error) {
+				showBanner(parseError(error), "error");
+			}
+		}
+
+		async function fileToAttachment(file, group, kind = "file") {
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => resolve({
+					group,
+					kind,
+					filename: file.name,
+					content: reader.result,
+					size: file.size,
+				});
+				reader.onerror = () => reject(new Error(t("fileReadFailed")));
+				reader.readAsDataURL(file);
+			});
+		}
+
+		function getAttachmentsForGroup(group) {
+			return group === "attendance" ? state.attendanceAttachments : state.leaveAttachments;
+		}
+
+		function buildAttachmentPayload(group) {
+			return JSON.stringify(
+				getAttachmentsForGroup(group).map(({ filename, content }) => ({ filename, content }))
+			);
+		}
+
+		function clearAttachments(group) {
+			getAttachmentsForGroup(group).length = 0;
+			renderAttachmentLists();
+		}
+
+		async function addFilesToGroup(fileList, group, kindResolver) {
+			const files = Array.from(fileList || []);
+			if (!files.length) {
+				return;
+			}
+
+			const target = getAttachmentsForGroup(group);
+			if (target.length + files.length > 3) {
+				showBanner(t("maxAttachments"), "error");
+				return;
+			}
+
+			const items = await Promise.all(files.map((file) => fileToAttachment(file, group, kindResolver(file))));
+			target.push(...items);
+			renderAttachmentLists();
+		}
+
+		async function toggleAudioRecording() {
+			const button = $("#record-audio");
+			if (state.recorder?.state === "recording") {
+				state.recorder.stop();
+				button.textContent = t("recordAudio");
+				return;
+			}
+
+			if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+				showBanner(t("audioUnsupported"), "error");
+				return;
+			}
+
+			if (state.attendanceAttachments.length >= 3) {
+				showBanner(t("audioMax"), "error");
+				return;
+			}
+
+			try {
+				state.audioChunks = [];
+				state.recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				state.recorder = new MediaRecorder(state.recordingStream);
+				state.recorder.ondataavailable = (event) => {
+					if (event.data?.size) {
+						state.audioChunks.push(event.data);
+					}
+				};
+				state.recorder.onstop = async () => {
+					const blob = new Blob(state.audioChunks, { type: state.recorder.mimeType || "audio/webm" });
+					state.recordingStream?.getTracks().forEach((track) => track.stop());
+					state.recordingStream = null;
+					const extension = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "m4a" : "webm";
+					const file = new File([blob], `voice-note-${Date.now()}.${extension}`, { type: blob.type });
+					await addFilesToGroup([file], "attendance", () => "voice");
+					showBanner(t("audioSaved"));
+				};
+				state.recorder.start();
+				button.textContent = t("stopAudio");
+				showBanner(t("audioStarted"));
+			} catch (error) {
+				showBanner(parseError(error), "error");
+			}
+		}
+
+		async function openFaceCamera() {
+			if (!navigator.mediaDevices?.getUserMedia) {
+				showBanner(t("cameraUnsupported"), "error");
+				return;
+			}
+
+			try {
+				await closeFaceCamera();
+				state.cameraStream = await navigator.mediaDevices.getUserMedia({
+					video: {
+						facingMode: { ideal: "user" },
+						width: { ideal: 1280 },
+						height: { ideal: 960 },
+					},
+					audio: false,
+				});
+				const preview = $("#face-camera-preview");
+				preview.srcObject = state.cameraStream;
+				$("#face-camera-tray").classList.remove("mobile-hidden");
+				showBanner(t("cameraStarted"));
+			} catch (error) {
+				showBanner(t("cameraUnsupported"), "error");
+			}
+		}
+
+		async function captureFacePhoto() {
+			const preview = $("#face-camera-preview");
+			if (!preview.srcObject) {
+				return;
+			}
+
+			const canvas = document.createElement("canvas");
+			canvas.width = preview.videoWidth || 1280;
+			canvas.height = preview.videoHeight || 960;
+			canvas.getContext("2d").drawImage(preview, 0, 0, canvas.width, canvas.height);
+			const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+			if (!blob) {
+				showBanner(t("fileReadFailed"), "error");
+				return;
+			}
+			const file = new File([blob], `face-verification-${Date.now()}.jpg`, { type: "image/jpeg" });
+			await addFilesToGroup([file], "attendance", () => "face");
+			await closeFaceCamera();
+			showBanner(t("faceSaved"));
+		}
+
+		async function closeFaceCamera() {
+			if (state.cameraStream) {
+				state.cameraStream.getTracks().forEach((track) => track.stop());
+				state.cameraStream = null;
+			}
+			const preview = $("#face-camera-preview");
+			if (preview) {
+				preview.srcObject = null;
+			}
+			$("#face-camera-tray").classList.add("mobile-hidden");
+		}
+
+		async function submitAttendance() {
+			if (state.isSubmittingAttendance) {
+				return;
+			}
+
+			state.isSubmittingAttendance = true;
+			renderStatusPanel();
+			try {
+				if (!state.lastPosition && state.status?.location) {
+					await refreshGpsStatus();
+				}
+				const payload = await apiCall("do_mobile_checkin", {
+					latitude: state.lastPosition?.latitude,
+					longitude: state.lastPosition?.longitude,
+					verification_mode: state.deviceBiometricAvailable ? "gps+device-ready" : "gps",
+					verification_note: $("#attendance-note").value.trim(),
+					attachments_json: buildAttachmentPayload("attendance"),
+				});
+				showBanner(payload.message || t("attendanceSaved"));
+				clearAttachments("attendance");
+				$("#attendance-note").value = "";
+				updateVerificationNotePreview();
+				await loadDashboard();
+			} catch (error) {
+				showBanner(parseError(error), "error");
+			} finally {
+				state.isSubmittingAttendance = false;
+				renderStatusPanel();
+			}
+		}
+
+		async function submitLeaveRequest(event) {
+			event.preventDefault();
+			if (state.isSubmittingLeave) {
+				return;
+			}
+
+			state.isSubmittingLeave = true;
+			$("#submit-leave-request").disabled = true;
+			try {
+				const requestType = $("#leave-request-type").value;
+				const payload = {
+					request_type: requestType,
+					start_date: $("#leave-start-date").value,
+					end_date: $("#leave-end-date").value || $("#leave-start-date").value,
+					reason: $("#leave-reason").value.trim(),
+					leave_subtype: $("#leave-subtype").value,
+					relationship_to_deceased: $("#relationship-to-deceased").value.trim(),
+					medical_certificate_no: $("#medical-certificate-no").value.trim(),
+					hospital_name: $("#hospital-name").value.trim(),
+					expected_delivery_date: $("#expected-delivery-date").value,
+					actual_delivery_date: $("#actual-delivery-date").value,
+					half_day: $("#leave-half-day").checked ? 1 : 0,
+					attachments_json: buildAttachmentPayload("leave"),
+				};
+
+				if (!payload.start_date) {
+					throw new Error(t("startDateRequired"));
+				}
+				if (["special", "maternity_paternity"].includes(requestType) && !payload.leave_subtype) {
+					throw new Error(t("subtypeRequired"));
+				}
+
+				const response = await apiCall("submit_mobile_leave_request", payload);
+				showBanner(response.message || t("leaveSaved"));
+				clearAttachments("leave");
+				$("#leave-request-form").reset();
+				populateLeaveSubtypeOptions();
+				await loadDashboard();
+			} catch (error) {
+				showBanner(parseError(error), "error");
+			} finally {
+				state.isSubmittingLeave = false;
+				$("#submit-leave-request").disabled = false;
+			}
+		}
+
+		async function loadInsightsFromMonth() {
+			const value = $("#insights-month").value;
+			if (!value) {
+				return;
+			}
+			const [year, month] = value.split("-");
+			try {
+				const insights = await apiCall("get_attendance_insights", { month, year });
+				renderInsightsPanel(insights);
+			} catch (error) {
+				showBanner(parseError(error), "error");
+			}
+		}
+
+		async function checkBiometricAvailability() {
+			const statusEl = $("#biometric-status");
+			if (window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) {
+				try {
+					state.deviceBiometricAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+					statusEl.textContent = state.deviceBiometricAvailable
+						? t("bioAvailable")
+						: t("bioDisabled");
+				} catch (error) {
+					statusEl.textContent = t("bioCheckFailed");
+				}
+			} else {
+				statusEl.textContent = t("bioUnsupported");
+			}
+		}
+
+		function setCurrentMonth() {
+			const now = new Date();
+			const month = String(now.getMonth() + 1).padStart(2, "0");
+			$("#insights-month").value = `${now.getFullYear()}-${month}`;
+		}
+
+		function tickClock() {
+			$("#live-clock").textContent = new Intl.DateTimeFormat(LOCALE, {
+				dateStyle: "full",
+				timeStyle: "short",
+			}).format(new Date());
+		}
+
+		function isMobileClient() {
+			return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
+		}
+
+		function isStandaloneMode() {
+			return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+		}
+
+		function updatePermissionStatuses() {
+			$("#pwa-install-status").textContent = isStandaloneMode() ? t("installActive") : (state.deferredInstallPrompt ? t("installReady") : t("pending"));
+			$("#pwa-location-status").textContent = state.lastPosition ? t("granted") : t("pending");
+			$("#pwa-notification-status").textContent = Notification.permission === "granted" ? t("granted") : Notification.permission === "denied" ? t("blocked") : t("pending");
+		}
+
+		function updatePWAGate() {
+			const shouldLock = isMobileClient() && !isStandaloneMode();
+			$("#pwa-gate").classList.toggle("mobile-hidden", !shouldLock);
+			document.body.classList.toggle("mobile-pwa-locked", shouldLock);
+			updatePermissionStatuses();
+		}
+
+		async function registerPWA() {
+			if ("serviceWorker" in navigator) {
+				try {
+					await navigator.serviceWorker.register("/mobile-attendance-sw.js", { scope: "/" });
+				} catch (error) {
+					// Ignore registration failures and keep app usable.
+				}
+			}
+
+			window.addEventListener("beforeinstallprompt", (event) => {
+				event.preventDefault();
+				state.deferredInstallPrompt = event;
+				updatePWAGate();
+			});
+
+			window.addEventListener("appinstalled", () => {
+				state.deferredInstallPrompt = null;
+				updatePWAGate();
+			});
+		}
+
+		async function installPWA() {
+			if (state.deferredInstallPrompt) {
+				state.deferredInstallPrompt.prompt();
+				await state.deferredInstallPrompt.userChoice;
+				state.deferredInstallPrompt = null;
+				updatePWAGate();
+				return;
+			}
+
+			showBanner(t("installHint"), "error");
+		}
+
+		async function requestDevicePermissions() {
+			try {
+				if (typeof Notification !== "undefined" && Notification.permission === "default") {
+					await Notification.requestPermission();
+				}
+				if (!state.lastPosition) {
+					await refreshGpsStatus();
+				}
+				showBanner(t("notificationsEnabled"));
+			} catch (error) {
+				showBanner(parseError(error), "error");
+			} finally {
+				updatePermissionStatuses();
+			}
+		}
+
+		async function loadDashboard() {
+			const [status, availableLocations] = await Promise.all([
+				apiCall("get_attendance_status"),
+				apiCall("get_available_locations"),
+			]);
+			state.hasEmployeeAccess = true;
+			state.status = status;
+			state.availableLocations = availableLocations || [];
+			refreshDashboardView();
+		}
+
+		async function handleDashboardReload() {
+			try {
+				await loadDashboard();
+				showBanner(t("dashboardUpdated"));
+			} catch (error) {
+				showBanner(parseError(error), "error");
+			}
+		}
+
+		function bindFileInput(selector, group, kindResolver) {
+			$(selector).addEventListener("change", async (event) => {
+				await addFilesToGroup(event.target.files, group, kindResolver);
+				event.target.value = "";
+			});
+		}
+
+		function bindAttachmentReset(selector, group) {
+			$(selector).addEventListener("click", () => clearAttachments(group));
+		}
+
+		function bindEvents() {
+			$("#reload-dashboard").addEventListener("click", handleDashboardReload);
+
+			$("#open-face-camera").addEventListener("click", openFaceCamera);
+			$("#capture-face-photo").addEventListener("click", captureFacePhoto);
+			$("#close-face-camera").addEventListener("click", closeFaceCamera);
+			$("#gps-refresh").addEventListener("click", refreshGpsStatus);
+			$("#attendance-action").addEventListener("click", submitAttendance);
+			$("#leave-request-form").addEventListener("submit", submitLeaveRequest);
+			$("#leave-request-type").addEventListener("change", populateLeaveSubtypeOptions);
+			$("#attendance-note").addEventListener("input", updateVerificationNotePreview);
+			$("#insights-month").addEventListener("change", loadInsightsFromMonth);
+			$("#record-audio").addEventListener("click", toggleAudioRecording);
+
+			bindFileInput("#attendance-face-input", "attendance", () => "face");
+			bindFileInput("#attendance-files-input", "attendance", (file) => file.type.startsWith("image/") ? "face" : "file");
+			bindFileInput("#leave-files-input", "leave", () => "file");
+			bindAttachmentReset("#clear-attendance-attachments", "attendance");
+			bindAttachmentReset("#clear-leave-attachments", "leave");
+
+			$("#pwa-install-action").addEventListener("click", installPWA);
+			$("#pwa-permission-action").addEventListener("click", requestDevicePermissions);
+			window.addEventListener("resize", updatePWAGate);
+		}
+
+		async function init() {
+			if (CURRENT_USER === "Guest") {
+				window.location.href = "/login?redirect-to=/mobile-attendance";
+				return;
+			}
+
+			await resolveRuntimeLanguage();
+			applyStaticTranslations();
+			await registerPWA();
+			updatePWAGate();
+			setCurrentMonth();
+			tickClock();
+			window.setInterval(tickClock, 30000);
+			renderAttachmentLists();
+			bindEvents();
+			updateVerificationNotePreview();
+			await checkBiometricAvailability();
+			try {
+				await loadDashboard();
+				await refreshGpsStatus();
+				updatePWAGate();
+			} catch (error) {
+				const message = parseError(error);
+				if (message.includes("لم يتم ربط حسابك بسجل موظف نشط")) {
+					applyNoEmployeeState();
+				}
+				showBanner(message, "error");
+				updatePWAGate();
+				if (message.includes("تسجيل الدخول")) {
+					window.setTimeout(() => {
+						window.location.href = "/login?redirect-to=/mobile-attendance";
+					}, 1000);
+				}
+			}
+		}
+
+		init();
+	})();
 </script>
-</body>
-</html>
+{% endblock %}

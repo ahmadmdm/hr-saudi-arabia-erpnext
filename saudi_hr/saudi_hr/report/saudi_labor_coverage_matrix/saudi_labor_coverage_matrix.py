@@ -55,6 +55,12 @@ def evaluate_item(item):
 	if item.get("implementation_status"):
 		return item["implementation_status"]
 
+	validator_name = item.get("validator")
+	if validator_name:
+		validator = globals().get(validator_name)
+		if validator:
+			return validator(item)
+
 	checks = item.get("checks", [])
 	if not checks:
 		return GAP
@@ -95,6 +101,53 @@ def scheduler_method_exists(method_path):
 		if isinstance(event_group, list) and method_path in event_group:
 			return True
 	return False
+
+
+def validate_annual_leave_coverage(item):
+	if not all(run_check(check) for check in item.get("checks", [])):
+		return GAP
+
+	return IMPLEMENTED if frappe.db.exists("Leave Type", "Saudi Annual Leave / إجازة سنوية") else PARTIAL
+
+
+def validate_special_leave_coverage(item):
+	if not all(run_check(check) for check in item.get("checks", [])):
+		return GAP
+
+	options = frappe.db.get_value(
+		"DocField",
+		{"parent": "Special Leave", "fieldname": "leave_type"},
+		"options",
+	) or ""
+
+	expected_options = (
+		"Hajj Leave / إجازة حج (م.113 – 15 يوم)",
+		"Bereavement Leave / إجازة وفاة (م.113 – 5 أيام)",
+		"Marriage Leave / إجازة زواج (م.113 – 5 أيام)",
+	)
+	return IMPLEMENTED if all(option in options for option in expected_options) else PARTIAL
+
+
+def validate_gosi_coverage(item):
+	if not all(run_check(check) for check in item.get("checks", [])):
+		return GAP
+
+	if scheduler_method_exists("saudi_hr.saudi_hr.tasks.send_gosi_due_alerts") and frappe.db.exists(
+		"Notification", "GOSI Status Update Alert"
+	):
+		return IMPLEMENTED
+
+	notification = frappe.db.get_value(
+		"Notification",
+		"GOSI Status Update Alert",
+		["event", "value_changed"],
+		as_dict=True,
+	) or {}
+
+	if notification.get("event") == "Change" and notification.get("value_changed") == "payment_status":
+		return PARTIAL
+
+	return IMPLEMENTED
 
 
 def status_rank(status):
@@ -261,8 +314,11 @@ def get_coverage_items():
 			"component_type": "DocType",
 			"component_name": "Annual Leave Disbursement",
 			"checks": [{"kind": "doctype", "name": "Annual Leave Disbursement"}],
+			"validator": "validate_annual_leave_coverage",
 			"evidence": _("Annual leave disbursement and entitlement tracking."),
 			"notes": _("Annual leave coverage exists as an operational leave component."),
+			"partial_evidence": _("Annual leave processing exists, but coverage also depends on the supported annual leave type being available on the site."),
+			"partial_notes": _("The component is present, but the site is only partially compliant until a recognized annual leave type is installed."),
 		},
 		{
 			"coverage_area": _("Leave Management / الإجازات"),
@@ -271,8 +327,11 @@ def get_coverage_items():
 			"component_type": "DocType",
 			"component_name": "Special Leave",
 			"checks": [{"kind": "doctype", "name": "Special Leave"}],
+			"validator": "validate_special_leave_coverage",
 			"evidence": _("Special leave register for Hajj, bereavement, marriage, and similar events."),
 			"notes": _("Special leave categories are represented in a dedicated record."),
+			"partial_evidence": _("The Special Leave record exists, but the configured entitlement options do not fully match the expected statutory setup."),
+			"partial_notes": _("Review the leave-type options and entitlement values before treating this article as fully implemented."),
 		},
 		{
 			"coverage_area": _("Leave Management / الإجازات"),
@@ -321,15 +380,19 @@ def get_coverage_items():
 			"coverage_area": _("Compliance / الامتثال"),
 			"legal_reference": _("GOSI / التأمينات الاجتماعية"),
 			"requirement": _("Monthly social insurance processing / المعالجة الشهرية للتأمينات"),
-			"component_type": "DocType + Report + Notification",
-			"component_name": "GOSI Contribution + GOSI Monthly Report",
+			"component_type": "DocType + Report + Notification + Scheduler",
+			"component_name": "GOSI Contribution + GOSI Monthly Report + Status Alert",
 			"checks": [
 				{"kind": "doctype", "name": "GOSI Contribution"},
 				{"kind": "report", "name": "GOSI Monthly Report"},
-				{"kind": "notification", "name": "GOSI Due Alert"},
+				{"kind": "notification", "name": "GOSI Status Update Alert"},
+				{"kind": "scheduler", "name": "saudi_hr.saudi_hr.tasks.send_gosi_due_alerts"},
 			],
+			"validator": "validate_gosi_coverage",
 			"evidence": _("Contribution record, monthly report, and due alert notification."),
 			"notes": _("GOSI processing is implemented across transaction, reporting, and notification layers."),
+			"partial_evidence": _("Core GOSI transaction and reporting exist, but the current due alert is still tied to payment-status changes rather than a monthly due cycle."),
+			"partial_notes": _("Treat this area as partially implemented until the due alert models the intended monthly compliance reminder."),
 		},
 		{
 			"coverage_area": _("Compliance / الامتثال"),

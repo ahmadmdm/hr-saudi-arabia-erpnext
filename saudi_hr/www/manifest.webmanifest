@@ -1,15 +1,16 @@
 {
-  "name": "حضور الموظفين",
-  "short_name": "حضور",
-  "description": "تطبيق تسجيل حضور الموظفين عبر GPS",
+  "name": "Saudi HR Mobile Attendance",
+  "short_name": "Attendance",
+  "description": "Mobile attendance, leave requests, and GPS verification for Saudi HR employees.",
   "start_url": "/mobile-attendance",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0f3460",
-  "theme_color": "#0f3460",
+  "background_color": "#17684f",
+  "theme_color": "#17684f",
   "orientation": "portrait",
-  "lang": "ar",
-  "dir": "rtl",
+  "lang": "en",
+  "dir": "auto",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/mobile-attendance-icon.svg",

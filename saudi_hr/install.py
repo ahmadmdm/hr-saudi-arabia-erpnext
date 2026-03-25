@@ -9,6 +9,7 @@ import frappe
 def after_install():
 	create_workflow_states()
 	sync_dashboard_chart_configs()
+	sync_notification_configs()
 	create_saudi_leave_types()
 	create_eosb_gratuity_rule()
 	create_default_settings()
@@ -19,6 +20,7 @@ def after_migrate():
 	"""Called after every bench migrate — ensures workflow states always exist."""
 	create_workflow_states()
 	sync_dashboard_chart_configs()
+	sync_notification_configs()
 
 
 def sync_dashboard_chart_configs():
@@ -37,6 +39,22 @@ def sync_dashboard_chart_configs():
 				continue
 
 			frappe.db.set_value("Dashboard Chart", chart_name, fieldname, value, update_modified=False)
+
+
+def sync_notification_configs():
+	"""Keep GOSI notifications aligned with the scheduler-driven compliance flow."""
+	old_name = "GOSI Due Alert"
+	new_name = "GOSI Status Update Alert"
+
+	if frappe.db.exists("Notification", old_name):
+		event = frappe.db.get_value("Notification", old_name, "event")
+		value_changed = frappe.db.get_value("Notification", old_name, "value_changed")
+
+		if event == "Change" and value_changed == "payment_status":
+			if frappe.db.exists("Notification", new_name):
+				frappe.delete_doc("Notification", old_name, force=1, ignore_permissions=True)
+			else:
+				frappe.rename_doc("Notification", old_name, new_name, force=True, merge=False)
 
 
 # ─── Workflow States ──────────────────────────────────────────────────────────
@@ -103,16 +121,22 @@ def create_saudi_leave_types():
 		},
 		{
 			"leave_type_name": "Hajj Leave / إجازة الحج",
-			"max_leaves_allowed": 20,
+			"max_leaves_allowed": 15,
 			"is_carry_forward": 0,
 			"applicable_after": 730,  # 2 years of service
-			"description": "Hajj leave — once per service, maximum 20 days",
+			"description": "Hajj leave — once per service after 2 years, maximum 15 days",
 		},
 		{
 			"leave_type_name": "Bereavement Leave / إجازة وفاة",
 			"max_leaves_allowed": 5,
 			"is_carry_forward": 0,
 			"description": "Bereavement leave — 5 days for immediate family",
+		},
+		{
+			"leave_type_name": "Marriage Leave / إجازة زواج",
+			"max_leaves_allowed": 5,
+			"is_carry_forward": 0,
+			"description": "Marriage leave — 5 days with full pay",
 		},
 	]
 
