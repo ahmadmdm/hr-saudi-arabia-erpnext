@@ -177,7 +177,7 @@
    "fieldname": "penalty_days",
    "fieldtype": "Int",
    "label": "Suspension Days / أيام الإيقاف",
-   "depends_on": "eval:frm.doc.penalty_type && frm.doc.penalty_type.includes('Suspension')"
+    "depends_on": "eval:doc.penalty_type && doc.penalty_type.includes('Suspension')"
   },
   {
    "fieldname": "column_break_4",
@@ -192,7 +192,7 @@
    "fieldname": "penalty_end_date",
    "fieldtype": "Date",
    "label": "Penalty End Date / تاريخ انتهاء الجزاء",
-   "depends_on": "eval:frm.doc.penalty_type && frm.doc.penalty_type.includes('Suspension')"
+    "depends_on": "eval:doc.penalty_type && doc.penalty_type.includes('Suspension')"
   },
   {
    "fieldname": "decision_notes",

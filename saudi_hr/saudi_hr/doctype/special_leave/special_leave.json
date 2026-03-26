@@ -37,7 +37,7 @@
  "fields": [
   {
    "fieldname": "naming_series",
-   "fieldtype": "Select",
+    "depends_on": "eval:doc.leave_type && doc.leave_type.includes('Hajj')",
    "label": "Naming Series",
    "options": "SAU-SL-.YYYY.-.####",
    "reqd": 1
@@ -45,7 +45,7 @@
   {
    "fieldname": "employee",
    "fieldtype": "Link",
-   "in_list_view": 1,
+    "depends_on": "eval:doc.leave_type && doc.leave_type.includes('Bereavement')",
    "label": "Employee / الموظف",
    "options": "Employee",
    "reqd": 1
