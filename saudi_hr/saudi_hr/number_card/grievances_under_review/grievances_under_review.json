@@ -3,7 +3,7 @@
  "docstatus": 0,
  "doctype": "Number Card",
  "document_type": "Employee Grievance",
- "filters_json": "[[\"Employee Grievance\",\"workflow_state\",\"=\",\"\u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629 / Under Review\"]]",
+ "filters_json": "[[\"Employee Grievance\",\"status\",\"=\",\"In Review / \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629\"]]",
  "function": "Count",
  "idx": 0,
  "is_public": 1,

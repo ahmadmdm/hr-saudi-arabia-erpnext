@@ -1,6 +1,7 @@
 {
  "based_on": "nationality",
  "chart_type": "Group By",
+ "color": "#ca8a04",
  "creation": "2026-03-17 00:00:00.000000",
  "custom_options": "",
  "doctype": "Dashboard Chart",

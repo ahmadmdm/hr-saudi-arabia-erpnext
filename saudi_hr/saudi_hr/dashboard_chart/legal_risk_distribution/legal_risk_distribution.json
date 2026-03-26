@@ -2,6 +2,7 @@
  "based_on": "risk_level",
  "chart_name": "Legal Risk Distribution",
  "chart_type": "Group By",
+ "color": "#0f766e",
  "creation": "2026-03-19 08:52:26.226072",
  "custom_options": "",
  "docstatus": 0,

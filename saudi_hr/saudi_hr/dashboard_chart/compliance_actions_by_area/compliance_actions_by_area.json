@@ -2,6 +2,7 @@
  "based_on": "compliance_area",
  "chart_name": "Compliance Actions by Area",
  "chart_type": "Group By",
+ "color": "#f97316",
  "creation": "2026-03-19 08:52:25.413275",
  "custom_options": "",
  "docstatus": 0,

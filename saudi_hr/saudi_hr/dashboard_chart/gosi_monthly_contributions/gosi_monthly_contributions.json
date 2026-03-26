@@ -1,6 +1,7 @@
 {
  "based_on": "total_contribution",
  "chart_type": "Sum",
+ "color": "#16a34a",
  "creation": "2026-03-17 00:00:00.000000",
  "custom_options": "",
  "doctype": "Dashboard Chart",

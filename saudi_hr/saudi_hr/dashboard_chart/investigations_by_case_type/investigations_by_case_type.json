@@ -2,6 +2,7 @@
  "based_on": "case_type",
  "chart_name": "Investigations by Case Type",
  "chart_type": "Group By",
+ "color": "#7c3aed",
  "creation": "2026-03-19 19:43:41.339899",
  "currency": "SAR",
  "custom_options": "",

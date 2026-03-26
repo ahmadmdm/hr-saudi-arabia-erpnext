@@ -1,6 +1,7 @@
 {
  "based_on": "contract_type",
  "chart_type": "Group By",
+ "color": "#2563eb",
  "creation": "2026-03-17 00:00:00.000000",
  "custom_options": "",
  "doctype": "Dashboard Chart",

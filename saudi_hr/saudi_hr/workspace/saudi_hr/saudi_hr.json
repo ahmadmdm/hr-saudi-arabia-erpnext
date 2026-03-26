@@ -7,9 +7,29 @@
   {
    "chart_name": "GOSI Monthly Contributions",
    "label": "GOSI Monthly Contributions"
+  },
+  {
+   "chart_name": "Compliance Actions by Area",
+   "label": "Compliance Actions by Area"
+  },
+  {
+   "chart_name": "Grievances by Type",
+   "label": "Grievances by Type"
+  },
+  {
+   "chart_name": "Investigations by Case Type",
+   "label": "Investigations by Case Type"
+  },
+  {
+   "chart_name": "Legal Risk Distribution",
+   "label": "Legal Risk Distribution"
+  },
+  {
+   "chart_name": "Nationality Distribution",
+   "label": "Nationality Distribution"
   }
  ],
- "content": "[{\"id\":\"saudi_hr_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Saudi HR Dashboard</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Contracts\",\"col\":3}},{\"id\":\"saudi_hr_card_2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring Iqamas\",\"col\":3}},{\"id\":\"saudi_hr_card_3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Overtime\",\"col\":3}},{\"id\":\"saudi_hr_card_4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total GOSI This Month\",\"col\":3}},{\"id\":\"saudi_hr_spacer_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_chart_1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Active Contracts by Type\",\"col\":6}},{\"id\":\"saudi_hr_chart_2\",\"type\":\"chart\",\"data\":{\"chart_name\":\"GOSI Monthly Contributions\",\"col\":6}},{\"id\":\"saudi_hr_spacer_2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick Access</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi HR Settings\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employment Contracts\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Monthly Payroll\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Leave Management\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Compliance Tracker\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Mobile Attendance\",\"col\":2}},{\"id\":\"saudi_hr_spacer_3\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_3\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Core Areas</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_links_1\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup & Policy\",\"col\":4}},{\"id\":\"saudi_hr_card_links_2\",\"type\":\"card\",\"data\":{\"card_name\":\"People & Contracts\",\"col\":4}},{\"id\":\"saudi_hr_card_links_3\",\"type\":\"card\",\"data\":{\"card_name\":\"Attendance & Payroll\",\"col\":4}},{\"id\":\"saudi_hr_card_links_4\",\"type\":\"card\",\"data\":{\"card_name\":\"Leaves & Benefits\",\"col\":4}},{\"id\":\"saudi_hr_card_links_5\",\"type\":\"card\",\"data\":{\"card_name\":\"Compliance & Legal\",\"col\":4}},{\"id\":\"saudi_hr_card_links_6\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "content": "[{\"id\":\"saudi_hr_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Saudi HR Dashboard</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Contracts\",\"col\":3}},{\"id\":\"saudi_hr_card_2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring Iqamas\",\"col\":3}},{\"id\":\"saudi_hr_card_3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Overtime\",\"col\":3}},{\"id\":\"saudi_hr_card_4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total GOSI This Month\",\"col\":3}},{\"id\":\"saudi_hr_card_5\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Approved HR Policies\",\"col\":3}},{\"id\":\"saudi_hr_card_6\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Compliance Actions In Progress\",\"col\":3}},{\"id\":\"saudi_hr_card_7\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Grievances Under Review\",\"col\":3}},{\"id\":\"saudi_hr_card_8\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Investigations In Progress\",\"col\":3}},{\"id\":\"saudi_hr_card_9\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Completed Compliance Actions\",\"col\":3}},{\"id\":\"saudi_hr_card_10\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Resolved Grievances\",\"col\":3}},{\"id\":\"saudi_hr_card_11\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Appeals Under Review\",\"col\":3}},{\"id\":\"saudi_hr_card_12\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"High Risk Legal References\",\"col\":3}},{\"id\":\"saudi_hr_spacer_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_chart_1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Active Contracts by Type\",\"col\":6}},{\"id\":\"saudi_hr_chart_2\",\"type\":\"chart\",\"data\":{\"chart_name\":\"GOSI Monthly Contributions\",\"col\":6}},{\"id\":\"saudi_hr_chart_3\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Compliance Actions by Area\",\"col\":4}},{\"id\":\"saudi_hr_chart_4\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Grievances by Type\",\"col\":4}},{\"id\":\"saudi_hr_chart_5\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Investigations by Case Type\",\"col\":4}},{\"id\":\"saudi_hr_chart_6\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Legal Risk Distribution\",\"col\":6}},{\"id\":\"saudi_hr_chart_7\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Nationality Distribution\",\"col\":6}},{\"id\":\"saudi_hr_spacer_2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick Access</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi HR Settings\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employment Contracts\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Monthly Payroll\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Leave Management\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Compliance Tracker\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Mobile Attendance\",\"col\":2}},{\"id\":\"saudi_hr_spacer_3\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_3\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Core Areas</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_links_1\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup & Policy\",\"col\":4}},{\"id\":\"saudi_hr_card_links_2\",\"type\":\"card\",\"data\":{\"card_name\":\"People & Contracts\",\"col\":4}},{\"id\":\"saudi_hr_card_links_3\",\"type\":\"card\",\"data\":{\"card_name\":\"Attendance & Payroll\",\"col\":4}},{\"id\":\"saudi_hr_card_links_4\",\"type\":\"card\",\"data\":{\"card_name\":\"Leaves & Benefits\",\"col\":4}},{\"id\":\"saudi_hr_card_links_5\",\"type\":\"card\",\"data\":{\"card_name\":\"Compliance & Legal\",\"col\":4}},{\"id\":\"saudi_hr_card_links_6\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
  "creation": "2026-03-25 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -271,7 +291,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Compliance & Legal",
-   "link_count": 8,
+   "link_count": 9,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -322,6 +342,16 @@
    "label": "Labor Dispute",
    "link_count": 0,
    "link_to": "Labor Dispute",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Absence Case",
+   "link_count": 0,
+   "link_to": "Absence Case",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -496,6 +526,38 @@
   {
    "label": "إجمالي التأمينات هذا الشهر",
    "number_card_name": "Total GOSI This Month"
+  },
+  {
+   "label": "السياسات المعتمدة",
+   "number_card_name": "Approved HR Policies"
+  },
+  {
+   "label": "إجراءات الامتثال الجارية",
+   "number_card_name": "Compliance Actions In Progress"
+  },
+  {
+   "label": "التظلمات قيد المراجعة",
+   "number_card_name": "Grievances Under Review"
+  },
+  {
+   "label": "التحقيقات الجارية",
+   "number_card_name": "Investigations In Progress"
+  },
+  {
+   "label": "Completed Compliance Actions",
+   "number_card_name": "Completed Compliance Actions"
+  },
+  {
+   "label": "Resolved Grievances",
+   "number_card_name": "Resolved Grievances"
+  },
+  {
+   "label": "Appeals Under Review",
+   "number_card_name": "Appeals Under Review"
+  },
+  {
+   "label": "High Risk Legal References",
+   "number_card_name": "High Risk Legal References"
   }
  ],
  "owner": "Administrator",
@@ -506,46 +568,52 @@
  "sequence_id": 29.0,
  "shortcuts": [
   {
+   "color": "Blue",
    "doc_view": "Form",
    "label": "Saudi HR Settings",
    "link_to": "Saudi HR Settings",
    "type": "DocType"
   },
   {
+   "color": "Green",
    "doc_view": "List",
    "label": "Employment Contracts",
    "link_to": "Saudi Employment Contract",
    "type": "DocType"
   },
   {
+   "color": "Orange",
    "doc_view": "List",
    "label": "Monthly Payroll",
    "link_to": "Saudi Monthly Payroll",
    "type": "DocType"
   },
   {
+   "color": "Yellow",
    "doc_view": "List",
    "label": "Attendance",
    "link_to": "Saudi Daily Attendance",
    "type": "DocType"
   },
   {
+   "color": "Cyan",
    "doc_view": "List",
    "label": "Leave Management",
    "link_to": "Special Leave",
    "type": "DocType"
   },
   {
+   "color": "Red",
    "doc_view": "Report",
    "label": "Compliance Tracker",
    "link_to": "Compliance Case Tracker",
    "type": "Report"
-    },
-    {
-     "color": "Blue",
-     "label": "Mobile Attendance",
-     "type": "URL",
-     "url": "/mobile-attendance"
+  },
+  {
+   "color": "Blue",
+   "label": "Mobile Attendance",
+   "type": "URL",
+   "url": "/mobile-attendance"
   }
  ],
  "title": "Saudi HR"

@@ -4,7 +4,7 @@
  "docstatus": 0,
  "doctype": "Number Card",
  "document_type": "HR Compliance Action Log",
- "filters_json": "[[\"HR Compliance Action Log\",\"workflow_state\",\"=\",\"\u0645\u0643\u062a\u0645\u0644 / Completed\"]]",
+ "filters_json": "[[\"HR Compliance Action Log\",\"status\",\"=\",\"Completed / \u0645\u0643\u062a\u0645\u0644\"]]",
  "function": "Count",
  "idx": 0,
  "is_public": 1,

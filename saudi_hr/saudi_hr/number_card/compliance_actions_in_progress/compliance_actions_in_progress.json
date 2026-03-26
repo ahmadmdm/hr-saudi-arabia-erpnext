@@ -3,7 +3,7 @@
  "docstatus": 0,
  "doctype": "Number Card",
  "document_type": "HR Compliance Action Log",
- "filters_json": "[[\"HR Compliance Action Log\",\"workflow_state\",\"=\",\"\u0642\u064a\u062f \u0627\u0644\u062a\u0646\u0641\u064a\u0630 / In Progress\"]]",
+ "filters_json": "[[\"HR Compliance Action Log\",\"status\",\"=\",\"In Progress / \u0642\u064a\u062f \u0627\u0644\u062a\u0646\u0641\u064a\u0630\"]]",
  "function": "Count",
  "idx": 0,
  "is_public": 1,

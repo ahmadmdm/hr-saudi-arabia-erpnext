@@ -3,7 +3,7 @@
  "docstatus": 0,
  "doctype": "Number Card",
  "document_type": "Investigation Record",
- "filters_json": "[[\"Investigation Record\",\"workflow_state\",\"=\",\"\u0642\u064a\u062f \u0627\u0644\u062a\u062d\u0642\u064a\u0642 / In Progress\"]]",
+ "filters_json": "[[\"Investigation Record\",\"status\",\"=\",\"In Progress / \u0642\u064a\u062f \u0627\u0644\u062a\u062d\u0642\u064a\u0642\"]]",
  "function": "Count",
  "idx": 0,
  "is_public": 1,

@@ -3,7 +3,7 @@
  "docstatus": 0,
  "doctype": "Number Card",
  "document_type": "HR Policy Document",
- "filters_json": "[[\"HR Policy Document\",\"workflow_state\",\"=\",\"\u0645\u0639\u062a\u0645\u062f / Approved\"]]",
+ "filters_json": "[[\"HR Policy Document\",\"status\",\"=\",\"Active / \u0633\u0627\u0631\u064a\u0629\"]]",
  "function": "Count",
  "idx": 0,
  "is_public": 1,
