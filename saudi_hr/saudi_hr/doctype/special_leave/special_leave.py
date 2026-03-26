@@ -3,6 +3,8 @@ from frappe.model.document import Document
 from frappe import _
 from frappe.utils import date_diff, getdate
 
+from saudi_hr.saudi_hr.utils import get_employee_basic_salary
+
 
 # Days entitlement per م.113
 LEAVE_ENTITLEMENT = {
@@ -125,12 +127,7 @@ class SpecialLeave(Document):
     def _calculate_pay(self):
         if not self.daily_basic_salary:
             if self.employee:
-                monthly = frappe.db.get_value(
-                    "Salary Structure Assignment",
-                    {"employee": self.employee, "docstatus": 1},
-                    "base",
-                    order_by="from_date desc",
-                )
+                monthly = get_employee_basic_salary(self.employee)
                 if monthly:
                     self.daily_basic_salary = monthly / 30
         if self.daily_basic_salary and self.actual_days:

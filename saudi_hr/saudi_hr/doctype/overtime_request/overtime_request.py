@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate
 
+from saudi_hr.saudi_hr.utils import get_employee_basic_salary as get_current_basic_salary
+
 
 class OvertimeRequest(Document):
 
@@ -27,15 +29,8 @@ class OvertimeRequest(Document):
 			frappe.throw(_("Overtime hours must be greater than 0 / يجب أن تكون ساعات الإضافي أكبر من الصفر"))
 
 	def _fetch_salary(self):
-		"""جلب الراتب الأساسي من آخر هيكل راتب للموظف."""
-		sal_assign = frappe.get_all(
-			"Salary Structure Assignment",
-			filters={"employee": self.employee, "docstatus": 1},
-			fields=["base"],
-			order_by="from_date desc",
-			limit=1,
-		)
-		self.monthly_basic = flt(sal_assign[0].base) if sal_assign else 0.0
+		"""جلب الراتب الأساسي من العقد النشط للموظف."""
+		self.monthly_basic = get_current_basic_salary(self.employee)
 		self.overtime_rate = self.OVERTIME_RATE
 		# الأجر الساعي = الراتب الشهري / 240
 		self.hourly_rate = round(self.monthly_basic / self.WORKING_HOURS_PER_MONTH, 4)
@@ -165,11 +160,4 @@ def create_overtime_journal_entry(doc, method=None):
 @frappe.whitelist()
 def get_employee_basic_salary(employee):
 	"""Return the employee's current basic salary for JS auto-fill."""
-	sal = frappe.get_all(
-		"Salary Structure Assignment",
-		filters={"employee": employee, "docstatus": 1},
-		fields=["base"],
-		order_by="from_date desc",
-		limit=1,
-	)
-	return flt(sal[0].base) if sal else 0.0
+	return get_current_basic_salary(employee)

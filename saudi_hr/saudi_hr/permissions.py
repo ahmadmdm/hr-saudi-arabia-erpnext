@@ -83,6 +83,14 @@ def has_monthly_attendance_record_permission(doc, user=None, permission_type=Non
 	return _employee_permission(doc, user)
 
 
+def get_saudi_annual_leave_query(user=None):
+	return _employee_query("Saudi Annual Leave", user)
+
+
+def has_saudi_annual_leave_permission(doc, user=None, permission_type=None):
+	return _employee_permission(doc, user)
+
+
 def get_saudi_sick_leave_query(user=None):
 	return _employee_query("Saudi Sick Leave", user)
 
@@ -104,14 +112,6 @@ def get_special_leave_query(user=None):
 
 
 def has_special_leave_permission(doc, user=None, permission_type=None):
-	return _employee_permission(doc, user)
-
-
-def get_leave_application_query(user=None):
-	return _employee_query("Leave Application", user)
-
-
-def has_leave_application_permission(doc, user=None, permission_type=None):
 	return _employee_permission(doc, user)
 
 

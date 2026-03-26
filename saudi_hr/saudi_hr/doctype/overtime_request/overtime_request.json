@@ -204,9 +204,8 @@
   },
   {
    "fieldname": "payroll_period",
-   "fieldtype": "Link",
-   "label": "Payroll Period / فترة الرواتب",
-   "options": "Payroll Period"
+    "fieldtype": "Data",
+    "label": "Payroll Reference / مرجع الرواتب"
   },
   {
    "fieldname": "amended_from",

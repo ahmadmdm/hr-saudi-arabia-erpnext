@@ -107,7 +107,7 @@ def validate_annual_leave_coverage(item):
 	if not all(run_check(check) for check in item.get("checks", [])):
 		return GAP
 
-	return IMPLEMENTED if frappe.db.exists("Leave Type", "Saudi Annual Leave / إجازة سنوية") else PARTIAL
+	return IMPLEMENTED if frappe.db.exists("DocType", "Saudi Annual Leave") else PARTIAL
 
 
 def validate_special_leave_coverage(item):

@@ -1,12 +1,14 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
+from frappe.utils import today
 
 
 class DisciplinaryProcedure(Document):
 
     def validate(self):
         self._validate_dates()
+        self._sync_from_investigation()
         self._check_prior_warnings()
 
     def on_submit(self):
@@ -56,6 +58,67 @@ class DisciplinaryProcedure(Document):
                 indicator="orange",
                 title=_("Progressive Discipline Warning")
             )
+
+    def _sync_from_investigation(self):
+        if not self.investigation_record:
+            return
+
+        record = frappe.db.get_value(
+            "Investigation Record",
+            self.investigation_record,
+            ["subject_employee", "company", "department", "allegation_date", "legal_reference_matrix", "employee_warning_notice"],
+            as_dict=True,
+        ) or {}
+
+        self.employee = self.employee or record.get("subject_employee")
+        self.company = self.company or record.get("company")
+        self.department = self.department or record.get("department")
+        self.incident_date = self.incident_date or record.get("allegation_date")
+        self.legal_reference_matrix = self.legal_reference_matrix or record.get("legal_reference_matrix")
+        self.employee_warning_notice = self.employee_warning_notice or record.get("employee_warning_notice")
+
+
+@frappe.whitelist()
+def create_decision_log(doc_name):
+    doc = frappe.get_doc("Disciplinary Procedure", doc_name)
+    if doc.disciplinary_decision_log and frappe.db.exists("Disciplinary Decision Log", doc.disciplinary_decision_log):
+        return {"decision_log": doc.disciplinary_decision_log, "created": False}
+
+    article_reference = None
+    legal_reference = None
+    if doc.legal_reference_matrix:
+        reference = frappe.db.get_value(
+            "Legal Reference Matrix",
+            doc.legal_reference_matrix,
+            ["article_number", "law_name"],
+            as_dict=True,
+        ) or {}
+        article_reference = reference.get("article_number")
+        legal_reference = reference.get("law_name")
+
+    decision_log = frappe.get_doc(
+        {
+            "doctype": "Disciplinary Decision Log",
+            "disciplinary_procedure": doc.name,
+            "employee": doc.employee,
+            "company": doc.company,
+            "department": doc.department,
+            "investigation_record": doc.investigation_record,
+            "employee_warning_notice": doc.employee_warning_notice,
+            "decision_status": "Issued / صادر" if doc.docstatus == 1 else "Draft / مسودة",
+            "decision_type": doc.penalty_type,
+            "decision_date": doc.penalty_start_date or today(),
+            "effective_from": doc.penalty_start_date,
+            "effective_to": doc.penalty_end_date,
+            "decided_by": frappe.session.user,
+            "article_reference": article_reference,
+            "legal_reference": legal_reference,
+            "decision_summary": doc.decision_notes or doc.incident_description,
+            "appeal_deadline": doc.appeal_date,
+        }
+    ).insert(ignore_permissions=True)
+    doc.db_set("disciplinary_decision_log", decision_log.name, update_modified=False)
+    return {"decision_log": decision_log.name, "created": True}
 
 
 @frappe.whitelist()

@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import date_diff, getdate, flt, nowdate
 
+from saudi_hr.saudi_hr.utils import get_employee_basic_salary
+
 
 class EndofServiceBenefit(Document):
 
@@ -109,14 +111,7 @@ class EndofServiceBenefit(Document):
 @frappe.whitelist()
 def get_last_basic_salary(employee):
 	"""Return the employee's latest basic salary for JS auto-fill."""
-	sal = frappe.get_all(
-		"Salary Structure Assignment",
-		filters={"employee": employee, "docstatus": 1},
-		fields=["base"],
-		order_by="from_date desc",
-		limit=1,
-	)
-	return flt(sal[0].base) if sal else 0.0
+	return get_employee_basic_salary(employee)
 
 
 @frappe.whitelist()

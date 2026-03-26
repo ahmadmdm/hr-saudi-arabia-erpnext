@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import date_diff, getdate, flt, get_first_day_of_week
 
+from saudi_hr.saudi_hr.utils import get_employee_basic_salary
+
 
 class SaudiSickLeave(Document):
 
@@ -57,14 +59,7 @@ class SaudiSickLeave(Document):
 		new_days = self.total_days or 0
 
 		# حساب الأجر اليومي
-		sal_assign = frappe.get_all(
-			"Salary Structure Assignment",
-			filters={"employee": self.employee, "docstatus": 1},
-			fields=["base"],
-			order_by="from_date desc",
-			limit=1,
-		)
-		monthly = flt(sal_assign[0].base) if sal_assign else 0.0
+		monthly = get_employee_basic_salary(self.employee)
 		self.daily_salary = round(monthly / 30, 2)
 
 		# حساب معدل الأجر بحسب الشريحة التراكمية
@@ -142,12 +137,5 @@ def get_sick_days_this_year(employee, exclude_doc=""):
 @frappe.whitelist()
 def get_daily_salary(employee):
 	"""Return daily salary (monthly_basic / 30) for the employee."""
-	sal = frappe.get_all(
-		"Salary Structure Assignment",
-		filters={"employee": employee, "docstatus": 1},
-		fields=["base"],
-		order_by="from_date desc",
-		limit=1,
-	)
-	monthly = flt(sal[0].base) if sal else 0.0
+	monthly = get_employee_basic_salary(employee)
 	return round(monthly / 30, 2)

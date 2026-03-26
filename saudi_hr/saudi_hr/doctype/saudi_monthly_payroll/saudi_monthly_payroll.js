@@ -38,6 +38,7 @@ frappe.ui.form.on('Saudi Monthly Payroll Employee', {
     housing_allowance(frm, cdt, cdn){ _calc_row(frm, cdt, cdn); },
     transport_allowance(frm, cdt, cdn){ _calc_row(frm, cdt, cdn); },
     other_allowances(frm, cdt, cdn) { _calc_row(frm, cdt, cdn); },
+    loan_deduction(frm, cdt, cdn)   { _calc_row(frm, cdt, cdn); },
 });
 
 
@@ -171,10 +172,12 @@ function _calc_row(frm, cdt, cdn) {
     const gosi_base = Math.min(basic, 45000);
     const gosi_ded  = parseFloat((gosi_base * gosi_rate / 100).toFixed(2));
 
-    const net = parseFloat((gross - gosi_ded - flt(row.sick_leave_deduction) + flt(row.overtime_addition)).toFixed(2));
+    const total_deductions = gosi_ded + flt(row.sick_leave_deduction) + flt(row.loan_deduction);
+    const net = parseFloat((gross + flt(row.overtime_addition) - total_deductions).toFixed(2));
 
     frappe.model.set_value(cdt, cdn, 'gross_salary', parseFloat(gross.toFixed(2)));
     frappe.model.set_value(cdt, cdn, 'gosi_employee_deduction', gosi_ded);
+    frappe.model.set_value(cdt, cdn, 'total_deductions', parseFloat(total_deductions.toFixed(2)));
     frappe.model.set_value(cdt, cdn, 'net_salary', net);
 
     _update_totals(frm);
@@ -184,16 +187,20 @@ function _calc_row(frm, cdt, cdn) {
 // ─── Totals ───────────────────────────────────────────────────────────────────
 
 function _update_totals(frm) {
-    let total_gross = 0, total_gosi = 0, total_ot = 0, total_net = 0;
+    let total_gross = 0, total_gosi = 0, total_sick = 0, total_loan = 0, total_ot = 0, total_net = 0;
     (frm.doc.employees || []).forEach(row => {
         total_gross += flt(row.gross_salary);
         total_gosi  += flt(row.gosi_employee_deduction);
+        total_sick  += flt(row.sick_leave_deduction);
+        total_loan  += flt(row.loan_deduction);
         total_ot    += flt(row.overtime_addition);
         total_net   += flt(row.net_salary);
     });
     frm.set_value('total_employees',      (frm.doc.employees || []).length);
     frm.set_value('total_gross',          parseFloat(total_gross.toFixed(2)));
     frm.set_value('total_gosi_deductions',parseFloat(total_gosi.toFixed(2)));
+    frm.set_value('total_sick_deductions',parseFloat(total_sick.toFixed(2)));
+    frm.set_value('total_loan_deductions',parseFloat(total_loan.toFixed(2)));
     frm.set_value('total_overtime',       parseFloat(total_ot.toFixed(2)));
     frm.set_value('total_net_payable',    parseFloat(total_net.toFixed(2)));
 }

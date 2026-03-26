@@ -11,11 +11,10 @@ import frappe
 from frappe import _
 from frappe.utils import flt, get_datetime, get_first_day, get_last_day, getdate, now_datetime, nowdate, time_diff_in_hours
 from frappe.utils.file_manager import save_file
-from hrms.hr.doctype.leave_application.leave_application import get_leave_approver
 
-from saudi_hr.saudi_hr.doctype.annual_leave_disbursement.annual_leave_disbursement import _get_supported_annual_leave_types
 from saudi_hr.saudi_hr.doctype.maternity_paternity_leave.maternity_paternity_leave import LEAVE_DAYS
 from saudi_hr.saudi_hr.location_utils import resolve_location_reference
+from saudi_hr.saudi_hr.utils import get_annual_leave_balance
 
 
 SPECIAL_LEAVE_OPTIONS = [
@@ -162,6 +161,8 @@ def _get_payroll_snapshot(employee):
 		SELECT
 			child.gosi_employee_deduction,
 			child.sick_leave_deduction,
+			child.loan_deduction,
+			child.total_deductions,
 			child.overtime_addition,
 			child.net_salary,
 			parent.month,
@@ -185,6 +186,8 @@ def _get_payroll_snapshot(employee):
 		"status": row.status,
 		"gosi_deduction": flt(row.gosi_employee_deduction),
 		"sick_leave_deduction": flt(row.sick_leave_deduction),
+		"loan_deduction": flt(row.loan_deduction),
+		"total_deductions": flt(row.total_deductions),
 		"overtime_addition": flt(row.overtime_addition),
 		"net_salary": flt(row.net_salary),
 	}
@@ -246,30 +249,16 @@ def _get_attendance_insights(employee, month=None, year=None):
 	}
 
 
-def _get_annual_leave_type():
-	for leave_type in _get_supported_annual_leave_types():
-		if frappe.db.exists("Leave Type", leave_type):
-			return leave_type
-	return None
-
-
 def _get_leave_options(employee):
-	annual_leave_type = _get_annual_leave_type()
-	annual_balance = None
-	if annual_leave_type:
-		try:
-			from hrms.hr.doctype.leave_application.leave_application import get_leave_balance_on
-
-			annual_balance = get_leave_balance_on(employee, annual_leave_type, getdate(nowdate()))
-		except Exception:
-			annual_balance = None
+	annual_balance = get_annual_leave_balance(employee, nowdate())
 
 	return {
 		"annual": {
 			"label": "Annual Leave / إجازة سنوية",
-			"doctype": "Leave Application",
-			"leave_type": annual_leave_type,
-			"balance": annual_balance,
+			"doctype": "Saudi Annual Leave",
+			"balance": annual_balance.get("balance"),
+			"entitled": annual_balance.get("entitled"),
+			"taken": annual_balance.get("taken"),
 		},
 		"sick": {
 			"label": "Sick Leave / إجازة مرضية",
@@ -304,20 +293,14 @@ def _build_mobile_leave_doc(employee, profile, request_type, attachments, payloa
 	base_fields = _get_mobile_leave_base_fields(employee, profile)
 
 	if request_type == "annual":
-		leave_type = _get_annual_leave_type()
-		if not leave_type:
-			frappe.throw(_("لم يتم إعداد نوع الإجازة السنوية في النظام بعد."))
-
 		return frappe.get_doc(
 			{
-				"doctype": "Leave Application",
+				"doctype": "Saudi Annual Leave",
 				**base_fields,
-				"leave_type": leave_type,
-				"from_date": payload["start_date"],
-				"to_date": payload["end_date"] or payload["start_date"],
+				"leave_start_date": payload["start_date"],
+				"leave_end_date": payload["end_date"] or payload["start_date"],
 				"half_day": int(payload.get("half_day") or 0),
 				"description": payload.get("reason") or "",
-				"leave_approver": get_leave_approver(employee),
 			}
 		)
 
@@ -375,12 +358,11 @@ def _docstatus_label(docstatus):
 
 def _get_recent_leave_requests(employee, limit=8):
 	rows = []
-	annual_types = _get_supported_annual_leave_types()
 
 	for row in frappe.get_all(
-		"Leave Application",
-		filters={"employee": employee, "leave_type": ["in", annual_types]},
-		fields=["name", "status", "from_date", "to_date", "total_leave_days", "creation", "docstatus"],
+		"Saudi Annual Leave",
+		filters={"employee": employee},
+		fields=["name", "status", "leave_start_date", "leave_end_date", "total_leave_days", "creation", "docstatus"],
 		order_by="creation desc",
 		limit=limit,
 	):
@@ -389,8 +371,8 @@ def _get_recent_leave_requests(employee, limit=8):
 				"name": row.name,
 				"category": "Annual Leave / إجازة سنوية",
 				"status": row.status,
-				"from_date": row.from_date,
-				"to_date": row.to_date,
+				"from_date": row.leave_start_date,
+				"to_date": row.leave_end_date,
 				"days": flt(row.total_leave_days),
 				"created_at": str(row.creation),
 			}

@@ -24,9 +24,9 @@
   },
   {
    "fieldname": "leave_type",
-   "fieldtype": "Link",
+    "fieldtype": "Select",
    "label": "Leave Type / نوع الإجازة",
-   "options": "Leave Type"
+    "options": "Annual Leave / إجازة سنوية"
   }
  ],
  "is_standard": "Yes",

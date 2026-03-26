@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, flt
 
+from saudi_hr.saudi_hr.utils import get_employee_basic_salary
+
 # الأيام المستحقة بحسب نوع الإجازة (م.151 من نظام العمل السعودي)
 LEAVE_DAYS = {
 	"Maternity / أمومة (70 يوم)": 70,
@@ -37,14 +39,7 @@ class MaternityPaternityLeave(Document):
 		self.full_pay = 1
 		self.pay_note = "Full pay per Saudi Labor Law Art. 151 / أجر كامل وفقاً للمادة 151"
 
-		sal = frappe.get_all(
-			"Salary Structure Assignment",
-			filters={"employee": self.employee, "docstatus": 1},
-			fields=["base"],
-			order_by="from_date desc",
-			limit=1,
-		)
-		monthly = flt(sal[0].base) if sal else 0.0
+		monthly = get_employee_basic_salary(self.employee)
 		self.daily_salary = round(monthly / 30, 2)
 		self.total_leave_pay = round(self.daily_salary * (self.entitled_days or 0), 2)
 
@@ -61,12 +56,5 @@ class MaternityPaternityLeave(Document):
 @frappe.whitelist()
 def get_daily_salary(employee):
 	"""Return daily salary (monthly_basic / 30) for JS auto-fill."""
-	sal = frappe.get_all(
-		"Salary Structure Assignment",
-		filters={"employee": employee, "docstatus": 1},
-		fields=["base"],
-		order_by="from_date desc",
-		limit=1,
-	)
-	monthly = flt(sal[0].base) if sal else 0.0
+	monthly = get_employee_basic_salary(employee)
 	return round(monthly / 30, 2)

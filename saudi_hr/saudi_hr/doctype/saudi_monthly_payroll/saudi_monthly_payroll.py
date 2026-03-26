@@ -1,7 +1,10 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, nowdate, getdate, date_diff, add_days
+from frappe.utils import cint, flt, getdate
+
+from saudi_hr.saudi_hr.doctype.employee_loan.employee_loan import apply_payroll_loan_deductions, get_due_loan_deduction, revert_payroll_loan_deductions
+from saudi_hr.saudi_hr.utils import get_employee_salary_components
 
 # معدلات GOSI الافتراضية
 GOSI_SAUDI_EMP = 10.0      # اقتطاع الموظف السعودي
@@ -22,13 +25,17 @@ class SaudiMonthlyPayroll(Document):
 		self.total_employees = len(self.employees)
 		self.total_gross = round(sum(flt(r.gross_salary) for r in self.employees), 2)
 		self.total_gosi_deductions = round(sum(flt(r.gosi_employee_deduction) for r in self.employees), 2)
+		self.total_sick_deductions = round(sum(flt(r.sick_leave_deduction) for r in self.employees), 2)
+		self.total_loan_deductions = round(sum(flt(r.loan_deduction) for r in self.employees), 2)
 		self.total_overtime = round(sum(flt(r.overtime_addition) for r in self.employees), 2)
 		self.total_net_payable = round(sum(flt(r.net_salary) for r in self.employees), 2)
 
 	def on_submit(self):
+		apply_payroll_loan_deductions(self)
 		self.db_set("status", "Completed / مكتمل")
 
 	def on_cancel(self):
+		revert_payroll_loan_deductions(self)
 		self.db_set("status", "Cancelled / ملغى")
 
 
@@ -46,7 +53,7 @@ def fetch_employees(doc_name: str):
 	employees = frappe.get_all(
 		"Employee",
 		filters={"company": doc.company, "status": "Active"},
-		fields=["name", "employee_name", "department", "nationality"],
+		fields=_get_employee_fetch_fields(),
 		order_by="employee_name",
 	)
 
@@ -58,23 +65,9 @@ def fetch_employees(doc_name: str):
 
 	emp_names = [e["name"] for e in employees]
 
-	# ── جلب الرواتب دفعةً واحدة (batch) لتجنب N+1 queries ──────────────────
-	sal_rows = frappe.db.sql(
-		"""SELECT employee, base FROM `tabSalary Structure Assignment`
-		   WHERE employee IN %(names)s AND docstatus=1
-		   ORDER BY from_date DESC""",
-		{"names": emp_names},
-		as_dict=True,
-	)
-	# أحدث راتب أساسي لكل موظف (القائمة مرتّبة تنازلياً، نأخذ أول ظهور)
-	salary_map = {}
-	for row in sal_rows:
-		if row["employee"] not in salary_map:
-			salary_map[row["employee"]] = flt(row["base"])
-
-	# ── جلب بدلات العقود دفعةً واحدة ──────────────────────────────────────
+	# ── جلب بدلات العقود ورواتبها دفعةً واحدة ───────────────────────────────
 	contract_rows = frappe.db.sql(
-		"""SELECT employee, housing_allowance, transport_allowance, other_allowances
+		"""SELECT employee, basic_salary, housing_allowance, transport_allowance, other_allowances, total_salary
 		   FROM `tabSaudi Employment Contract`
 		   WHERE employee IN %(names)s
 		     AND contract_status = 'Active / نشط'
@@ -122,12 +115,16 @@ def fetch_employees(doc_name: str):
 	for ot in ot_rows:
 		ot_map[ot["employee"]] = ot_map.get(ot["employee"], 0.0) + flt(ot["overtime_amount"])
 
+	loan_map = {emp_name: get_due_loan_deduction(emp_name, month_num, int(doc.year)) for emp_name in emp_names}
+
 	# مسح الجدول الحالي
 	doc.set("employees", [])
 
 	for emp in employees:
-		basic = salary_map.get(emp["name"], 0.0)
 		contract = contract_map.get(emp["name"])
+		basic = flt(contract["basic_salary"]) if contract else 0.0
+		if not basic:
+			basic = get_employee_salary_components(emp["name"])["basic_salary"]
 		housing = flt(contract["housing_allowance"]) if contract else 0.0
 		transport = flt(contract["transport_allowance"]) if contract else 0.0
 		other = flt(contract["other_allowances"]) if contract else 0.0
@@ -148,7 +145,10 @@ def fetch_employees(doc_name: str):
 				sick_deduction += round(full_pay - actual_pay, 2)
 
 		overtime = round(ot_map.get(emp["name"], 0.0), 2)
-		net = round(gross - gosi_deduction - sick_deduction + overtime, 2)
+		loan_info = loan_map.get(emp["name"], {"loan_deduction": 0.0, "installment_names": []})
+		loan_deduction = round(flt(loan_info.get("loan_deduction")), 2)
+		total_deductions = round(gosi_deduction + sick_deduction + loan_deduction, 2)
+		net = round(gross + overtime - total_deductions, 2)
 
 		doc.append("employees", {
 			"employee": emp["name"],
@@ -162,7 +162,10 @@ def fetch_employees(doc_name: str):
 			"gross_salary": gross,
 			"gosi_employee_deduction": gosi_deduction,
 			"sick_leave_deduction": round(sick_deduction, 2),
+			"loan_deduction": loan_deduction,
+			"total_deductions": total_deductions,
 			"overtime_addition": overtime,
+			"loan_installments": ", ".join(loan_info.get("installment_names", [])),
 			"net_salary": net,
 		})
 
@@ -179,7 +182,7 @@ def calculate_employee_row(employee: str, month: str, year: int):
 	emp_doc = frappe.get_all(
 		"Employee",
 		filters={"name": employee},
-		fields=["name", "employee_name", "department", "nationality"],
+		fields=_get_employee_fetch_fields(),
 		limit=1,
 	)
 	if not emp_doc:
@@ -221,7 +224,11 @@ def create_journal_entry_from_payroll(doc_name: str):
 	# ── حسابات الإجمالي ─────────────────────────────────────────────────────
 	total_gross = flt(doc.total_gross)
 	total_gosi = flt(doc.total_gosi_deductions)
+	total_sick = flt(doc.total_sick_deductions)
+	total_loan = flt(doc.total_loan_deductions)
+	total_overtime = flt(doc.total_overtime)
 	total_net = flt(doc.total_net_payable)
+	total_salary_cost = round(total_gross + total_overtime - total_sick, 2)
 
 	# ── الحسابات المحاسبية ───────────────────────────────────────────────────
 	expense_account = (
@@ -259,6 +266,18 @@ def create_journal_entry_from_payroll(doc_name: str):
 		)
 		or payable_account
 	)
+	loan_receivable_account = (
+		frappe.db.get_value(
+			"Account",
+			{"company": company, "account_name": ["like", "%Loan%"], "root_type": "Asset", "is_group": 0},
+			"name",
+		)
+		or frappe.db.get_value(
+			"Account",
+			{"company": company, "account_type": "Receivable", "is_group": 0},
+			"name",
+		)
+	)
 
 	if not expense_account or not payable_account:
 		frappe.throw(
@@ -275,23 +294,22 @@ def create_journal_entry_from_payroll(doc_name: str):
 	accounts = [
 		{
 			"account": expense_account,
-			"debit_in_account_currency": total_gross,
-			"reference_type": "Saudi Monthly Payroll",
-			"reference_name": doc.name,
+			"debit_in_account_currency": total_salary_cost,
 		},
 	]
 	if total_gosi > 0:
 		accounts.append({
 			"account": gosi_payable_account,
 			"credit_in_account_currency": total_gosi,
-			"reference_type": "Saudi Monthly Payroll",
-			"reference_name": doc.name,
+		})
+	if total_loan > 0 and loan_receivable_account:
+		accounts.append({
+			"account": loan_receivable_account,
+			"credit_in_account_currency": total_loan,
 		})
 	accounts.append({
 		"account": payable_account,
 		"credit_in_account_currency": total_net,
-		"reference_type": "Saudi Monthly Payroll",
-		"reference_name": doc.name,
 	})
 
 	je = frappe.get_doc({
@@ -325,31 +343,11 @@ def create_journal_entry_from_payroll(doc_name: str):
 
 def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 	"""بناء بيانات صف الموظف الواحد في الجدول الفرعي."""
-	# جلب الراتب من هيكل الراتب
-	sal = frappe.get_all(
-		"Salary Structure Assignment",
-		filters={"employee": emp["name"], "docstatus": 1},
-		fields=["base"],
-		order_by="from_date desc",
-		limit=1,
-	)
-	basic = flt(sal[0].base) if sal else 0.0
-
-	# جلب بدلات العقد إن وجد
-	contract = frappe.get_all(
-		"Saudi Employment Contract",
-		filters={
-			"employee": emp["name"],
-			"contract_status": "Active / نشط",
-			"docstatus": 1,
-		},
-		fields=["housing_allowance", "transport_allowance", "other_allowances"],
-		order_by="start_date desc",
-		limit=1,
-	)
-	housing = flt(contract[0].housing_allowance) if contract else 0.0
-	transport = flt(contract[0].transport_allowance) if contract else 0.0
-	other = flt(contract[0].other_allowances) if contract else 0.0
+	salary = get_employee_salary_components(emp["name"])
+	basic = salary["basic_salary"]
+	housing = salary["housing_allowance"]
+	transport = salary["transport_allowance"]
+	other = salary["other_allowances"]
 
 	gross = round(basic + housing + transport + other, 2)
 
@@ -398,8 +396,11 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 		fields=["overtime_amount"],
 	)
 	overtime = round(sum(flt(r.overtime_amount) for r in ot_rows), 2)
+	loan_info = get_due_loan_deduction(emp["name"], month_num, int(year))
+	loan_deduction = round(flt(loan_info.get("loan_deduction")), 2)
+	total_deductions = round(gosi_deduction + sick_deduction + loan_deduction, 2)
 
-	net = round(gross - gosi_deduction - sick_deduction + overtime, 2)
+	net = round(gross + overtime - total_deductions, 2)
 
 	return {
 		"employee": emp["name"],
@@ -413,7 +414,10 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 		"gross_salary": gross,
 		"gosi_employee_deduction": gosi_deduction,
 		"sick_leave_deduction": round(sick_deduction, 2),
+		"loan_deduction": loan_deduction,
+		"total_deductions": total_deductions,
 		"overtime_addition": overtime,
+		"loan_installments": ", ".join(loan_info.get("installment_names", [])),
 		"net_salary": net,
 	}
 
@@ -434,6 +438,13 @@ def _month_name_to_num(month_label: str) -> int:
 		if key in MONTHS:
 			return MONTHS[key]
 	return 1
+
+
+def _get_employee_fetch_fields() -> list[str]:
+	fields = ["name", "employee_name", "department"]
+	if frappe.get_meta("Employee").has_field("nationality"):
+		fields.append("nationality")
+	return fields
 
 
 def _get_payable_account(company: str) -> str:

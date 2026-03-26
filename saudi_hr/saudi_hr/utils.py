@@ -5,6 +5,77 @@ import frappe
 from frappe.utils import date_diff, getdate, flt
 
 
+def get_active_contract(employee: str, fields=None, as_dict=True):
+	field_list = fields or [
+		"name",
+		"basic_salary",
+		"housing_allowance",
+		"transport_allowance",
+		"other_allowances",
+		"total_salary",
+	]
+	return frappe.db.get_value(
+		"Saudi Employment Contract",
+		{"employee": employee, "contract_status": "Active / نشط"},
+		field_list,
+		as_dict=as_dict,
+		order_by="start_date desc",
+	)
+
+
+def get_employee_basic_salary(employee: str) -> float:
+	contract = get_active_contract(employee, ["basic_salary"], as_dict=True) or {}
+	basic_salary = flt(contract.get("basic_salary"))
+	if basic_salary:
+		return basic_salary
+	return flt(frappe.db.get_value("Employee", employee, "ctc") or 0)
+
+
+def get_employee_salary_components(employee: str) -> dict:
+	contract = get_active_contract(
+		employee,
+		["basic_salary", "housing_allowance", "transport_allowance", "other_allowances", "total_salary"],
+		as_dict=True,
+	) or {}
+	basic = flt(contract.get("basic_salary") or frappe.db.get_value("Employee", employee, "ctc") or 0)
+	housing = flt(contract.get("housing_allowance") or 0)
+	transport = flt(contract.get("transport_allowance") or 0)
+	other = flt(contract.get("other_allowances") or 0)
+	total = flt(contract.get("total_salary") or (basic + housing + transport + other))
+	return {
+		"basic_salary": basic,
+		"housing_allowance": housing,
+		"transport_allowance": transport,
+		"other_allowances": other,
+		"total_salary": total,
+	}
+
+
+def get_annual_leave_days_taken(employee: str, leave_year: int, exclude_name: str | None = None) -> float:
+	filters = {
+		"employee": employee,
+		"leave_start_date": ["between", [f"{leave_year}-01-01", f"{leave_year}-12-31"]],
+		"docstatus": 1,
+	}
+	if exclude_name:
+		filters["name"] = ["!=", exclude_name]
+
+	rows = frappe.get_all("Saudi Annual Leave", filters=filters, fields=["total_leave_days"])
+	return sum(flt(row.total_leave_days) for row in rows)
+
+
+def get_annual_leave_balance(employee: str, reference_date: str | None = None, exclude_name: str | None = None) -> dict:
+	reference = getdate(reference_date) if reference_date else getdate()
+	entitlement = get_annual_leave_entitlement(employee, reference)
+	taken = get_annual_leave_days_taken(employee, reference.year, exclude_name=exclude_name)
+	return {
+		"entitled": entitlement,
+		"taken": taken,
+		"balance": flt(entitlement) - flt(taken),
+		"year": reference.year,
+	}
+
+
 def get_annual_leave_entitlement(employee: str, date: str = None) -> int:
 	"""
 	إرجاع عدد أيام الإجازة السنوية بحسب سنوات الخدمة (م.109).
@@ -37,17 +108,7 @@ def get_eosb_amount(employee: str, termination_reason: str, termination_date: st
 	years = total_days / 365.0
 
 	# الأجر الأساسي الأخير
-	basic_salary = flt(emp.get("ctc") or 0)
-	# محاولة الحصول على الأجر الأساسي من هيكل الراتب الحالي
-	sal_assign = frappe.get_all(
-		"Salary Structure Assignment",
-		filters={"employee": employee, "docstatus": 1},
-		fields=["base"],
-		order_by="from_date desc",
-		limit=1,
-	)
-	if sal_assign:
-		basic_salary = flt(sal_assign[0].base)
+	basic_salary = get_employee_basic_salary(employee)
 
 	monthly_basic = basic_salary  # افتراض أن الراتب شهري
 

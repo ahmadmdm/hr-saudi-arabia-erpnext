@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.4.2-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.5.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.4.2-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -52,7 +52,7 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
 ### 🇸🇦 بالعربية
 
-**saudi_hr** هو تطبيق Frappe مستقل، مبني على قمة ERPNext وHRMS، يُغطي **كامل متطلبات نظام العمل السعودي** الخاصة بإدارة الموارد البشرية.
+**saudi_hr** هو تطبيق Frappe مستقل، مبني على قمة ERPNext، يُغطي **كامل متطلبات نظام العمل السعودي** الخاصة بإدارة الموارد البشرية.
 
 صُمّم خصيصاً للمنشآت العاملة في المملكة العربية السعودية، بجميع أحجامها، ويشمل:
 
@@ -68,7 +68,7 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
 ### 🇬🇧 In English
 
-**saudi_hr** is a standalone Frappe application built on ERPNext + HRMS that covers **all Saudi Labor Law requirements** for HR management.
+**saudi_hr** is a standalone Frappe application built on ERPNext that covers **all Saudi Labor Law requirements** for HR management.
 
 Built for establishments of any size operating in Saudi Arabia. Includes:
 
@@ -92,9 +92,17 @@ Built for establishments of any size operating in Saudi Arabia. Includes:
 | Python | Python | ≥ 3.10 | ≥ 3.10 |
 | Frappe Framework | Frappe Framework | ≥ 15.0.0 | ≥ 15.0.0 |
 | ERPNext | ERPNext | ≥ 15.0.0 | ≥ 15.0.0 |
-| HRMS | HRMS | ≥ 15.0.0 | ≥ 15.0.0 |
 | MariaDB | MariaDB | ≥ 10.6 | ≥ 10.6 |
 | Node.js | Node.js | ≥ 18 | ≥ 18 |
+
+**بيئة التحقق الحالية | Verified Stack**
+
+- Frappe `15.103.2`
+- ERPNext `15.102.0`
+- Python `3.11`
+- MariaDB `10.6+`
+- Node.js `24.x`
+- لا يعتمد التطبيق على HRMS، ويعمل بشكل مستقل فوق `frappe` و`erpnext` فقط
 
 ---
 
@@ -112,8 +120,21 @@ bench build --app saudi_hr
 bench --site <your-site-name> clear-cache
 ```
 
-> **ملاحظة:** يجب تثبيت `frappe`, `erpnext`, و`hrms` قبل هذا التطبيق. كما يعتمد التطبيق الآن على `openpyxl` لقالب فروع الموظفين و`openlocationcode` لدعم Plus Code، وسيتم تثبيتهما تلقائياً عبر بيانات الحزمة عند استخدام `bench get-app` أو `pip install -e apps/saudi_hr`.  
-> **Note:** `frappe`, `erpnext`, and `hrms` must be installed first. The app now also depends on `openpyxl` for the employee-branch template flow and `openlocationcode` for Plus Code support; both are installed automatically from the package metadata when using `bench get-app` or `pip install -e apps/saudi_hr`.
+> **ملاحظة:** يجب تثبيت `frappe` و`erpnext` قبل هذا التطبيق. كما يعتمد التطبيق الآن على `openpyxl` لقالب فروع الموظفين و`openlocationcode` لدعم Plus Code، وسيتم تثبيتهما تلقائياً عبر بيانات الحزمة عند استخدام `bench get-app` أو `pip install -e apps/saudi_hr`.  
+> **Note:** `frappe` and `erpnext` must be installed first. The app now also depends on `openpyxl` for the employee-branch template flow and `openlocationcode` for Plus Code support; both are installed automatically from the package metadata when using `bench get-app` or `pip install -e apps/saudi_hr`.
+
+### التحقق من الاعتماديات | Dependency Verification
+
+```bash
+# Verify Python package dependencies
+./env/bin/python -c "import openpyxl, openlocationcode; print('runtime dependencies ok')"
+
+# Verify bench app test suite
+bench --site <your-site-name> run-tests --app saudi_hr --skip-test-records
+```
+
+> **معلومة مهمة:** ملفات الاعتماديات موحدة في `pyproject.toml` و`setup.py` و`requirements.txt`، ولا توجد تبعيات frontend منفصلة داخل التطبيق.  
+> **Important:** Dependency declarations are aligned in `pyproject.toml`, `setup.py`, and `requirements.txt`, and the app currently has no separate frontend package manifest.
 
 ### نقل التطبيق إلى نظام آخر | Moving the App to Another System
 
@@ -361,7 +382,39 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.4.2 — ٢٦ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.5.0 — ٢٧ مارس ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**الإصدار المستقل الكامل | Full Standalone Release:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|---------|
+| Standalone Architecture | البنية المستقلة | إزالة الاعتماد التشغيلي على HRMS والإبقاء على التطبيق فوق `frappe` و`erpnext` فقط |
+| README + Packaging | التوثيق والحزم | توثيق الاعتماديات الفعلية والتحقق منها، مع الحفاظ على تطابق `pyproject.toml` و`setup.py` و`requirements.txt` |
+
+**توسعة دورة حياة الموظف | Employee Lifecycle Expansion:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|---------|
+| Recruitment & Onboarding | التوظيف والتهيئة | إضافة `Hiring Requisition`, `Candidate Profile`, `Employee Onboarding` |
+| Performance & Exit | الأداء وإنهاء الخدمة | إضافة `Performance Review`, `Exit Clearance` |
+| Compliance & Governance | الامتثال والحوكمة | إضافة `Policy Acknowledgement`, `Saudi Regulatory Task`, `Employee Warning Notice`, `Disciplinary Decision Log` |
+
+**القروض والخصومات | Employee Loans & Payroll Deductions:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|---------|
+| Employee Loan | قروض الموظفين | إضافة القروض، جدول الأقساط، صرف القرض، واعتماد الصرف قبل القيد |
+| Saudi Monthly Payroll | مسير الرواتب | ربط الخصم الشهري للقرض داخل الرواتب وتجميع خصومات القروض في المسير |
+| Loan Reports & Print | التقارير والطباعة | إضافة `Outstanding Employee Loans`, `Loan Deduction Register`, `Monthly Loan Recovery Summary`, وصيغة `Employee Loan Agreement AR` |
+
+**إصلاحات واستقرار | Stability Fixes:**
+
+| الملف | التحديث |
+|-------|---------|
+| `annual_leave_disbursement.json` | إصلاح تعريفات `depends_on` غير الصالحة التي كانت تكسر واجهة النموذج |
+| `install.py` + `employee_loan.py` | إضافة تسوية ما بعد الترحيل لسجلات القروض القديمة لتتوافق مع مسار الاعتماد الجديد |
+
+### v1.4.2 — ٢٦ مارس ٢٠٢٦
 
 **تحسينات مساحة العمل | Workspace Improvements:**
 

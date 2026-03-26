@@ -17,6 +17,7 @@
   "case_type",
   "reference_doctype",
   "reference_name",
+  "legal_reference_matrix",
   "column_break_2",
   "allegation_date",
   "investigator",
@@ -29,7 +30,8 @@
   "employee_statement",
   "findings",
   "recommendation",
-  "outcome_summary"
+  "outcome_summary",
+  "employee_warning_notice"
  ],
  "fields": [
   {
@@ -108,6 +110,12 @@
    "label": "Reference Name / اسم المرجع"
   },
   {
+   "fieldname": "legal_reference_matrix",
+   "fieldtype": "Link",
+   "label": "Legal Reference / المرجع النظامي",
+   "options": "Legal Reference Matrix"
+  },
+  {
    "fieldname": "column_break_2",
    "fieldtype": "Column Break"
   },
@@ -175,11 +183,18 @@
    "fieldname": "outcome_summary",
    "fieldtype": "Text Editor",
    "label": "Outcome Summary / ملخص المخرجات"
+  },
+  {
+   "fieldname": "employee_warning_notice",
+   "fieldtype": "Link",
+   "label": "Warning Notice / الإنذار",
+   "options": "Employee Warning Notice",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-search",
  "links": [],
- "modified": "2026-03-19 00:00:00.000000",
+ "modified": "2026-03-27 02:00:00.000000",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "Investigation Record",

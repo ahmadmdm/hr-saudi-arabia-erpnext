@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "creation": "2026-03-27 03:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "installment_number",
+  "due_date",
+  "installment_amount",
+  "deducted_amount",
+  "outstanding_amount",
+  "deduction_status",
+  "deduction_date",
+  "payroll_reference"
+ ],
+ "fields": [
+  {"fieldname": "installment_number", "fieldtype": "Int", "in_list_view": 1, "label": "Installment # / رقم القسط", "read_only": 1},
+  {"fieldname": "due_date", "fieldtype": "Date", "in_list_view": 1, "label": "Due Date / تاريخ الاستحقاق", "reqd": 1},
+  {"fieldname": "installment_amount", "fieldtype": "Currency", "in_list_view": 1, "label": "Installment Amount / مبلغ القسط", "options": "currency", "reqd": 1},
+  {"fieldname": "deducted_amount", "fieldtype": "Currency", "label": "Deducted Amount / المبلغ المخصوم", "options": "currency", "read_only": 1},
+  {"fieldname": "outstanding_amount", "fieldtype": "Currency", "label": "Outstanding / المتبقي", "options": "currency", "read_only": 1},
+  {"fieldname": "deduction_status", "fieldtype": "Select", "in_list_view": 1, "label": "Status / الحالة", "options": "Pending / مستحق\nDeducted / مخصوم\nDeferred / مؤجل\nCancelled / ملغى", "default": "Pending / مستحق"},
+  {"fieldname": "deduction_date", "fieldtype": "Date", "label": "Deduction Date / تاريخ الخصم", "read_only": 1},
+  {"fieldname": "payroll_reference", "fieldtype": "Link", "label": "Payroll / كشف الرواتب", "options": "Saudi Monthly Payroll", "read_only": 1}
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-27 03:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Employee Loan Installment",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": []
+}

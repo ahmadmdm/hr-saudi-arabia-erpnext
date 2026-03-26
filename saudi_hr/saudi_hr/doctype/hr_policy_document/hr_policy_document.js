@@ -8,6 +8,20 @@ const HR_POLICY_DOCUMENT_SECTION_DESCRIPTIONS = {
 frappe.ui.form.on("HR Policy Document", {
 	refresh(frm) {
 		apply_hr_policy_document_section_descriptions(frm, HR_POLICY_DOCUMENT_SECTION_DESCRIPTIONS);
+
+		if (!frm.is_new() && frm.doc.acknowledgement_required && frm.doc.status === "Active / سارية") {
+			frm.add_custom_button(__("Sync Acknowledgements / مزامنة الإقرارات"), async function () {
+				const response = await frappe.call({
+					method: "saudi_hr.saudi_hr.doctype.hr_policy_document.hr_policy_document.sync_policy_acknowledgements",
+					args: { policy_name: frm.doc.name },
+				});
+				await frm.reload_doc();
+				frappe.show_alert({
+					message: __("Created {0} acknowledgement records", [response.message.created || 0]),
+					indicator: "green",
+				});
+			});
+		}
 	},
 });
 

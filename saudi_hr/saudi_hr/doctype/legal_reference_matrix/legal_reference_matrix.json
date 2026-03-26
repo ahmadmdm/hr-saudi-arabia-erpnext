@@ -23,6 +23,12 @@
   "obligation_summary",
   "required_control",
   "linked_policy",
+  "execution_section",
+  "lifecycle_stage",
+  "task_category",
+  "column_break_3",
+  "latest_regulatory_task",
+  "open_regulatory_tasks",
   "risk_level",
   "evidence_requirement",
   "retirement_reason",
@@ -127,6 +133,41 @@
    "options": "HR Policy Document"
   },
   {
+   "description": "Track the execution path that closes this legal obligation in operations.",
+   "fieldname": "execution_section",
+   "fieldtype": "Section Break",
+   "label": "Execution Tracking / تتبع التنفيذ"
+  },
+  {
+   "fieldname": "lifecycle_stage",
+   "fieldtype": "Select",
+   "label": "Lifecycle Stage / مرحلة دورة الحياة",
+   "options": "Strategy & Setup\nTalent Acquisition\nOnboarding & Employment\nTime, Leave & Payroll\nPerformance & Development\nEmployee Relations & Legal\nSeparation & Offboarding\nReports & Analytics"
+  },
+  {
+   "fieldname": "task_category",
+   "fieldtype": "Select",
+   "label": "Default Task Category / تصنيف المهمة الافتراضي",
+   "options": "Policy / سياسة\nWorkflow / إجراء\nCalculation / حسبة\nReport / تقرير\nAlert / تنبيه\nDocument / مستند\nIntegration / تكامل\nPermission / صلاحيات\nWorkspace / مساحة عمل\nOther / أخرى"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "latest_regulatory_task",
+   "fieldtype": "Link",
+   "label": "Latest Regulatory Task / آخر مهمة تنظيمية",
+   "options": "Saudi Regulatory Task",
+   "read_only": 1
+  },
+  {
+   "fieldname": "open_regulatory_tasks",
+   "fieldtype": "Int",
+   "label": "Open Regulatory Tasks / المهام التنظيمية المفتوحة",
+   "read_only": 1
+  },
+  {
    "fieldname": "risk_level",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -152,7 +193,7 @@
  ],
  "icon": "fa fa-balance-scale",
  "links": [],
- "modified": "2026-03-19 00:00:00.000000",
+ "modified": "2026-03-27 02:00:00.000000",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "Legal Reference Matrix",

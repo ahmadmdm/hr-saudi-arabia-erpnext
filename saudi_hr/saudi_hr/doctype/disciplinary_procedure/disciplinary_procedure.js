@@ -89,6 +89,19 @@ frappe.ui.form.on("Disciplinary Procedure", {
             }, __("Actions"));
         }
 
+        if (!frm.is_new() && frm.doc.penalty_type) {
+            frm.add_custom_button(__("Create Decision Log / إنشاء سجل قرار"), async function () {
+                const response = await frappe.call({
+                    method: "saudi_hr.saudi_hr.doctype.disciplinary_procedure.disciplinary_procedure.create_decision_log",
+                    args: { doc_name: frm.doc.name }
+                });
+                await frm.reload_doc();
+                if (response.message?.decision_log) {
+                    frappe.set_route("Form", "Disciplinary Decision Log", response.message.decision_log);
+                }
+            }, __("Actions"));
+        }
+
         // Indicate step-by-step status flow
         if (frm.doc.docstatus === 0) {
             let steps = [

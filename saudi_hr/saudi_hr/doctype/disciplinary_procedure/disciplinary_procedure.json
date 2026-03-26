@@ -15,6 +15,8 @@
   "incident_section",
   "incident_date",
   "reported_by",
+  "investigation_record",
+  "legal_reference_matrix",
   "column_break_2",
   "violation_type",
   "status",
@@ -34,6 +36,8 @@
   "penalty_end_date",
   "decision_notes",
   "hr_manager_approval",
+  "employee_warning_notice",
+  "disciplinary_decision_log",
   "appeal_section",
   "appeal_submitted",
   "appeal_date",
@@ -100,6 +104,18 @@
    "fieldtype": "Link",
    "label": "Reported By / أُبلغ من",
    "options": "User"
+  },
+  {
+   "fieldname": "investigation_record",
+   "fieldtype": "Link",
+   "label": "Investigation Record / سجل التحقيق",
+   "options": "Investigation Record"
+  },
+  {
+   "fieldname": "legal_reference_matrix",
+   "fieldtype": "Link",
+   "label": "Legal Reference / المرجع النظامي",
+   "options": "Legal Reference Matrix"
   },
   {
    "fieldname": "column_break_2",
@@ -206,6 +222,19 @@
    "label": "HR Manager Approved / موافقة مدير الموارد البشرية"
   },
   {
+   "fieldname": "employee_warning_notice",
+   "fieldtype": "Link",
+   "label": "Warning Notice / الإنذار",
+   "options": "Employee Warning Notice"
+  },
+  {
+   "fieldname": "disciplinary_decision_log",
+   "fieldtype": "Link",
+   "label": "Decision Log / سجل القرار",
+   "options": "Disciplinary Decision Log",
+   "read_only": 1
+  },
+  {
    "fieldname": "appeal_section",
    "fieldtype": "Section Break",
    "label": "Appeal / التظلم (م.72)"
@@ -240,7 +269,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-03-17 00:00:00.000000",
+ "modified": "2026-03-27 02:00:00.000000",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "Disciplinary Procedure",

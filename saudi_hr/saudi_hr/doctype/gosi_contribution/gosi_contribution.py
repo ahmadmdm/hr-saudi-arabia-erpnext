@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
+from saudi_hr.saudi_hr.utils import get_employee_basic_salary as get_current_basic_salary
+
 # الحد الأقصى لوعاء الاشتراك في التأمينات
 GOSI_MAX_BASE = 45000.0
 
@@ -182,14 +184,7 @@ def create_payroll_entries(doc, method=None):
 @frappe.whitelist()
 def get_employee_basic_salary(employee):
 	"""Return the employee's current basic salary for JS auto-fill."""
-	sal = frappe.get_all(
-		"Salary Structure Assignment",
-		filters={"employee": employee, "docstatus": 1},
-		fields=["base"],
-		order_by="from_date desc",
-		limit=1,
-	)
-	return flt(sal[0].base) if sal else 0.0
+	return get_current_basic_salary(employee)
 
 
 @frappe.whitelist()
@@ -216,14 +211,7 @@ def generate_gosi_for_month(company: str, month: str, year: int):
 			continue
 
 		# الحصول على الراتب الأساسي
-		sal = frappe.get_all(
-			"Salary Structure Assignment",
-			filters={"employee": emp.name, "docstatus": 1},
-			fields=["base"],
-			order_by="from_date desc",
-			limit=1,
-		)
-		base = flt(sal[0].base) if sal else 0.0
+		base = get_current_basic_salary(emp.name)
 
 		doc = frappe.get_doc({
 			"doctype": "GOSI Contribution",

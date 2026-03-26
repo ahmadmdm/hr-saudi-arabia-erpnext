@@ -7,7 +7,7 @@ app_publisher = "IdeaOrbit"
 app_description = "Saudi HR Management System per Saudi Labor Law (Royal Decree M/51)"
 app_email = "info@ideaorbit.net"
 app_license = "MIT"
-required_apps = ["frappe/erpnext", "frappe/hrms"]
+required_apps = ["frappe/erpnext"]
 
 # Apps Screen
 add_to_apps_screen = [
@@ -56,6 +56,11 @@ doc_events = {
 	"GOSI Contribution": {
 		"on_submit": "saudi_hr.saudi_hr.doctype.gosi_contribution.gosi_contribution.create_payroll_entries",
 	},
+	"Policy Acknowledgement": {
+		"after_insert": "saudi_hr.saudi_hr.doctype.policy_acknowledgement.policy_acknowledgement.update_policy_acknowledgement_summary",
+		"on_update": "saudi_hr.saudi_hr.doctype.policy_acknowledgement.policy_acknowledgement.update_policy_acknowledgement_summary",
+		"on_trash": "saudi_hr.saudi_hr.doctype.policy_acknowledgement.policy_acknowledgement.update_policy_acknowledgement_summary",
+	},
 }
 
 # ─── Custom Fields on Employee ──────────────────────────────────────────────────
@@ -78,10 +83,10 @@ permission_query_conditions = {
 	"Saudi Employee Checkin": "saudi_hr.saudi_hr.permissions.get_saudi_employee_checkin_query",
 	"Saudi Daily Attendance": "saudi_hr.saudi_hr.permissions.get_saudi_daily_attendance_query",
 	"Monthly Attendance Record": "saudi_hr.saudi_hr.permissions.get_monthly_attendance_record_query",
+	"Saudi Annual Leave": "saudi_hr.saudi_hr.permissions.get_saudi_annual_leave_query",
 	"Saudi Sick Leave": "saudi_hr.saudi_hr.permissions.get_saudi_sick_leave_query",
 	"Maternity Paternity Leave": "saudi_hr.saudi_hr.permissions.get_maternity_paternity_leave_query",
 	"Special Leave": "saudi_hr.saudi_hr.permissions.get_special_leave_query",
-	"Leave Application": "saudi_hr.saudi_hr.permissions.get_leave_application_query",
 	"Attendance Location": "saudi_hr.saudi_hr.permissions.get_attendance_location_query",
 }
 
@@ -89,10 +94,10 @@ has_permission = {
 	"Saudi Employee Checkin": "saudi_hr.saudi_hr.permissions.has_saudi_employee_checkin_permission",
 	"Saudi Daily Attendance": "saudi_hr.saudi_hr.permissions.has_saudi_daily_attendance_permission",
 	"Monthly Attendance Record": "saudi_hr.saudi_hr.permissions.has_monthly_attendance_record_permission",
+	"Saudi Annual Leave": "saudi_hr.saudi_hr.permissions.has_saudi_annual_leave_permission",
 	"Saudi Sick Leave": "saudi_hr.saudi_hr.permissions.has_saudi_sick_leave_permission",
 	"Maternity Paternity Leave": "saudi_hr.saudi_hr.permissions.has_maternity_paternity_leave_permission",
 	"Special Leave": "saudi_hr.saudi_hr.permissions.has_special_leave_permission",
-	"Leave Application": "saudi_hr.saudi_hr.permissions.has_leave_application_permission",
 	"Attendance Location": "saudi_hr.saudi_hr.permissions.has_attendance_location_permission",
 }
 

@@ -30,12 +30,6 @@ frappe.ui.form.on('Saudi Employment Contract', {
                 frm.set_value('designation', emp.designation);
                 frm.set_value('nationality', emp.nationality || '');
                 frm.set_value('passport_number', emp.passport_number || '');
-                // Fetch salary structure assignment for basic salary
-                frappe.call({
-                    method: 'hrms.payroll.doctype.salary_structure_assignment.salary_structure_assignment.get_employee_salary_slip',
-                    args: { employee: frm.doc.employee },
-                    callback(s) { /* optional enhancement */ }
-                });
             }
         });
     },

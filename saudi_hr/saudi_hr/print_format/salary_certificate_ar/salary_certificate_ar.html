@@ -183,15 +183,15 @@
 {%- set issue_date = frappe.utils.today() -%}
 {%- set validity_date = frappe.utils.add_months(issue_date, 3) -%}
 
-{%- set salary_assignment = frappe.db.get_value(
-    "Salary Structure Assignment",
-    {"employee": doc.name, "docstatus": 1},
-    ["base", "from_date"],
-    as_dict=True,
-    order_by="from_date desc"
+{%- set contract_salary = frappe.db.get_value(
+  "Saudi Employment Contract",
+  {"employee": doc.name, "contract_status": "Active / نشط"},
+  ["basic_salary", "from_date"],
+  as_dict=True,
+  order_by="start_date desc"
 ) or {} -%}
 
-{%- set basic = salary_assignment.get("base") or 0 -%}
+{%- set basic = contract_salary.get("basic_salary") or 0 -%}
 {%- set daily_rate = basic / 30 -%}
 
 {%- set contract = frappe.db.get_value(

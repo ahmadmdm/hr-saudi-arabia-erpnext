@@ -10,8 +10,6 @@ def after_install():
 	create_workflow_states()
 	sync_dashboard_chart_configs()
 	sync_notification_configs()
-	create_saudi_leave_types()
-	create_eosb_gratuity_rule()
 	create_default_settings()
 	frappe.db.commit()
 
@@ -21,6 +19,8 @@ def after_migrate():
 	create_workflow_states()
 	sync_dashboard_chart_configs()
 	sync_notification_configs()
+	migrate_legacy_annual_leave()
+	migrate_legacy_employee_loans()
 
 
 def sync_dashboard_chart_configs():
@@ -91,96 +91,72 @@ def create_workflow_states():
 
 # ─── Leave Types ───────────────────────────────────────────────────────────────
 
-def create_saudi_leave_types():
-	"""إنشاء أنواع الإجازات السعودية الإلزامية إن لم تكن موجودة."""
-	leave_types = [
-		{
-			"leave_type_name": "Saudi Annual Leave / إجازة سنوية",
-			"max_leaves_allowed": 30,
-			"is_carry_forward": 1,
-			"allow_encashment": 1,
-			"description": "Annual leave per Saudi Labor Law Art. 109 — 21 days (<5 yrs) / 30 days (≥5 yrs)",
-		},
-		{
-			"leave_type_name": "Saudi Sick Leave / إجازة مرضية",
-			"max_leaves_allowed": 120,
-			"is_lwp": 0,
-			"description": "Sick leave per Saudi Labor Law Art. 117 — 30 days full pay / 60 days 75% / 30 days unpaid",
-		},
-		{
-			"leave_type_name": "Saudi Maternity Leave / إجازة أمومة",
-			"max_leaves_allowed": 70,
-			"is_carry_forward": 0,
-			"description": "Maternity leave per Saudi Labor Law Art. 151 — 70 days full pay",
-		},
-		{
-			"leave_type_name": "Saudi Paternity Leave / إجازة أبوة",
-			"max_leaves_allowed": 3,
-			"is_carry_forward": 0,
-			"description": "Paternity leave per Saudi Labor Law Art. 151 — 3 days full pay",
-		},
-		{
-			"leave_type_name": "Hajj Leave / إجازة الحج",
-			"max_leaves_allowed": 15,
-			"is_carry_forward": 0,
-			"applicable_after": 730,  # 2 years of service
-			"description": "Hajj leave — once per service after 2 years, maximum 15 days",
-		},
-		{
-			"leave_type_name": "Bereavement Leave / إجازة وفاة",
-			"max_leaves_allowed": 5,
-			"is_carry_forward": 0,
-			"description": "Bereavement leave — 5 days for immediate family",
-		},
-		{
-			"leave_type_name": "Marriage Leave / إجازة زواج",
-			"max_leaves_allowed": 5,
-			"is_carry_forward": 0,
-			"description": "Marriage leave — 5 days with full pay",
-		},
-	]
-
-	for lt in leave_types:
-		if not frappe.db.exists("Leave Type", lt["leave_type_name"]):
-			doc = frappe.get_doc({"doctype": "Leave Type", **lt})
-			doc.insert(ignore_permissions=True)
-			frappe.msgprint(f"Created Leave Type: {lt['leave_type_name']}", alert=True)
-
-
-# ─── EOSB Gratuity Rule ─────────────────────────────────────────────────────────
-
-def create_eosb_gratuity_rule():
-	"""إنشاء قاعدة مكافأة نهاية الخدمة السعودية (م.84)."""
-	if frappe.db.exists("Gratuity Rule", "Saudi EOSB Rule / قاعدة مكافأة نهاية الخدمة"):
+def migrate_legacy_annual_leave():
+	"""Copy legacy annual leave requests into Saudi Annual Leave before HRMS removal."""
+	if not frappe.db.exists("DocType", "Saudi Annual Leave"):
+		return
+	if not frappe.db.exists("DocType", "Leave Application"):
 		return
 
-	rule = frappe.get_doc({
-		"doctype": "Gratuity Rule",
-		"name": "Saudi EOSB Rule / قاعدة مكافأة نهاية الخدمة",
-		"calculate_gratuity_amount_based_on": "Sum of all previous slabs",
-		"work_experience_calculation_function": "Manual",
-		"total_working_days_per_year": 365,
-		"minimum_year_for_gratuity": 1,
-		"gratuity_rule_slabs": [
-			# سنة 1 إلى 5: نصف شهر عن كل سنة
-			{
-				"from_year": 0,
-				"to_year": 5,
-				"fraction_of_applicable_earnings": 0.5,
-			},
-			# أكثر من 5 سنوات: شهر كامل عن كل سنة
-			{
-				"from_year": 5,
-				"to_year": 0,  # 0 = no upper limit
-				"fraction_of_applicable_earnings": 1.0,
-			},
+	annual_types = (
+		"Saudi Annual Leave / إجازة سنوية",
+		"Annual Leave",
+	)
+	rows = frappe.get_all(
+		"Leave Application",
+		filters={"leave_type": ["in", list(annual_types)]},
+		fields=[
+			"name",
+			"employee",
+			"employee_name",
+			"company",
+			"department",
+			"from_date",
+			"to_date",
+			"half_day",
+			"description",
+			"status",
+			"docstatus",
+			"creation",
 		],
-	})
-	try:
-		rule.insert(ignore_permissions=True)
-		frappe.msgprint("Created Saudi EOSB Gratuity Rule", alert=True)
-	except Exception:
-		pass  # Gratuity module may not be installed yet
+	)
+
+	for row in rows:
+		if frappe.db.exists("Saudi Annual Leave", {"legacy_reference": row.name}):
+			continue
+
+		doc = frappe.get_doc(
+			{
+				"doctype": "Saudi Annual Leave",
+				"employee": row.employee,
+				"employee_name": row.employee_name,
+				"company": row.company,
+				"department": row.department,
+				"leave_start_date": row.from_date,
+				"leave_end_date": row.to_date,
+				"half_day": row.half_day,
+				"description": row.description,
+				"legacy_reference": row.name,
+			}
+		)
+		doc.insert(ignore_permissions=True)
+		if row.docstatus == 1:
+			doc.submit()
+		elif row.docstatus == 2:
+			doc.submit()
+			doc.cancel()
+		elif row.status:
+			doc.db_set("status", row.status)
+
+
+def migrate_legacy_employee_loans():
+	"""Backfill approval states for loans created before the approval workflow existed."""
+	if not frappe.db.exists("DocType", "Employee Loan"):
+		return
+
+	from saudi_hr.saudi_hr.doctype.employee_loan.employee_loan import reconcile_legacy_employee_loans
+
+	reconcile_legacy_employee_loans()
 
 
 # ─── Saudi HR Settings ──────────────────────────────────────────────────────────

@@ -5,6 +5,8 @@ import frappe
 from frappe import _
 from frappe.utils import date_diff, getdate, today
 
+from saudi_hr.saudi_hr.utils import get_annual_leave_days_taken, get_annual_leave_entitlement
+
 
 def execute(filters=None):
 	filters = filters or {}
@@ -55,41 +57,13 @@ def get_data(filters):
 		as_dict=True,
 	)
 
-	leave_type = filters.get("leave_type") or "Annual Leave"
 	result = []
 
 	for emp in employees:
 		years = date_diff(today(), emp.date_of_joining) / 365.0
-		entitlement = 30 if years >= 5 else 21
-
-		# رصيد الإجازات من hrms
-		alloc = frappe.db.sql(
-			"""
-			SELECT COALESCE(SUM(total_leaves_allocated), 0) AS allocated
-			FROM `tabLeave Allocation`
-			WHERE employee = %(emp)s
-			  AND leave_type = %(lt)s
-			  AND docstatus = 1
-			""",
-			{"emp": emp.employee, "lt": leave_type},
-			as_dict=True,
-		)
-		allocated = float(alloc[0].allocated or 0) if alloc else 0
-
-		# الإجازات المستهلكة من طلبات الإجازة المعتمدة
-		taken_rows = frappe.db.sql(
-			"""
-			SELECT COALESCE(SUM(total_leave_days), 0) AS taken
-			FROM `tabLeave Application`
-			WHERE employee = %(emp)s
-			  AND leave_type = %(lt)s
-			  AND docstatus = 1
-			  AND status = 'Approved'
-			""",
-			{"emp": emp.employee, "lt": leave_type},
-			as_dict=True,
-		)
-		taken = float(taken_rows[0].taken or 0) if taken_rows else 0
+		entitlement = get_annual_leave_entitlement(emp.employee)
+		allocated = float(entitlement)
+		taken = float(get_annual_leave_days_taken(emp.employee, getdate(today()).year))
 		balance = allocated - taken
 
 		result.append({

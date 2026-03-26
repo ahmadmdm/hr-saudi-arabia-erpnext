@@ -19,6 +19,14 @@
   "column_break_2",
   "owner_user",
   "acknowledgement_required",
+    "policy_version",
+    "acknowledgement_due_days",
+    "target_scope",
+    "target_department",
+    "acknowledgement_summary_section",
+    "acknowledged_count",
+    "pending_acknowledgement_count",
+    "last_acknowledgement_sync_on",
   "legal_section",
   "legal_reference",
   "article_reference",
@@ -104,6 +112,56 @@
    "label": "Acknowledgement Required / يتطلب إقراراً"
   },
   {
+   "default": "1.0",
+   "fieldname": "policy_version",
+   "fieldtype": "Data",
+   "label": "Policy Version / إصدار السياسة",
+   "reqd": 1
+  },
+  {
+   "default": "7",
+   "fieldname": "acknowledgement_due_days",
+   "fieldtype": "Int",
+   "label": "Acknowledgement Due Days / مهلة الإقرار بالأيام"
+  },
+  {
+   "default": "Company Employees / موظفو الشركة",
+   "fieldname": "target_scope",
+   "fieldtype": "Select",
+   "label": "Target Scope / نطاق التطبيق",
+   "options": "Company Employees / موظفو الشركة\nDepartment Employees / موظفو القسم"
+  },
+  {
+   "depends_on": "eval:doc.target_scope === 'Department Employees / موظفو القسم'",
+   "fieldname": "target_department",
+   "fieldtype": "Link",
+   "label": "Target Department / القسم المستهدف",
+   "options": "Department"
+  },
+  {
+   "fieldname": "acknowledgement_summary_section",
+   "fieldtype": "Section Break",
+   "label": "Acknowledgement Summary / ملخص الإقرارات"
+  },
+  {
+   "fieldname": "acknowledged_count",
+   "fieldtype": "Int",
+   "label": "Acknowledged Count / عدد من أقروا",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pending_acknowledgement_count",
+   "fieldtype": "Int",
+   "label": "Pending Count / عدد المعلّقين",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_acknowledgement_sync_on",
+   "fieldtype": "Datetime",
+   "label": "Last Sync On / آخر مزامنة",
+   "read_only": 1
+  },
+  {
     "description": "Capture the legal basis and risk level that justify this policy.",
    "fieldname": "legal_section",
    "fieldtype": "Section Break",
@@ -150,7 +208,7 @@
  ],
  "icon": "fa fa-book",
  "links": [],
- "modified": "2026-03-19 00:00:00.000000",
+ "modified": "2026-03-27 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "HR Policy Document",

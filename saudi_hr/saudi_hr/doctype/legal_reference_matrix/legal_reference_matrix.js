@@ -7,6 +7,19 @@ const LEGAL_REFERENCE_MATRIX_SECTION_DESCRIPTIONS = {
 frappe.ui.form.on("Legal Reference Matrix", {
 	refresh(frm) {
 		apply_legal_reference_matrix_section_descriptions(frm, LEGAL_REFERENCE_MATRIX_SECTION_DESCRIPTIONS);
+
+		if (!frm.is_new() && frm.doc.status !== "Retired / متقاعد") {
+			frm.add_custom_button(__("Create Regulatory Task / إنشاء مهمة تنظيمية"), async function () {
+				const response = await frappe.call({
+					method: "saudi_hr.saudi_hr.doctype.legal_reference_matrix.legal_reference_matrix.create_regulatory_task",
+					args: { reference_name: frm.doc.name },
+				});
+				await frm.reload_doc();
+				if (response.message?.task_name) {
+					frappe.set_route("Form", "Saudi Regulatory Task", response.message.task_name);
+				}
+			});
+		}
 	},
 });
 
