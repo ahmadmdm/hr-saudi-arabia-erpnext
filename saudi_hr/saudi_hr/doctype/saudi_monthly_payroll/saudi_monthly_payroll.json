@@ -16,6 +16,8 @@
   "column_break_2",
   "status",
   "payroll_journal_entry",
+  "source_workbook",
+  "employee_setup_workbook",
   "employees_section",
   "employees",
   "totals_section",
@@ -25,6 +27,7 @@
   "total_gosi_deductions",
     "total_sick_deductions",
     "total_loan_deductions",
+    "total_other_deductions",
   "total_overtime",
   "total_net_payable",
   "notes_section",
@@ -97,6 +100,19 @@
    "read_only": 1
   },
   {
+   "description": "Attach the external payroll workbook, then use Import Workbook to populate payroll rows. / أرفق ملف الرواتب الخارجي ثم استخدم زر استيراد ملف الرواتب لتعبئة الصفوف.",
+   "fieldname": "source_workbook",
+   "fieldtype": "Attach",
+   "label": "Source Workbook / ملف الرواتب المصدر"
+  },
+  {
+   "description": "Upload the completed employee setup workbook generated from payroll gaps before using Import Employee Setup. / ارفع ملف إعداد الموظفين المكتمل الناتج من فجوات الرواتب قبل استخدام استيراد إعداد الموظفين.",
+   "fieldname": "employee_setup_workbook",
+   "fieldtype": "Attach",
+    "hidden": 1,
+   "label": "Employee Setup Workbook / ملف إعداد الموظفين"
+  },
+  {
    "fieldname": "employees_section",
    "fieldtype": "Section Break",
    "label": "Employees / الموظفون"
@@ -147,6 +163,13 @@
      "fieldname": "total_loan_deductions",
      "fieldtype": "Currency",
      "label": "Total Loan Deductions / إجمالي خصومات القروض",
+     "options": "currency",
+     "read_only": 1
+    },
+    {
+     "fieldname": "total_other_deductions",
+     "fieldtype": "Currency",
+     "label": "Total Other Deductions / إجمالي الخصومات الأخرى",
      "options": "currency",
      "read_only": 1
     },

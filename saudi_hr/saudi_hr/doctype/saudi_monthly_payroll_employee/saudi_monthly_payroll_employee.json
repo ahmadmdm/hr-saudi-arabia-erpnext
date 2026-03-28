@@ -4,8 +4,10 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "payroll_employee_id",
   "employee",
   "employee_name",
+  "workbook_department",
   "column_break_1",
   "department",
   "nationality",
@@ -19,6 +21,7 @@
   "gosi_employee_deduction",
   "sick_leave_deduction",
     "loan_deduction",
+    "other_deductions",
     "total_deductions",
   "overtime_addition",
     "loan_installments",
@@ -26,12 +29,18 @@
  ],
  "fields": [
   {
+   "fieldname": "payroll_employee_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Payroll ID / الرقم الوظيفي",
+   "read_only": 1
+  },
+  {
    "fieldname": "employee",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Employee / الموظف",
-   "options": "Employee",
-   "reqd": 1
+   "options": "Employee"
   },
   {
    "fetch_from": "employee.employee_name",
@@ -39,6 +48,13 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Name / الاسم",
+   "read_only": 1
+  },
+  {
+   "fieldname": "workbook_department",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Workbook Department / قسم الملف",
    "read_only": 1
   },
   {
@@ -122,6 +138,12 @@
      "label": "Loan Deduction / خصم القرض",
      "options": "currency",
      "read_only": 1
+    },
+    {
+     "fieldname": "other_deductions",
+     "fieldtype": "Currency",
+     "label": "Other Deductions / خصومات أخرى",
+     "options": "currency"
     },
     {
      "fieldname": "total_deductions",
