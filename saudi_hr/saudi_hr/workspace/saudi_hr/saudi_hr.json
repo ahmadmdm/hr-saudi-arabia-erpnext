@@ -44,8 +44,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Strategy & Setup",
-    "link_count": 6,
+   "label": "Strategy & Setup",
+   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -113,50 +113,50 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Talent Acquisition",
-    "link_count": 2,
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Card Break"
-  },
-  {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Hiring Requisition",
-    "link_count": 0,
-    "link_to": "Hiring Requisition",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-  },
-  {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Candidate Profile",
-    "link_count": 0,
-    "link_to": "Candidate Profile",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-  },
-  {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Onboarding & Employment",
-    "link_count": 5,
+   "label": "Talent Acquisition",
+   "link_count": 2,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Employee Onboarding",
-    "link_count": 0,
-    "link_to": "Employee Onboarding",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Hiring Requisition",
+   "link_count": 0,
+   "link_to": "Hiring Requisition",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Candidate Profile",
+   "link_count": 0,
+   "link_to": "Candidate Profile",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Onboarding & Employment",
+   "link_count": 5,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Employee Onboarding",
+   "link_count": 0,
+   "link_to": "Employee Onboarding",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
    "hidden": 0,
@@ -201,8 +201,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Time, Leave & Payroll",
-    "link_count": 12,
+   "label": "Time, Leave & Payroll",
+   "link_count": 12,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -240,12 +240,12 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Saudi Annual Leave",
-    "link_count": 0,
-    "link_to": "Saudi Annual Leave",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "label": "Saudi Annual Leave",
+   "link_count": 0,
+   "link_to": "Saudi Annual Leave",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
    "hidden": 0,
@@ -288,8 +288,8 @@
    "type": "Link"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Saudi Monthly Payroll",
    "link_count": 0,
    "link_to": "Saudi Monthly Payroll",
@@ -330,37 +330,37 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Performance & Development",
-    "link_count": 2,
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Card Break"
+   "label": "Performance & Development",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Performance Review",
-    "link_count": 0,
-    "link_to": "Performance Review",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Performance Review",
+   "link_count": 0,
+   "link_to": "Performance Review",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Training Record",
-    "link_count": 0,
-    "link_to": "Training Record",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Training Record",
+   "link_count": 0,
+   "link_to": "Training Record",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Employee Relations & Legal",
-    "link_count": 11,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Employee Relations & Legal",
+   "link_count": 11,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -478,57 +478,57 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Separation & Offboarding",
-    "link_count": 4,
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Card Break"
+   "label": "Separation & Offboarding",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Termination Notice",
-    "link_count": 0,
-    "link_to": "Termination Notice",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Termination Notice",
+   "link_count": 0,
+   "link_to": "Termination Notice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "End of Service Benefit",
-    "link_count": 0,
-    "link_to": "End of Service Benefit",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "End of Service Benefit",
+   "link_count": 0,
+   "link_to": "End of Service Benefit",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Annual Leave Disbursement",
-    "link_count": 0,
-    "link_to": "Annual Leave Disbursement",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Annual Leave Disbursement",
+   "link_count": 0,
+   "link_to": "Annual Leave Disbursement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Exit Clearance",
-    "link_count": 0,
-    "link_to": "Exit Clearance",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Exit Clearance",
+   "link_count": 0,
+   "link_to": "Exit Clearance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Reports & Analytics",
-     "link_count": 14,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports & Analytics",
+   "link_count": 15,
    "link_type": "Report",
    "onboard": 0,
    "type": "Card Break"
@@ -672,6 +672,16 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "ملف الموظف الشامل",
+   "link_count": 0,
+   "link_to": "Employee",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
  "modified": "2026-03-27 03:20:00.000000",
@@ -738,49 +748,49 @@
   {
    "color": "Blue",
    "doc_view": "Form",
-    "label": "Hiring Requisition",
-    "link_to": "Hiring Requisition",
-    "type": "DocType"
+   "label": "Hiring Requisition",
+   "link_to": "Hiring Requisition",
+   "type": "DocType"
   },
   {
-    "color": "Green",
-    "doc_view": "List",
-    "label": "Candidate Pipeline",
-    "link_to": "Candidate Profile",
-    "type": "DocType"
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Candidate Pipeline",
+   "link_to": "Candidate Profile",
+   "type": "DocType"
   },
   {
-    "color": "Orange",
-    "doc_view": "List",
-    "label": "Employee Onboarding",
-    "link_to": "Employee Onboarding",
-    "type": "DocType"
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Employee Onboarding",
+   "link_to": "Employee Onboarding",
+   "type": "DocType"
   },
   {
-    "color": "Yellow",
-    "doc_view": "List",
-    "label": "Saudi Annual Leave",
-    "link_to": "Saudi Annual Leave",
-    "type": "DocType"
+   "color": "Yellow",
+   "doc_view": "List",
+   "label": "Saudi Annual Leave",
+   "link_to": "Saudi Annual Leave",
+   "type": "DocType"
   },
   {
-    "color": "Cyan",
-    "doc_view": "List",
-    "label": "Performance Review",
-    "link_to": "Performance Review",
-    "type": "DocType"
+   "color": "Cyan",
+   "doc_view": "List",
+   "label": "Performance Review",
+   "link_to": "Performance Review",
+   "type": "DocType"
   },
   {
-    "color": "Red",
-    "doc_view": "List",
-    "label": "Exit Clearance",
-    "link_to": "Exit Clearance",
-    "type": "DocType"
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Exit Clearance",
+   "link_to": "Exit Clearance",
+   "type": "DocType"
   },
   {
-    "color": "Blue",
-    "doc_view": "Form",
-    "label": "Saudi HR Settings",
+   "color": "Blue",
+   "doc_view": "Form",
+   "label": "Saudi HR Settings",
    "link_to": "Saudi HR Settings",
    "type": "DocType"
   },
