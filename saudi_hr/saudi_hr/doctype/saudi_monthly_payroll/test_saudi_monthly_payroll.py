@@ -488,6 +488,202 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(rows[0]["middle_name"], "Mohamed Ali")
 		self.assertEqual(rows[0]["last_name"], "Salem")
 
+	# ─── Template: verify the downloaded template leaves HR fields empty ─────────
+
+	def test_employee_setup_template_has_empty_hr_fields_for_filling(self):
+		"""القالب يجب أن يحتوي صف رأس صحيح، وأن تكون حقول HR (gender/dob/doj) فارغة."""
+		rows = payroll_module._build_employee_setup_template_rows("amd", [{
+			"source_row": 5,
+			"employee_id": "9001",
+			"employee_name": "Khalid Ibrahim Nasser",
+			"national_id": "1000000001",
+			"department": "Finance",
+			"designation": "Analyst",
+		}])
+
+		# الصف الأول = رأس الأعمدة
+		self.assertEqual(rows[0], payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS)
+
+		data_row = rows[1]
+		header = payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS
+
+		gender_idx       = header.index("gender")
+		dob_idx          = header.index("date_of_birth")
+		doj_idx          = header.index("date_of_joining")
+		first_name_idx   = header.index("first_name")
+		last_name_idx    = header.index("last_name")
+
+		# الحقول الجاهزة من ملف الرواتب يجب أن تكون ممتلئة
+		self.assertEqual(data_row[first_name_idx], "Khalid")
+		self.assertEqual(data_row[last_name_idx], "Nasser")
+
+		# الحقول التي يجب أن يملأها HR يجب أن تكون فارغة
+		self.assertEqual(data_row[gender_idx], "")
+		self.assertEqual(data_row[dob_idx], "")
+		self.assertEqual(data_row[doj_idx], "")
+
+	def test_employee_setup_template_header_contains_all_expected_columns(self):
+		"""تحقق من أن رأس القالب يحتوي جميع الأعمدة المطلوبة."""
+		required = [
+			"source_row", "payroll_employee_id", "payroll_employee_name",
+			"national_id", "company", "department", "designation",
+			"employee_number", "first_name", "middle_name", "last_name",
+			"gender", "date_of_birth", "date_of_joining", "status", "remarks",
+		]
+		self.assertEqual(payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS, required)
+
+	def test_employee_setup_template_empty_when_no_unmatched_rows(self):
+		"""إذا لم توجد صفوف غير مطابقة، القالب يُعيد رأساً فقط بدون بيانات."""
+		rows = payroll_module._build_employee_setup_template_rows("amd", [])
+		self.assertEqual(len(rows), 1)  # header only
+		self.assertEqual(rows[0], payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS)
+
+	# ─── GOSI: تحقق من حساب الاقتطاع السعودي وغير السعودي ──────────────────────
+
+	def test_build_employee_row_gosi_zero_for_non_saudi(self):
+		"""الموظف غير السعودي لا يُقتطع منه GOSI."""
+		emp = {"name": "EMP-0002", "employee_name": "John Doe", "department": "IT", "nationality": "American"}
+		with patch.object(payroll_module, "get_employee_salary_components", return_value={
+			"basic_salary": 5000, "housing_allowance": 0, "transport_allowance": 0, "other_allowances": 0,
+		}), patch.object(payroll_module.frappe, "get_all", side_effect=[[], []]), \
+		     patch.object(payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 0, "installment_names": []}):
+			row = payroll_module._build_employee_row(emp, "March / مارس", 2026)
+
+		self.assertEqual(row["gosi_employee_deduction"], 0.0)
+		self.assertEqual(row["net_salary"], 5000.0)
+
+	def test_build_employee_row_gosi_capped_at_45000_base(self):
+		"""GOSI يُحسب على أساس 45,000 كحد أقصى وليس على الراتب الكامل."""
+		emp = {"name": "EMP-0003", "employee_name": "Faisal", "department": "Exec", "nationality": "Saudi"}
+		with patch.object(payroll_module, "get_employee_salary_components", return_value={
+			"basic_salary": 60000, "housing_allowance": 0, "transport_allowance": 0, "other_allowances": 0,
+		}), patch.object(payroll_module.frappe, "get_all", side_effect=[[], []]), \
+		     patch.object(payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 0, "installment_names": []}):
+			row = payroll_module._build_employee_row(emp, "March / مارس", 2026)
+
+		expected_gosi = round(45000.0 * 10.0 / 100, 2)  # 4500.0
+		self.assertEqual(row["gosi_employee_deduction"], expected_gosi)
+
+	# ─── صافي الراتب: التحقق من المعادلة الكاملة ────────────────────────────────
+
+	def test_recalculate_employee_rows_net_equals_gross_plus_ot_minus_deductions(self):
+		"""صافي الراتب = إجمالي + عمل إضافي - إجمالي الخصومات."""
+		doc = frappe.get_doc({
+			"doctype": "Saudi Monthly Payroll",
+			"company": "amd",
+			"month": "March / مارس",
+			"year": 2026,
+			"posting_date": "2026-03-31",
+			"employees": [
+				{
+					"employee": "EMP-1",
+					"basic_salary": 8000,
+					"housing_allowance": 3000,
+					"transport_allowance": 500,
+					"other_allowances": 0,
+					"gosi_employee_deduction": 800,
+					"sick_leave_deduction": 100,
+					"loan_deduction": 400,
+					"other_deductions": 0,
+					"overtime_addition": 250,
+					"net_salary": 0,  # will be recalculated
+				},
+			],
+		})
+		doc._recalculate_employee_rows()
+
+		row = doc.employees[0]
+		self.assertEqual(row.gross_salary, 11500.0)
+		self.assertEqual(row.total_deductions, 1300.0)
+		self.assertEqual(row.net_salary, 10450.0)  # 11500 + 250 - 1300
+
+	def test_recalculate_totals_net_matches_sum_of_employee_nets(self):
+		"""total_net_payable يجب أن يساوي مجموع صافي رواتب جميع الموظفين."""
+		doc = frappe.get_doc({
+			"doctype": "Saudi Monthly Payroll",
+			"company": "amd",
+			"month": "March / مارس",
+			"year": 2026,
+			"posting_date": "2026-03-31",
+			"employees": [
+				{"employee": "EMP-1", "gross_salary": 5000, "gosi_employee_deduction": 500, "sick_leave_deduction": 0, "loan_deduction": 0, "other_deductions": 0, "overtime_addition": 0, "net_salary": 4500},
+				{"employee": "EMP-2", "gross_salary": 7500, "gosi_employee_deduction": 750, "sick_leave_deduction": 200, "loan_deduction": 300, "other_deductions": 50, "overtime_addition": 500, "net_salary": 6700},
+			],
+		})
+		doc._recalculate_totals()
+
+		self.assertEqual(doc.total_net_payable, 11200.0)
+		self.assertEqual(doc.total_gross, 12500.0)
+		self.assertEqual(doc.total_gosi_deductions, 1250.0)
+		self.assertEqual(doc.total_sick_deductions, 200.0)
+		self.assertEqual(doc.total_loan_deductions, 300.0)
+		self.assertEqual(doc.total_other_deductions, 50.0)
+		self.assertEqual(doc.total_overtime, 500.0)
+
+	# ─── قالب الاستيراد: التحقق من إدارة الأسماء ────────────────────────────────
+
+	def test_employee_setup_template_single_word_name(self):
+		"""اسم من كلمة واحدة يُوضع في first_name فقط."""
+		rows = payroll_module._build_employee_setup_template_rows("amd", [{
+			"source_row": 1,
+			"employee_id": "1001",
+			"employee_name": "Mohammed",
+			"national_id": "",
+		}])
+		header = payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS
+		data = rows[1]
+		self.assertEqual(data[header.index("first_name")], "Mohammed")
+		self.assertEqual(data[header.index("middle_name")], "")
+		self.assertEqual(data[header.index("last_name")], "")
+
+	def test_employee_setup_template_two_word_name(self):
+		"""اسم من كلمتين: first_name + last_name، middle_name فارغ."""
+		rows = payroll_module._build_employee_setup_template_rows("amd", [{
+			"source_row": 2,
+			"employee_id": "1002",
+			"employee_name": "Ali Hassan",
+			"national_id": "",
+		}])
+		header = payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS
+		data = rows[1]
+		self.assertEqual(data[header.index("first_name")], "Ali")
+		self.assertEqual(data[header.index("middle_name")], "")
+		self.assertEqual(data[header.index("last_name")], "Hassan")
+
+	# ─── is_empty_source_row: تحقق من منطق تخطي الصفوف الفارغة ─────────────────
+
+	def test_is_empty_source_row_passes_rows_with_employee_id(self):
+		"""صف يحتوي employee_id يجب ألّا يُعتبر فارغاً."""
+		self.assertFalse(payroll_module._is_empty_source_row({
+			"employee_id": "1023",
+			"employee_name": None,
+			"gross_salary": 0,
+			"net_salary": 0,
+		}))
+
+	def test_is_empty_source_row_passes_rows_with_name_only(self):
+		"""صف يحتوي اسم فقط بدون ID لا يُعتبر فارغاً."""
+		self.assertFalse(payroll_module._is_empty_source_row({
+			"employee_id": None,
+			"employee_name": "Ahmad",
+			"gross_salary": 0,
+			"net_salary": 0,
+		}))
+
+	# ─── _get_payroll_payable_account: مزيد من حالات البحث عن الحساب ──────────
+
+	def test_get_payroll_payable_account_prefers_salary_payable_over_party_payable(self):
+		"""Salary Payable يُفضَّل على Creditors party account."""
+		accounts = [
+			{"name": "Creditors - A", "account_name": "Creditors", "account_type": "Payable"},
+			{"name": "Salary Payable - A", "account_name": "Salary Payable", "account_type": ""},
+		]
+		with patch.object(payroll_module.frappe, "get_all", return_value=accounts):
+			account = payroll_module._get_payroll_payable_account("amd")
+		self.assertEqual(account, "Salary Payable - A")
+
+	# ─────────────────────────────────────────────────────────────────────────────
+
 	def test_extract_employee_setup_rows_reads_generated_workbook(self):
 		content = payroll_module.make_xlsx([
 			payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS,
