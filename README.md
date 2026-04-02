@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.8.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.8.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.8.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -382,7 +382,21 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.8.0 — ٢ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.8.1 — ٢ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**استيراد ملف الرواتب | Payroll Workbook Import Completion:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Saudi Monthly Payroll Employee | صفوف المسير | حفظ الحقول القادمة من الملف مباشرة: `work_location`, `designation`, `salary_mode`, `gosi_registration`, `working_days`, `absence_days`, `late_hours` |
+| Payroll Workbook Mapping | ربط أعمدة الملف | تمرير القيم الجديدة من شيتات الرواتب إلى صفوف المسير وإبقاؤها متاحة بعد الاستيراد الفعلي |
+| Gross/Overtime Normalization | تسوية الإجمالي والإضافي | معالجة ملفات الرواتب التي تدمج `الإضافي` داخل `إجمالي البدلات` حتى لا تظهر تحذيرات `net salary mismatch` الوهمية |
+| Placeholder Employee Creation | إنشاء الموظفين المبدئي | استخدام `designation` من صف الرواتب عند إنشاء Employee مبدئي إذا كانت القيمة موجودة في `Designation` |
+| Test Suite | الاختبارات | توسيع التغطية إلى 78 اختبارًا مع التحقق من الاستيراد الحي ومرور جميع اختبارات `saudi_hr` |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يكمل تغطية ملف الرواتب المرفق، ويجعل استيراد الرواتب أكثر دقة ووضوحاً عند التعامل مع الحقول التشغيلية وقيم الإضافي.
+
+### v1.8.0 — ٢ أبريل ٢٠٢٦
 
 **تقوية الصلاحيات والمسارات الحرجة | Runtime Permission Hardening:**
 

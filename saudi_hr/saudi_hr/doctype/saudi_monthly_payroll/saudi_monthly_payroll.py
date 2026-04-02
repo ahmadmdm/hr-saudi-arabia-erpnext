@@ -239,6 +239,13 @@ def fetch_employees(doc_name: str):
 			"employee_name": emp.get("employee_name", ""),
 			"department": emp.get("department", ""),
 			"nationality": emp.get("nationality", ""),
+			"work_location": "",
+			"designation": "",
+			"salary_mode": "",
+			"gosi_registration": "",
+			"working_days": 0.0,
+			"absence_days": 0.0,
+			"late_hours": 0.0,
 			"basic_salary": basic,
 			"housing_allowance": housing,
 			"transport_allowance": transport,
@@ -702,6 +709,13 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 		"employee_name": emp.get("employee_name", ""),
 		"department": emp.get("department", ""),
 		"nationality": emp.get("nationality", ""),
+		"work_location": "",
+		"designation": "",
+		"salary_mode": "",
+		"gosi_registration": "",
+		"working_days": 0.0,
+		"absence_days": 0.0,
+		"late_hours": 0.0,
 		"basic_salary": basic,
 		"housing_allowance": housing,
 		"transport_allowance": transport,
@@ -1148,6 +1162,7 @@ def _build_basic_employee_payload_from_payroll_row(company: str, row, defaults: 
 		("middle_name", middle_name),
 		("last_name", last_name),
 		("department", _resolve_department_link(getattr(row, "department", None) or getattr(row, "workbook_department", None))),
+		("designation", _resolve_designation_link(getattr(row, "designation", None))),
 	):
 		if value and meta.has_field(fieldname):
 			payload[fieldname] = value
@@ -1252,9 +1267,14 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 		housing = _to_currency(raw.get("housing_allowance"))
 		transport = _to_currency(raw.get("transport_allowance"))
 		other_allowances = _to_currency(raw.get("other_allowances"))
-		gross = round(_to_currency(raw.get("gross_salary")) or (basic + housing + transport + other_allowances), 2)
+		component_gross = round(basic + housing + transport + other_allowances, 2)
 		gosi = _to_currency(raw.get("gosi_deduction"))
 		overtime = _to_currency(raw.get("additions"))
+		gross = _normalize_workbook_gross_salary(
+			_to_currency(raw.get("gross_salary")),
+			component_gross,
+			overtime,
+		)
 		total_deductions = _to_currency(raw.get("total_deductions"))
 		if not total_deductions:
 			total_deductions = round(
@@ -1282,8 +1302,15 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 			"employee": (employee or {}).get("name") or "",
 			"employee_name": (employee or {}).get("employee_name") or raw.get("employee_name") or "",
 			"workbook_department": cstr(raw.get("department") or "").strip(),
+			"work_location": cstr(raw.get("work_location") or "").strip(),
+			"designation": cstr(raw.get("designation") or "").strip(),
+			"salary_mode": cstr(raw.get("salary_mode") or "").strip(),
+			"gosi_registration": cstr(raw.get("gosi_registration") or "").strip(),
 			"department": _resolve_department_link((employee or {}).get("department") or raw.get("department")),
 			"nationality": (employee or {}).get("nationality") or "",
+			"working_days": _to_number(raw.get("working_days")),
+			"absence_days": _to_number(raw.get("absence_days")),
+			"late_hours": _to_number(raw.get("late_hours")),
 			"basic_salary": basic,
 			"housing_allowance": housing,
 			"transport_allowance": transport,
@@ -1319,6 +1346,21 @@ def _resolve_department_link(value) -> str:
 	if not department:
 		return ""
 	return department if frappe.db.exists("Department", department) else ""
+
+
+def _resolve_designation_link(value) -> str:
+	designation = cstr(value or "").strip()
+	if not designation:
+		return ""
+	return designation if frappe.db.exists("Designation", designation) else ""
+
+
+def _normalize_workbook_gross_salary(raw_gross: float, component_gross: float, overtime: float) -> float:
+	if raw_gross:
+		if overtime and abs(raw_gross - round(component_gross + overtime, 2)) <= 0.01:
+			return component_gross
+		return raw_gross
+	return component_gross
 
 
 def _get_company_employee_lookup(company: str) -> dict[str, dict]:
@@ -1431,11 +1473,15 @@ def _normalize_lookup_key(value) -> str:
 
 
 def _to_currency(value) -> float:
+	return round(_to_number(value), 2)
+
+
+def _to_number(value) -> float:
 	if _is_blank(value):
 		return 0.0
 	if isinstance(value, str) and value.strip().lower() == "blank":
 		return 0.0
-	return round(flt(value), 2)
+	return flt(value)
 
 
 def _is_blank(value) -> bool:

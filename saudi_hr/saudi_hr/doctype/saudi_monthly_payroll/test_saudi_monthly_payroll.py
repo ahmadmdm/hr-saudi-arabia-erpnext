@@ -205,7 +205,12 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(len(rows), 1)
 		self.assertEqual(rows[0]["employee_id"], 2960)
 		self.assertEqual(rows[0]["employee_name"], "موظف تجريبي")
+		self.assertEqual(rows[0]["salary_mode"], "بنك")
+		self.assertEqual(rows[0]["work_location"], "الرياض")
 		self.assertEqual(rows[0]["additions"], 100)
+		self.assertEqual(rows[0]["working_days"], 30)
+		self.assertEqual(rows[0]["absence_days"], 0)
+		self.assertEqual(rows[0]["late_hours"], 0)
 		self.assertEqual(rows[0]["gross_salary"], 6750)
 		self.assertEqual(rows[0]["gosi_deduction"], 500)
 		self.assertEqual(rows[0]["total_deductions"], 900)
@@ -216,16 +221,23 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			"source_row": 6,
 			"employee_id": 2960,
 			"employee_name": "موظف تجريبي",
+			"designation": "محاسب",
+			"work_location": "الرياض",
+			"salary_mode": "بنك",
 			"basic_salary": 5000,
 			"housing_allowance": 1000,
 			"transport_allowance": 500,
 			"other_allowances": 250,
 			"gross_salary": 6750,
+			"working_days": 30,
+			"absence_days": 1,
+			"late_hours": 2.5,
 			"gosi_deduction": 500,
 			"additions": 100,
 			"total_deductions": 900,
 			"net_salary": 5950,
 			"national_id": "2089300780",
+			"gosi_registration": "GOSI-1001",
 		}]
 
 		lookup = {
@@ -240,12 +252,50 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(len(rows), 1)
 		self.assertEqual(warnings, [])
 		self.assertEqual(rows[0]["employee"], "EMP-2960")
+		self.assertEqual(rows[0]["designation"], "محاسب")
+		self.assertEqual(rows[0]["work_location"], "الرياض")
+		self.assertEqual(rows[0]["salary_mode"], "بنك")
+		self.assertEqual(rows[0]["gosi_registration"], "GOSI-1001")
+		self.assertEqual(rows[0]["working_days"], 30)
+		self.assertEqual(rows[0]["absence_days"], 1)
+		self.assertEqual(rows[0]["late_hours"], 2.5)
 		self.assertEqual(rows[0]["gosi_employee_deduction"], 500)
 		self.assertEqual(rows[0]["other_deductions"], 400)
 		self.assertEqual(rows[0]["total_deductions"], 900)
 		self.assertEqual(rows[0]["net_salary"], 5950)
 		self.assertEqual(rows[0]["payroll_employee_id"], "2960")
 		self.assertEqual(rows[0]["workbook_department"], "")
+
+	def test_map_workbook_rows_to_payroll_normalizes_gross_when_it_includes_additions(self):
+		raw_rows = [{
+			"source_row": 15,
+			"employee_id": 24841,
+			"employee_name": "MUHAMMAD RIAZ",
+			"basic_salary": 3030,
+			"housing_allowance": 0,
+			"transport_allowance": 0,
+			"other_allowances": 1840,
+			"gross_salary": 5981,
+			"additions": 1111,
+			"gosi_deduction": 0,
+			"total_deductions": 0,
+			"net_salary": 5981,
+		}]
+
+		lookup = {
+			"24841": {"employee": {"name": "EMP-24841", "employee_name": "MUHAMMAD RIAZ", "department": "South", "nationality": "Saudi"}, "matched_by": "employee_id"}
+		}
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value=lookup), patch.object(
+			payroll_module.frappe.db, "exists", return_value=True
+		):
+			rows, warnings = payroll_module._map_workbook_rows_to_payroll("amd", raw_rows)
+
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(warnings, [])
+		self.assertEqual(rows[0]["gross_salary"], 4870)
+		self.assertEqual(rows[0]["overtime_addition"], 1111)
+		self.assertEqual(rows[0]["net_salary"], 5981)
 
 	def test_map_workbook_rows_to_payroll_keeps_unmatched_workbook_rows(self):
 		raw_rows = [{
@@ -323,6 +373,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			employee_name="MAJID ALI",
 			department="",
 			workbook_department="Finance",
+			designation="Analyst",
 		)
 		defaults = {
 			"gender": "Prefer not to say",
@@ -331,8 +382,8 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			"status": "Active",
 		}
 
-		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"middle_name", "last_name", "department"})), patch.object(
-			payroll_module.frappe.db, "exists", return_value=True
+		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"middle_name", "last_name", "department", "designation"})), patch.object(
+			payroll_module.frappe.db, "exists", side_effect=lambda doctype, name=None: True if (doctype == "Department" and name == "Finance") or (doctype == "Designation" and name == "Analyst") else False
 		):
 			payload = payroll_module._build_basic_employee_payload_from_payroll_row("amd", row, defaults)
 
@@ -340,6 +391,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(payload["first_name"], "MAJID")
 		self.assertEqual(payload["last_name"], "ALI")
 		self.assertEqual(payload["department"], "Finance")
+		self.assertEqual(payload["designation"], "Analyst")
 		self.assertEqual(payload["gender"], "Prefer not to say")
 
 	def test_create_basic_employees_for_payroll_creates_and_links_rows(self):

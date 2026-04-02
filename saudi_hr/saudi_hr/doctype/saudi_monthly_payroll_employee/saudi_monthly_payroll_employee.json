@@ -8,9 +8,16 @@
   "employee",
   "employee_name",
   "workbook_department",
+  "work_location",
+  "designation",
+  "salary_mode",
+  "gosi_registration",
   "column_break_1",
   "department",
   "nationality",
+  "working_days",
+  "absence_days",
+  "late_hours",
   "salary_section",
   "basic_salary",
   "housing_allowance",
@@ -58,6 +65,30 @@
    "read_only": 1
   },
   {
+   "fieldname": "work_location",
+   "fieldtype": "Data",
+   "label": "Work Location / مكان العمل",
+   "read_only": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation / المسمى الوظيفي",
+   "read_only": 1
+  },
+  {
+   "fieldname": "salary_mode",
+   "fieldtype": "Data",
+   "label": "Salary Mode / بنك أو كاش",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gosi_registration",
+   "fieldtype": "Data",
+   "label": "GOSI Registration / رقم التأمينات",
+   "read_only": 1
+  },
+  {
    "fieldname": "column_break_1",
    "fieldtype": "Column Break"
   },
@@ -73,6 +104,24 @@
    "fieldname": "nationality",
    "fieldtype": "Data",
    "label": "Nationality / الجنسية",
+   "read_only": 1
+  },
+  {
+   "fieldname": "working_days",
+   "fieldtype": "Float",
+   "label": "Working Days / أيام العمل",
+   "read_only": 1
+  },
+  {
+   "fieldname": "absence_days",
+   "fieldtype": "Float",
+   "label": "Absence Days / أيام الغياب",
+   "read_only": 1
+  },
+  {
+   "fieldname": "late_hours",
+   "fieldtype": "Float",
+   "label": "Late Hours / ساعات التأخير",
    "read_only": 1
   },
   {
