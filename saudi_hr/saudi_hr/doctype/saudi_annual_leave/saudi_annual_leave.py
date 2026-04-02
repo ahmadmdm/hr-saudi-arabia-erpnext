@@ -32,6 +32,11 @@ class SaudiAnnualLeave(Document):
 		end_date = getdate(self.leave_end_date)
 		if end_date < start_date:
 			frappe.throw(_("تاريخ نهاية الإجازة يجب أن يكون بعد أو مساوياً لتاريخ البداية."))
+		if start_date.year != end_date.year:
+			frappe.throw(
+				_("Annual leave request must stay within one calendar year.<br>يجب أن تقع الإجازة السنوية ضمن سنة ميلادية واحدة."),
+				title=_("Invalid Leave Period / فترة إجازة غير صالحة"),
+			)
 
 		if self.half_day and start_date != end_date:
 			frappe.throw(_("نصف يوم إجازة متاح فقط عندما تكون بداية الإجازة ونهايتها في اليوم نفسه."))
@@ -41,6 +46,13 @@ class SaudiAnnualLeave(Document):
 	def _calculate_balance(self):
 		if not self.employee or not self.leave_start_date:
 			return
+
+		joining_date = frappe.db.get_value("Employee", self.employee, "date_of_joining")
+		if joining_date and getdate(self.leave_start_date) < getdate(joining_date):
+			frappe.throw(
+				_("Annual leave cannot start before the employee joining date.<br>لا يمكن أن تبدأ الإجازة السنوية قبل تاريخ التحاق الموظف."),
+				title=_("Invalid Leave Date / تاريخ إجازة غير صالح"),
+			)
 
 		balance = get_annual_leave_balance(self.employee, self.leave_start_date, exclude_name=self.name)
 		self.leave_balance_before = balance["balance"]

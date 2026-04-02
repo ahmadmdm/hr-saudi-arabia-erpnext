@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, getdate, today
 
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+
 
 class InvestigationRecord(Document):
 
@@ -30,6 +32,7 @@ class InvestigationRecord(Document):
 @frappe.whitelist()
 def create_warning_notice(record_name: str):
 	record = frappe.get_doc("Investigation Record", record_name)
+	frappe.has_permission("Investigation Record", "read", doc=record, throw=True)
 	if record.employee_warning_notice and frappe.db.exists("Employee Warning Notice", record.employee_warning_notice):
 		return {"warning_notice": record.employee_warning_notice, "created": False}
 
@@ -47,6 +50,8 @@ def create_warning_notice(record_name: str):
 			"corrective_action": record.recommendation,
 			"due_date": add_days(record.investigation_end_date or today(), 7),
 		}
-	).insert(ignore_permissions=True)
+	)
+	assert_doctype_permissions("Employee Warning Notice", "create", doc=warning_notice)
+	warning_notice.insert()
 	record.db_set("employee_warning_notice", warning_notice.name, update_modified=False)
 	return {"warning_notice": warning_notice.name, "created": True}

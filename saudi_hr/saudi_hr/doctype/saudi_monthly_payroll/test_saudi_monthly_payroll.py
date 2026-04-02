@@ -21,6 +21,8 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 				"other_allowances": 50,
 			}
 		), patch.object(payroll_module.frappe, "get_all", side_effect=[[], []]), patch.object(
+			payroll_module, "get_gosi_rates", return_value={"employee_rate": 10.0}
+		), patch.object(
 			payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 125, "installment_names": ["INST-1"]}
 		):
 			row = payroll_module._build_employee_row(emp, "March / مارس", 2026)
@@ -31,6 +33,47 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(row["total_deductions"], 225)
 		self.assertEqual(row["net_salary"], 1125)
 		self.assertEqual(row["loan_installments"], "INST-1")
+
+	def test_build_employee_row_rejects_zero_basic_salary(self):
+		emp = {"name": "EMP-0001", "employee_name": "Demo Employee", "department": "HR", "nationality": "Saudi"}
+		with patch.object(
+			payroll_module, "get_employee_salary_components", return_value={
+				"basic_salary": 0,
+				"housing_allowance": 0,
+				"transport_allowance": 0,
+				"other_allowances": 0,
+			}
+		):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module._build_employee_row(emp, "March / مارس", 2026)
+
+	def test_build_employee_row_prorates_sick_leave_overlap(self):
+		emp = {"name": "EMP-0001", "employee_name": "Demo Employee", "department": "HR", "nationality": "Saudi"}
+		with patch.object(
+			payroll_module, "get_employee_salary_components", return_value={
+				"basic_salary": 3000,
+				"housing_allowance": 0,
+				"transport_allowance": 0,
+				"other_allowances": 0,
+			}
+		), patch.object(payroll_module, "get_gosi_rates", return_value={"employee_rate": 0.0}), patch.object(
+			payroll_module.frappe, "get_all", side_effect=[
+				[
+					frappe._dict({
+						"leave_pay_amount": 350,
+						"daily_salary": 100,
+						"total_days": 7,
+						"from_date": "2026-02-27",
+						"to_date": "2026-03-05",
+					})
+				],
+				[],
+			]
+		), patch.object(payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 0, "installment_names": []}):
+			row = payroll_module._build_employee_row(emp, "March / مارس", 2026)
+
+		self.assertEqual(row["sick_leave_deduction"], 250)
+		self.assertEqual(row["net_salary"], 2750)
 
 	def test_recalculate_totals_includes_loan_and_sick_deductions(self):
 		doc = frappe.get_doc({
@@ -393,7 +436,9 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(row_two.employee, "EMP-7803A")
 
 	def test_normalize_basic_employee_creation_defaults_validates_gender_and_dates(self):
-		with patch.object(payroll_module.frappe.db, "exists", side_effect=lambda doctype, name=None: True):
+		with patch.object(payroll_module, "today", return_value="2026-04-02"), patch.object(
+			payroll_module.frappe.db, "exists", side_effect=lambda doctype, name=None: True
+		):
 			defaults = payroll_module._normalize_basic_employee_creation_defaults(
 				"Prefer not to say",
 				"1990-01-01",
@@ -405,6 +450,18 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(str(defaults["date_of_birth"]), "1990-01-01")
 		self.assertEqual(str(defaults["date_of_joining"]), "2026-03-28")
 
+	def test_normalize_basic_employee_creation_defaults_rejects_future_dates(self):
+		with patch.object(payroll_module, "today", return_value="2026-04-02"), patch.object(
+			payroll_module.frappe.db, "exists", side_effect=lambda doctype, name=None: True
+		):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module._normalize_basic_employee_creation_defaults(
+					"Prefer not to say",
+					"2030-01-01",
+					"2030-02-01",
+					"Active",
+				)
+
 	def test_get_payroll_payable_account_prefers_named_non_party_account(self):
 		accounts = [
 			{"name": "Creditors - A", "account_name": "Creditors", "account_type": "Payable"},
@@ -415,6 +472,24 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			account = payroll_module._get_payroll_payable_account("amd")
 
 		self.assertEqual(account, "Payroll Payable - A")
+
+	def test_get_attached_file_content_rejects_invalid_extension(self):
+		with patch.object(payroll_module.frappe.db, "get_value", return_value=frappe._dict({
+			"name": "FILE-0001",
+			"file_name": "payroll.csv",
+			"file_size": 1024,
+		})):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module._get_attached_file_content("/private/files/payroll.csv")
+
+	def test_get_attached_file_content_rejects_large_file(self):
+		with patch.object(payroll_module.frappe.db, "get_value", return_value=frappe._dict({
+			"name": "FILE-0001",
+			"file_name": "payroll.xlsx",
+			"file_size": payroll_module.MAX_WORKBOOK_FILE_SIZE_BYTES + 1,
+		})):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module._get_attached_file_content("/private/files/payroll.xlsx")
 
 	def test_build_gap_report_rows_formats_unmatched_payload(self):
 		rows = payroll_module._build_gap_report_rows([{
@@ -546,6 +621,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		with patch.object(payroll_module, "get_employee_salary_components", return_value={
 			"basic_salary": 5000, "housing_allowance": 0, "transport_allowance": 0, "other_allowances": 0,
 		}), patch.object(payroll_module.frappe, "get_all", side_effect=[[], []]), \
+		     patch.object(payroll_module, "get_gosi_rates", return_value={"employee_rate": 0.0}), \
 		     patch.object(payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 0, "installment_names": []}):
 			row = payroll_module._build_employee_row(emp, "March / مارس", 2026)
 
@@ -557,12 +633,24 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		emp = {"name": "EMP-0003", "employee_name": "Faisal", "department": "Exec", "nationality": "Saudi"}
 		with patch.object(payroll_module, "get_employee_salary_components", return_value={
 			"basic_salary": 60000, "housing_allowance": 0, "transport_allowance": 0, "other_allowances": 0,
-		}), patch.object(payroll_module.frappe, "get_all", side_effect=[[], []]), \
+		}), patch.object(payroll_module.frappe, "get_all", return_value=[]), \
+		     patch.object(payroll_module, "get_gosi_rates", return_value={"employee_rate": 10.0}), \
 		     patch.object(payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 0, "installment_names": []}):
 			row = payroll_module._build_employee_row(emp, "March / مارس", 2026)
 
 		expected_gosi = round(45000.0 * 10.0 / 100, 2)  # 4500.0
 		self.assertEqual(row["gosi_employee_deduction"], expected_gosi)
+
+	def test_build_employee_row_uses_settings_backed_gosi_rate(self):
+		emp = {"name": "EMP-0004", "employee_name": "Demo Saudi", "department": "HR", "nationality": "Saudi"}
+		with patch.object(payroll_module, "get_employee_salary_components", return_value={
+			"basic_salary": 10000, "housing_allowance": 0, "transport_allowance": 0, "other_allowances": 0,
+		}), patch.object(payroll_module.frappe, "get_all", side_effect=[[], []]), \
+		     patch.object(payroll_module, "get_gosi_rates", return_value={"employee_rate": 7.5}), \
+		     patch.object(payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 0, "installment_names": []}):
+			row = payroll_module._build_employee_row(emp, "March / مارس", 2026)
+
+		self.assertEqual(row["gosi_employee_deduction"], 750.0)
 
 	# ─── صافي الراتب: التحقق من المعادلة الكاملة ────────────────────────────────
 
@@ -596,6 +684,33 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(row.gross_salary, 11500.0)
 		self.assertEqual(row.total_deductions, 1300.0)
 		self.assertEqual(row.net_salary, 10450.0)  # 11500 + 250 - 1300
+
+	def test_validate_blocks_negative_net_salary(self):
+		doc = frappe.get_doc({
+			"doctype": "Saudi Monthly Payroll",
+			"company": "amd",
+			"month": "March / مارس",
+			"year": 2026,
+			"posting_date": "2026-03-31",
+			"employees": [
+				{
+					"employee": "EMP-1",
+					"employee_name": "Negative Case",
+					"basic_salary": 1000,
+					"housing_allowance": 0,
+					"transport_allowance": 0,
+					"other_allowances": 0,
+					"gosi_employee_deduction": 100,
+					"sick_leave_deduction": 200,
+					"loan_deduction": 900,
+					"other_deductions": 0,
+					"overtime_addition": 0,
+				}
+			],
+		})
+
+		with self.assertRaises(frappe.ValidationError):
+			doc.validate()
 
 	def test_recalculate_totals_net_matches_sum_of_employee_nets(self):
 		"""total_net_payable يجب أن يساوي مجموع صافي رواتب جميع الموظفين."""
@@ -685,10 +800,11 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 	# ─────────────────────────────────────────────────────────────────────────────
 
 	def test_extract_employee_setup_rows_reads_generated_workbook(self):
-		content = payroll_module.make_xlsx([
-			payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS,
-			[6, "2960", "Missing Employee", "2089300780", "amd", "Finance", "Accountant", "2960", "Ali", "", "", "Male", "1990-01-01", "2024-01-01", "Active", "ok"],
-		], "Employee Setup").getvalue()
+		with patch("frappe.utils.xlsxutils.get_excel_date_format", return_value=("yyyy-mm-dd", "hh:mm:ss")):
+			content = payroll_module.make_xlsx([
+				payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS,
+				[6, "2960", "Missing Employee", "2089300780", "amd", "Finance", "Accountant", "2960", "Ali", "", "", "Male", "1990-01-01", "2024-01-01", "Active", "ok"],
+			], "Employee Setup").getvalue()
 
 		rows = payroll_module._extract_employee_setup_rows(content)
 
@@ -697,9 +813,18 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(rows[0]["first_name"], "Ali")
 
 	def test_prepare_employee_setup_row_validates_required_fields(self):
-		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: True)), patch.object(
-			payroll_module.frappe.db, "exists", return_value=False
-		):
+		def _exists(doctype, name=None):
+			if doctype == "Employee":
+				return False
+			if doctype == "DocType" and name == "Gender":
+				return True
+			if doctype in {"Gender", "Department", "Designation"}:
+				return True
+			return False
+
+		with patch.object(payroll_module, "today", return_value="2026-04-02"), patch.object(
+			payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: True)
+		), patch.object(payroll_module.frappe.db, "exists", side_effect=_exists):
 			payload = payroll_module._prepare_employee_setup_row("amd", {
 				"source_row": 6,
 				"employee_number": "2960",
@@ -719,6 +844,47 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(payload["last_name"], "Saleh")
 		self.assertEqual(payload["department"], "Finance")
 
+	def test_prepare_employee_setup_row_rejects_invalid_dates_and_links(self):
+		def _exists(doctype, name=None):
+			if doctype == "Employee":
+				return False
+			if doctype == "DocType" and name == "Gender":
+				return True
+			if doctype == "Gender" and name == "Male":
+				return True
+			return False
+
+		with patch.object(payroll_module, "today", return_value="2026-04-02"), patch.object(
+			payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: True)
+		), patch.object(payroll_module.frappe.db, "exists", side_effect=_exists):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module._prepare_employee_setup_row("amd", {
+					"source_row": 6,
+					"employee_number": "2960",
+					"company": "amd",
+					"first_name": "Ali",
+					"gender": "Male",
+					"date_of_birth": "2030-01-01",
+					"date_of_joining": "2030-02-01",
+					"status": "Active",
+				})
+
+		with patch.object(payroll_module, "today", return_value="2026-04-02"), patch.object(
+			payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: True)
+		), patch.object(payroll_module.frappe.db, "exists", side_effect=_exists):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module._prepare_employee_setup_row("amd", {
+					"source_row": 7,
+					"employee_number": "2961",
+					"company": "amd",
+					"first_name": "Omar",
+					"gender": "Male",
+					"date_of_birth": "1990-01-01",
+					"date_of_joining": "2024-01-01",
+					"department": "Unknown Department",
+					"status": "Active",
+				})
+
 	def test_import_employee_setup_rows_creates_missing_employees_only(self):
 		inserted = []
 
@@ -732,9 +898,20 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 				inserted.append(self.payload)
 				return self
 
-		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: True)), patch.object(
-			payroll_module.frappe.db, "exists", side_effect=[False, True]
-		), patch.object(payroll_module.frappe, "get_doc", side_effect=lambda payload: _EmployeeDoc(payload)):
+		def _exists(doctype, name=None):
+			if doctype == "Employee":
+				return name.get("employee_number") == "2961"
+			if doctype == "DocType" and name == "Gender":
+				return True
+			if doctype == "Gender" and name == "Male":
+				return True
+			return False
+
+		with patch.object(payroll_module, "today", return_value="2026-04-02"), patch.object(
+			payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: True)
+		), patch.object(payroll_module.frappe.db, "exists", side_effect=_exists), patch.object(
+			payroll_module.frappe, "get_doc", side_effect=lambda payload: _EmployeeDoc(payload)
+		):
 			created, skipped = payroll_module._import_employee_setup_rows("amd", [
 				{
 					"source_row": 6,

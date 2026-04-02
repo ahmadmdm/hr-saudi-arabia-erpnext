@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, getdate
 
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+
 
 OPEN_VIOLATION_STATUSES = {
 	"Open / مفتوح",
@@ -87,6 +89,7 @@ class LaborInspection(Document):
 					"corrective_action": row.corrective_action,
 				}
 			)
-			action.insert(ignore_permissions=True)
+			assert_doctype_permissions("HR Compliance Action Log", "create", doc=action)
+			action.insert()
 			frappe.db.set_value("Labor Inspection Violation", row.name, "action_log", action.name, update_modified=False)
 			row.action_log = action.name

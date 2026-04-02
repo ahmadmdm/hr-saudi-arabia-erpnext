@@ -14,7 +14,7 @@ from frappe.utils.file_manager import save_file
 
 from saudi_hr.saudi_hr.doctype.maternity_paternity_leave.maternity_paternity_leave import LEAVE_DAYS
 from saudi_hr.saudi_hr.location_utils import resolve_location_reference
-from saudi_hr.saudi_hr.utils import get_annual_leave_balance
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions, get_annual_leave_balance
 
 
 SPECIAL_LEAVE_OPTIONS = [
@@ -506,7 +506,8 @@ def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, ver
 			"verification_note": verification_note,
 		}
 	)
-	checkin.insert(ignore_permissions=True)
+	assert_doctype_permissions("Saudi Employee Checkin", "create", doc=checkin)
+	checkin.insert()
 	attached_files = _attach_files(checkin, attachments)
 	frappe.db.commit()
 
@@ -547,7 +548,8 @@ def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, ver
 						"early_exit": 1 if working_hours < _get_contract_hours_per_day(employee) else 0,
 					}
 				)
-				attendance.insert(ignore_permissions=True)
+				assert_doctype_permissions("Saudi Daily Attendance", ("create", "submit"), doc=attendance)
+				attendance.insert()
 				attendance.submit()
 
 				all_log_names = [item.name for item in today_checkins] + [checkin.name]
@@ -601,7 +603,8 @@ def submit_mobile_leave_request(
 		},
 	)
 
-	doc.insert(ignore_permissions=True)
+	assert_doctype_permissions(doc.doctype, "create", doc=doc)
+	doc.insert()
 	attached_files = _attach_files(doc, attachments)
 	frappe.db.commit()
 

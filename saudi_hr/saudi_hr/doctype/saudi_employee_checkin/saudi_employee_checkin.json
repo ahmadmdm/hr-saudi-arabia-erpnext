@@ -127,9 +127,10 @@
    "write": 1
   },
   {
-   "read": 1,
+    "create": 1,
+    "read": 1,
    "role": "Employee",
-   "write": 0
+    "write": 1
   }
  ],
  "sort_field": "time",

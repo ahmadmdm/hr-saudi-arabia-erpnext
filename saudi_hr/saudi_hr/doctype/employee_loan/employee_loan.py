@@ -1,7 +1,9 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_months, cint, flt, getdate, today
+from frappe.utils import add_months, cint, cstr, flt, getdate, today
+
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions
 
 
 class EmployeeLoan(Document):
@@ -68,6 +70,7 @@ class EmployeeLoan(Document):
 					"deducted_amount": 0,
 					"outstanding_amount": row["installment_amount"],
 					"deduction_status": "Pending / مستحق",
+					"payroll_deducted_amount": 0,
 				},
 			)
 
@@ -140,7 +143,7 @@ class EmployeeLoan(Document):
 				],
 			}
 		)
-		je.flags.ignore_permissions = True
+		assert_doctype_permissions("Journal Entry", ("create", "submit"))
 		je.insert()
 		je.submit()
 
@@ -246,43 +249,79 @@ def get_due_loan_deduction(employee: str, month: int, year: int) -> dict:
 	}
 
 
+def _update_parent_loan_summary(loan_name: str):
+	parent = frappe.get_doc("Employee Loan", loan_name)
+	parent._update_summary()
+	parent.db_set("total_deducted", parent.total_deducted, update_modified=False)
+	parent.db_set("outstanding_balance", parent.outstanding_balance, update_modified=False)
+	parent.db_set("status", "Closed / مغلق" if parent.outstanding_balance <= 0 else "Active / نشط", update_modified=False)
+
+
+def _get_locked_installment_state(installment_name: str):
+	rows = frappe.db.sql(
+		"""
+		SELECT name, parent, installment_amount, deducted_amount, outstanding_amount,
+			deduction_status, payroll_reference, payroll_deducted_amount
+		FROM `tabEmployee Loan Installment`
+		WHERE name = %s
+		FOR UPDATE
+		""",
+		(installment_name,),
+		as_dict=True,
+	)
+	if not rows:
+		frappe.throw(_("Loan installment {0} was not found.").format(installment_name))
+	return rows[0]
+
+
 def apply_payroll_loan_deductions(payroll_doc):
 	for row in payroll_doc.employees:
 		for installment_name in (row.get("loan_installments") or "").split(","):
 			installment_name = installment_name.strip()
 			if not installment_name:
 				continue
+			state = _get_locked_installment_state(installment_name)
+			if state.payroll_reference == payroll_doc.name and flt(state.payroll_deducted_amount) > 0:
+				continue
+			if cstr(state.payroll_reference).strip() and state.payroll_reference != payroll_doc.name:
+				frappe.throw(
+					_(
+						"Loan installment {0} was already deducted by payroll {1}.<br>"
+						"قسط القرض {0} تم خصمه بالفعل عبر كشف الرواتب {1}."
+					).format(installment_name, state.payroll_reference),
+					title=_("Duplicate Loan Deduction / خصم قرض مكرر"),
+				)
 			installment = frappe.get_doc("Employee Loan Installment", installment_name)
-			installment.db_set("deducted_amount", installment.outstanding_amount or installment.installment_amount, update_modified=False)
+			current_outstanding = flt(state.outstanding_amount or state.installment_amount)
+			if current_outstanding <= 0:
+				continue
+			installment.db_set("deducted_amount", flt(installment.deducted_amount) + current_outstanding, update_modified=False)
 			installment.db_set("outstanding_amount", 0, update_modified=False)
 			installment.db_set("deduction_status", "Deducted / مخصوم", update_modified=False)
 			installment.db_set("deduction_date", payroll_doc.posting_date, update_modified=False)
 			installment.db_set("payroll_reference", payroll_doc.name, update_modified=False)
-			parent = frappe.get_doc("Employee Loan", installment.parent)
-			parent._update_summary()
-			parent.db_set("total_deducted", parent.total_deducted, update_modified=False)
-			parent.db_set("outstanding_balance", parent.outstanding_balance, update_modified=False)
-			parent.db_set("status", "Closed / مغلق" if parent.outstanding_balance <= 0 else "Active / نشط", update_modified=False)
+			installment.db_set("payroll_deducted_amount", current_outstanding, update_modified=False)
+			_update_parent_loan_summary(installment.parent)
 
 
 def revert_payroll_loan_deductions(payroll_doc):
 	rows = frappe.get_all(
 		"Employee Loan Installment",
 		filters={"payroll_reference": payroll_doc.name},
-		fields=["name", "parent", "installment_amount"],
+		fields=["name", "parent", "installment_amount", "payroll_deducted_amount"],
 	)
 	for row in rows:
 		installment = frappe.get_doc("Employee Loan Installment", row.name)
-		installment.db_set("deducted_amount", 0, update_modified=False)
-		installment.db_set("outstanding_amount", row.installment_amount, update_modified=False)
+		payroll_deducted_amount = flt(row.payroll_deducted_amount)
+		if payroll_deducted_amount <= 0:
+			payroll_deducted_amount = min(flt(installment.installment_amount), flt(installment.deducted_amount or installment.installment_amount))
+		installment.db_set("deducted_amount", max(0, flt(installment.deducted_amount) - payroll_deducted_amount), update_modified=False)
+		installment.db_set("outstanding_amount", flt(installment.outstanding_amount) + payroll_deducted_amount, update_modified=False)
 		installment.db_set("deduction_status", "Pending / مستحق", update_modified=False)
 		installment.db_set("deduction_date", None, update_modified=False)
 		installment.db_set("payroll_reference", None, update_modified=False)
-		parent = frappe.get_doc("Employee Loan", installment.parent)
-		parent._update_summary()
-		parent.db_set("total_deducted", parent.total_deducted, update_modified=False)
-		parent.db_set("outstanding_balance", parent.outstanding_balance, update_modified=False)
-		parent.db_set("status", "Active / نشط" if parent.docstatus == 1 else parent.status, update_modified=False)
+		installment.db_set("payroll_deducted_amount", 0, update_modified=False)
+		_update_parent_loan_summary(installment.parent)
 
 
 @frappe.whitelist()

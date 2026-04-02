@@ -1,21 +1,21 @@
 from io import BytesIO
+from os.path import splitext
 
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint, cstr, flt, getdate
+from frappe.utils import cint, cstr, flt, getdate, today
 from frappe.utils.file_manager import save_file
 from frappe.utils.xlsxutils import make_xlsx
 from openpyxl import load_workbook
 
 from saudi_hr.saudi_hr.doctype.employee_loan.employee_loan import apply_payroll_loan_deductions, get_due_loan_deduction, revert_payroll_loan_deductions
-from saudi_hr.saudi_hr.utils import get_employee_salary_components
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_positive_basic_salary, calculate_prorated_sick_leave_deduction, get_employee_salary_components, get_gosi_rates, text_matches_tokens
 
-# معدلات GOSI الافتراضية
-GOSI_SAUDI_EMP = 10.0      # اقتطاع الموظف السعودي
-GOSI_NON_SAUDI_EMP = 0.0   # الموظف غير السعودي لا يُقتطع
 GOSI_MAX_BASE = 45000.0
 PREFERRED_SOURCE_WORKBOOK_SHEETS = ("كشف الرواتب طباعة", "كشف الرواتب", "كشف المصدر")
+MAX_WORKBOOK_FILE_SIZE_BYTES = 10 * 1024 * 1024
+ALLOWED_WORKBOOK_EXTENSIONS = {".xlsx", ".xlsm", ".xls"}
 EMPLOYEE_SETUP_TEMPLATE_HEADERS = [
 	"source_row",
 	"payroll_employee_id",
@@ -69,7 +69,20 @@ class SaudiMonthlyPayroll(Document):
 		if not self.status:
 			self.status = "Draft / مسودة"
 		self._recalculate_employee_rows()
+		self._validate_non_negative_net_salary()
 		self._recalculate_totals()
+
+	def _validate_non_negative_net_salary(self):
+		for row in self.employees:
+			if flt(row.net_salary) < 0:
+				employee_label = row.employee_name or row.employee or _("Unknown Employee")
+				frappe.throw(
+					_(
+						"Net salary for {0} cannot be negative. Please review loan, sick leave, and other deductions.<br>"
+						"لا يمكن أن يكون صافي الراتب للموظف {0} سالباً. يرجى مراجعة خصومات القرض والإجازات والخصومات الأخرى."
+					).format(employee_label),
+					title=_("Negative Net Salary / صافي راتب سالب"),
+				)
 
 	def _recalculate_employee_rows(self):
 		for row in self.employees:
@@ -132,7 +145,7 @@ def fetch_employees(doc_name: str):
 	if not employees:
 		doc.set("employees", [])
 		doc._recalculate_totals()
-		doc.save(ignore_permissions=True)
+		doc.save()
 		return {"count": 0, "total_net": 0.0}
 
 	emp_names = [e["name"] for e in employees]
@@ -162,10 +175,10 @@ def fetch_employees(doc_name: str):
 
 	# ── جلب الإجازات المرضية دفعةً واحدة ───────────────────────────────────
 	sick_rows = frappe.db.sql(
-		"""SELECT employee, leave_pay_amount, total_days
+		"""SELECT employee, leave_pay_amount, total_days, daily_salary, from_date, to_date
 		   FROM `tabSaudi Sick Leave`
 		   WHERE employee IN %(names)s AND docstatus=1
-		     AND from_date >= %(start)s AND to_date <= %(end)s""",
+		     AND from_date <= %(end)s AND to_date >= %(start)s""",
 		{"names": emp_names, "start": month_start, "end": month_end},
 		as_dict=True,
 	)
@@ -175,16 +188,17 @@ def fetch_employees(doc_name: str):
 
 	# ── جلب العمل الإضافي المعتمد دفعةً واحدة ───────────────────────────────
 	ot_rows = frappe.db.sql(
-		"""SELECT employee, overtime_amount
+		"""SELECT employee, overtime_amount, approval_status
 		   FROM `tabOvertime Request`
 		   WHERE employee IN %(names)s AND docstatus=1
-		     AND approval_status = 'Approved / موافق'
 		     AND date BETWEEN %(start)s AND %(end)s""",
 		{"names": emp_names, "start": month_start, "end": month_end},
 		as_dict=True,
 	)
 	ot_map: dict = {}
 	for ot in ot_rows:
+		if not text_matches_tokens(ot.get("approval_status"), "approved", "موافق"):
+			continue
 		ot_map[ot["employee"]] = ot_map.get(ot["employee"], 0.0) + flt(ot["overtime_amount"])
 
 	loan_map = {emp_name: get_due_loan_deduction(emp_name, month_num, int(doc.year)) for emp_name in emp_names}
@@ -197,24 +211,22 @@ def fetch_employees(doc_name: str):
 		basic = flt(contract["basic_salary"]) if contract else 0.0
 		if not basic:
 			basic = get_employee_salary_components(emp["name"])["basic_salary"]
+		assert_positive_basic_salary(emp.get("employee_name") or emp["name"], basic, _("fetching payroll / جلب الرواتب"))
 		housing = flt(contract["housing_allowance"]) if contract else 0.0
 		transport = flt(contract["transport_allowance"]) if contract else 0.0
 		other = flt(contract["other_allowances"]) if contract else 0.0
 		gross = round(basic + housing + transport + other, 2)
 
-		nat = (emp.get("nationality") or "").lower()
-		is_saudi = nat in ("saudi", "سعودي", "sa", "saudi arabia")
-		gosi_rate = GOSI_SAUDI_EMP if is_saudi else GOSI_NON_SAUDI_EMP
+		gosi_rate = flt(get_gosi_rates(emp.get("nationality") or "").get("employee_rate"))
 		gosi_base = min(basic, GOSI_MAX_BASE)
 		gosi_deduction = round(gosi_base * gosi_rate / 100, 2)
 
-		daily = round(basic / last_day, 2)
-		sick_deduction = 0.0
-		for sr in sick_map.get(emp["name"], []):
-			full_pay = flt(sr["total_days"]) * daily
-			actual_pay = flt(sr["leave_pay_amount"])
-			if full_pay > actual_pay:
-				sick_deduction += round(full_pay - actual_pay, 2)
+		sick_deduction = calculate_prorated_sick_leave_deduction(
+			sick_map.get(emp["name"], []),
+			month_start,
+			month_end,
+			round(basic / 30, 2),
+		)
 
 		overtime = round(ot_map.get(emp["name"], 0.0), 2)
 		loan_info = loan_map.get(emp["name"], {"loan_deduction": 0.0, "installment_names": []})
@@ -242,7 +254,7 @@ def fetch_employees(doc_name: str):
 		})
 
 	doc._recalculate_totals()
-	doc.save(ignore_permissions=True)
+	doc.save()
 	return {"count": len(employees), "total_net": doc.total_net_payable}
 
 
@@ -296,7 +308,15 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 
 	doc._recalculate_employee_rows()
 	doc._recalculate_totals()
-	doc.save(ignore_permissions=True)
+	doc.save()
+	_add_payroll_audit_comment(
+		doc,
+		_("Imported {0} payroll rows from workbook {1}. Warnings: {2}.").format(
+			len(import_rows),
+			workbook_url,
+			len(warnings),
+		),
+	)
 
 	return {
 		"count": len(import_rows),
@@ -372,6 +392,14 @@ def import_employee_setup_workbook(doc_name: str, file_url: str | None = None):
 	doc.db_set("employee_setup_workbook", workbook_url)
 	rows = _extract_employee_setup_rows(_get_attached_file_content(workbook_url))
 	created, skipped = _import_employee_setup_rows(doc.company, rows)
+	_add_payroll_audit_comment(
+		doc,
+		_("Imported employee setup workbook {0}. Created employees: {1}. Skipped rows: {2}.").format(
+			workbook_url,
+			len(created),
+			len(skipped),
+		),
+	)
 	return {"created_count": len(created), "skipped": skipped, "created_employees": created}
 
 
@@ -419,8 +447,17 @@ def create_basic_employees_from_payroll(
 		default_date_of_joining or doc.posting_date,
 		default_status,
 	)
+	assert_doctype_permissions("Employee", "create")
 	created, linked, skipped = _create_basic_employees_for_payroll(doc, defaults)
-	doc.save(ignore_permissions=True)
+	doc.save()
+	_add_payroll_audit_comment(
+		doc,
+		_("Created {0} placeholder employees from payroll. Linked existing rows: {1}. Skipped rows: {2}.").format(
+			len(created),
+			linked,
+			len(skipped),
+		),
+	)
 
 	remaining_unlinked = sum(1 for row in doc.employees if not cstr(row.employee or "").strip())
 	return {
@@ -473,41 +510,15 @@ def create_journal_entry_from_payroll(doc_name: str):
 	total_salary_cost = round(total_gross + total_overtime - total_sick - total_other, 2)
 
 	# ── الحسابات المحاسبية ───────────────────────────────────────────────────
-	expense_account = (
-		frappe.db.get_value(
-			"Account",
-			{"company": company, "account_name": ["like", "%Salary%"],
-			 "root_type": "Expense", "is_group": 0},
-			"name",
-		)
-		or frappe.db.get_value(
-			"Account",
-			{"company": company, "root_type": "Expense", "is_group": 0},
-			"name",
-		)
+	company_accounts = frappe.get_all(
+		"Account",
+		filters={"company": company, "is_group": 0},
+		fields=["name", "account_name", "account_type", "root_type"],
 	)
-	payable_account = _get_payroll_payable_account(company)
-	gosi_payable_account = (
-		frappe.db.get_value(
-			"Account",
-			{"company": company, "account_name": ["like", "%GOSI%"],
-			 "root_type": "Liability", "is_group": 0},
-			"name",
-		)
-		or payable_account
-	)
-	loan_receivable_account = (
-		frappe.db.get_value(
-			"Account",
-			{"company": company, "account_name": ["like", "%Loan%"], "root_type": "Asset", "is_group": 0},
-			"name",
-		)
-		or frappe.db.get_value(
-			"Account",
-			{"company": company, "account_type": "Receivable", "is_group": 0},
-			"name",
-		)
-	)
+	expense_account = _find_company_account(company_accounts, root_type="Expense", name_terms=("salary",)) or _find_company_account(company_accounts, root_type="Expense")
+	payable_account = _get_payroll_payable_account(company, accounts=company_accounts)
+	gosi_payable_account = _find_company_account(company_accounts, root_type="Liability", name_terms=("gosi",)) or payable_account
+	loan_receivable_account = _find_company_account(company_accounts, root_type="Asset", name_terms=("loan",)) or _find_company_account(company_accounts, account_type="Receivable")
 
 	if not expense_account or not payable_account:
 		frappe.throw(
@@ -553,7 +564,7 @@ def create_journal_entry_from_payroll(doc_name: str):
 		),
 		"accounts": accounts,
 	})
-	je.flags.ignore_permissions = True
+	assert_doctype_permissions("Journal Entry", ("create", "submit"))
 	je.insert()
 	je.submit()
 
@@ -569,12 +580,16 @@ def create_journal_entry_from_payroll(doc_name: str):
 	return je.name
 
 
-def _get_payroll_payable_account(company: str) -> str | None:
-	accounts = frappe.get_all(
+def _get_payroll_payable_account(company: str, accounts: list[dict] | None = None) -> str | None:
+	accounts = accounts or frappe.get_all(
 		"Account",
 		filters={"company": company, "root_type": "Liability", "is_group": 0},
-		fields=["name", "account_name", "account_type"],
+		fields=["name", "account_name", "account_type", "root_type"],
 	)
+	accounts = [
+		account for account in accounts
+		if cstr(account.get("root_type") or "liability").strip().lower() == "liability"
+	]
 
 	def rank(account: dict):
 		name = cstr(account.get("account_name") or account.get("name") or "").strip().lower()
@@ -611,12 +626,28 @@ def _get_payroll_payable_account(company: str) -> str | None:
 	return None
 
 
+def _find_company_account(accounts: list[dict], root_type: str | None = None, account_type: str | None = None, name_terms: tuple[str, ...] = ()) -> str | None:
+	for account in accounts:
+		account_root_type = cstr(account.get("root_type") or "").strip().lower()
+		account_account_type = cstr(account.get("account_type") or "").strip().lower()
+		account_name = cstr(account.get("account_name") or account.get("name") or "").strip().lower()
+		if root_type and account_root_type != root_type.lower():
+			continue
+		if account_type and account_account_type != account_type.lower():
+			continue
+		if name_terms and not any(term.lower() in account_name for term in name_terms):
+			continue
+		return account.get("name")
+	return None
+
+
 # ─── Private Helpers ────────────────────────────────────────────────────────────
 
 def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 	"""بناء بيانات صف الموظف الواحد في الجدول الفرعي."""
 	salary = get_employee_salary_components(emp["name"])
 	basic = salary["basic_salary"]
+	assert_positive_basic_salary(emp.get("employee_name") or emp["name"], basic, _("building payroll row / تجهيز صف الراتب"))
 	housing = salary["housing_allowance"]
 	transport = salary["transport_allowance"]
 	other = salary["other_allowances"]
@@ -624,9 +655,7 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 	gross = round(basic + housing + transport + other, 2)
 
 	# اقتطاع GOSI للموظف
-	nat = (emp.get("nationality") or "").lower()
-	is_saudi = nat in ("saudi", "سعودي", "sa", "saudi arabia")
-	gosi_rate = GOSI_SAUDI_EMP if is_saudi else GOSI_NON_SAUDI_EMP
+	gosi_rate = flt(get_gosi_rates(emp.get("nationality") or "").get("employee_rate"))
 	gosi_base = min(basic, GOSI_MAX_BASE)
 	gosi_deduction = round(gosi_base * gosi_rate / 100, 2)
 
@@ -642,19 +671,14 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 		filters={
 			"employee": emp["name"],
 			"docstatus": 1,
-			"from_date": [">=", month_start],
-			"to_date": ["<=", month_end],
 		},
-		fields=["leave_pay_amount", "daily_salary", "total_days", "pay_rate"],
+		fields=["leave_pay_amount", "daily_salary", "total_days", "pay_rate", "from_date", "to_date"],
 	)
-	# الخصم = الفرق بين الأجر الكامل والأجر المستحق
-	sick_deduction = 0.0
-	daily = round(basic / last_day, 2)  # الأجر اليومي يعتمد على أيام الشهر الفعلية
-	for sr in sick_rows:
-		full_pay = flt(sr.total_days) * daily
-		actual_pay = flt(sr.leave_pay_amount)
-		if full_pay > actual_pay:
-			sick_deduction += round(full_pay - actual_pay, 2)
+	month_filtered_sick_rows = [
+		sr for sr in sick_rows
+		if getdate(sr.from_date) <= getdate(month_end) and getdate(sr.to_date) >= getdate(month_start)
+	]
+	sick_deduction = calculate_prorated_sick_leave_deduction(month_filtered_sick_rows, month_start, month_end, round(basic / 30, 2))
 
 	# إضافة العمل الإضافي المعتمد في الشهر
 	ot_rows = frappe.get_all(
@@ -662,12 +686,11 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 		filters={
 			"employee": emp["name"],
 			"docstatus": 1,
-			"approval_status": "Approved / موافق",
 			"date": ["between", [month_start, month_end]],
 		},
-		fields=["overtime_amount"],
+		fields=["overtime_amount", "approval_status"],
 	)
-	overtime = round(sum(flt(r.overtime_amount) for r in ot_rows), 2)
+	overtime = round(sum(flt(r.overtime_amount) for r in ot_rows if text_matches_tokens(r.approval_status, "approved", "موافق")), 2)
 	loan_info = get_due_loan_deduction(emp["name"], month_num, int(year))
 	loan_deduction = round(flt(loan_info.get("loan_deduction")), 2)
 	total_deductions = round(gosi_deduction + sick_deduction + loan_deduction, 2)
@@ -909,11 +932,18 @@ def _import_employee_setup_rows(company: str, rows: list[dict]) -> tuple[list[st
 		prepared_rows.append(prepared)
 
 	created = []
-	for payload in prepared_rows:
-		employee = frappe.get_doc(payload)
-		employee.flags.ignore_permissions = True
-		employee.insert()
-		created.append(employee.name)
+	savepoint = "saudi_hr_employee_setup_import"
+	frappe.db.savepoint(savepoint)
+	try:
+		for payload in prepared_rows:
+			employee = frappe.get_doc(payload)
+			employee.insert()
+			created.append(employee.name)
+	except Exception:
+		frappe.db.rollback(save_point=savepoint)
+		raise
+	else:
+		frappe.db.release_savepoint(savepoint)
 
 	return created, skipped
 
@@ -938,6 +968,8 @@ def _prepare_employee_setup_row(company: str, row: dict) -> dict | None:
 		frappe.throw(_("Row {0}: first_name is required.<br>الصف {0}: الاسم الأول مطلوب.").format(row_label))
 	if not gender:
 		frappe.throw(_("Row {0}: gender is required.<br>الصف {0}: الجنس مطلوب.").format(row_label))
+	if frappe.db.exists("DocType", "Gender") and not frappe.db.exists("Gender", gender):
+		frappe.throw(_("Row {0}: gender was not found.<br>الصف {0}: الجنس غير موجود.").format(row_label))
 
 	try:
 		date_of_birth = getdate(row.get("date_of_birth"))
@@ -948,6 +980,14 @@ def _prepare_employee_setup_row(company: str, row: dict) -> dict | None:
 		date_of_joining = getdate(row.get("date_of_joining"))
 	except Exception:
 		frappe.throw(_("Row {0}: date_of_joining is invalid.<br>الصف {0}: تاريخ المباشرة غير صالح.").format(row_label))
+
+	today_date = getdate(today())
+	if date_of_birth > today_date:
+		frappe.throw(_("Row {0}: date_of_birth cannot be in the future.<br>الصف {0}: تاريخ الميلاد لا يمكن أن يكون في المستقبل.").format(row_label))
+	if date_of_joining > today_date:
+		frappe.throw(_("Row {0}: date_of_joining cannot be in the future.<br>الصف {0}: تاريخ المباشرة لا يمكن أن يكون في المستقبل.").format(row_label))
+	if date_of_joining <= date_of_birth:
+		frappe.throw(_("Row {0}: date_of_joining must be after date_of_birth.<br>الصف {0}: تاريخ المباشرة يجب أن يكون بعد تاريخ الميلاد.").format(row_label))
 
 	payload = {
 		"doctype": "Employee",
@@ -971,6 +1011,10 @@ def _prepare_employee_setup_row(company: str, row: dict) -> dict | None:
 		("department", cstr(row.get("department") or "").strip()),
 		("designation", cstr(row.get("designation") or "").strip()),
 	):
+		if fieldname == "department" and value and not frappe.db.exists("Department", value):
+			frappe.throw(_("Row {0}: department was not found.<br>الصف {0}: القسم غير موجود.").format(row_label))
+		if fieldname == "designation" and value and not frappe.db.exists("Designation", value):
+			frappe.throw(_("Row {0}: designation was not found.<br>الصف {0}: المسمى الوظيفي غير موجود.").format(row_label))
 		if value and meta.has_field(fieldname):
 			payload[fieldname] = value
 
@@ -999,6 +1043,14 @@ def _normalize_basic_employee_creation_defaults(
 	except Exception:
 		frappe.throw(_("Default date of joining is invalid.<br>تاريخ المباشرة الافتراضي غير صالح."))
 
+	today_date = getdate(today())
+	if date_of_birth > today_date:
+		frappe.throw(_("Default date of birth cannot be in the future.<br>تاريخ الميلاد الافتراضي لا يمكن أن يكون في المستقبل."))
+	if date_of_joining > today_date:
+		frappe.throw(_("Default date of joining cannot be in the future.<br>تاريخ المباشرة الافتراضي لا يمكن أن يكون في المستقبل."))
+	if date_of_joining <= date_of_birth:
+		frappe.throw(_("Default date of joining must be after date of birth.<br>تاريخ المباشرة الافتراضي يجب أن يكون بعد تاريخ الميلاد."))
+
 	status = cstr(default_status or "Active").strip() or "Active"
 	return {
 		"gender": gender,
@@ -1013,55 +1065,62 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 	created = []
 	linked = 0
 	skipped = []
+	savepoint = "saudi_hr_basic_employee_create"
+	frappe.db.savepoint(savepoint)
 
-	for row in doc.employees:
-		if cstr(row.employee or "").strip():
-			continue
+	try:
+		for row in doc.employees:
+			if cstr(row.employee or "").strip():
+				continue
 
-		raw = {
-			"employee_id": getattr(row, "payroll_employee_id", None),
-			"employee_name": getattr(row, "employee_name", None),
-		}
-		has_payroll_employee_id = bool(cstr(getattr(row, "payroll_employee_id", "") or "").strip())
-		employee, _matched_by = _match_workbook_employee(
-			raw,
-			lookup,
-			allow_related_employee_id=not has_payroll_employee_id,
-			allow_name_match=not has_payroll_employee_id,
-		)
-		if employee:
-			_hydrate_payroll_row_from_employee(row, employee)
-			linked += 1
-			continue
-
-		if not cstr(getattr(row, "payroll_employee_id", "") or "").strip() and not cstr(getattr(row, "employee_name", "") or "").strip():
-			skipped.append(
-				_("Row {0}: missing payroll employee id and employee name.").format(row.idx or "?")
+			raw = {
+				"employee_id": getattr(row, "payroll_employee_id", None),
+				"employee_name": getattr(row, "employee_name", None),
+			}
+			has_payroll_employee_id = bool(cstr(getattr(row, "payroll_employee_id", "") or "").strip())
+			employee, _matched_by = _match_workbook_employee(
+				raw,
+				lookup,
+				allow_related_employee_id=not has_payroll_employee_id,
+				allow_name_match=not has_payroll_employee_id,
 			)
-			continue
+			if employee:
+				_hydrate_payroll_row_from_employee(row, employee)
+				linked += 1
+				continue
 
-		payload = _build_basic_employee_payload_from_payroll_row(doc.company, row, defaults)
-		employee_doc = frappe.get_doc(payload)
-		employee_doc.flags.ignore_permissions = True
-		employee_doc.insert()
+			if not cstr(getattr(row, "payroll_employee_id", "") or "").strip() and not cstr(getattr(row, "employee_name", "") or "").strip():
+				skipped.append(
+					_("Row {0}: missing payroll employee id and employee name.").format(row.idx or "?")
+				)
+				continue
 
-		employee_data = {
-			"name": employee_doc.name,
-			"employee_name": employee_doc.get("employee_name") or cstr(getattr(row, "employee_name", "") or "").strip(),
-			"department": employee_doc.get("department") or "",
-			"nationality": employee_doc.get("nationality") or "",
-			"employee_number": employee_doc.get("employee_number") or payload.get("employee_number") or "",
-		}
+			payload = _build_basic_employee_payload_from_payroll_row(doc.company, row, defaults)
+			employee_doc = frappe.get_doc(payload)
+			employee_doc.insert()
 
-		for source, matched_by in (
-			(employee_data.get("name"), "name"),
-			(employee_data.get("employee_number"), "employee_id"),
-			(employee_data.get("employee_name"), "employee_name"),
-		):
-			_merge_employee_lookup(lookup, employee_data, source, matched_by)
+			employee_data = {
+				"name": employee_doc.name,
+				"employee_name": employee_doc.get("employee_name") or cstr(getattr(row, "employee_name", "") or "").strip(),
+				"department": employee_doc.get("department") or "",
+				"nationality": employee_doc.get("nationality") or "",
+				"employee_number": employee_doc.get("employee_number") or payload.get("employee_number") or "",
+			}
 
-		_hydrate_payroll_row_from_employee(row, employee_data)
-		created.append(employee_doc.name)
+			for source, matched_by in (
+				(employee_data.get("name"), "name"),
+				(employee_data.get("employee_number"), "employee_id"),
+				(employee_data.get("employee_name"), "employee_name"),
+			):
+				_merge_employee_lookup(lookup, employee_data, source, matched_by)
+
+			_hydrate_payroll_row_from_employee(row, employee_data)
+			created.append(employee_doc.name)
+	except Exception:
+		frappe.db.rollback(save_point=savepoint)
+		raise
+	else:
+		frappe.db.release_savepoint(savepoint)
 
 	return created, linked, skipped
 
@@ -1384,10 +1443,27 @@ def _is_blank(value) -> bool:
 
 
 def _get_attached_file_content(file_url: str) -> bytes:
-	file_name = frappe.db.get_value("File", {"file_url": file_url}, "name")
-	if not file_name:
+	file_row = frappe.db.get_value("File", {"file_url": file_url}, ["name", "file_name", "file_size"], as_dict=True)
+	if not file_row:
 		frappe.throw(_("Unable to find the uploaded payroll workbook.<br>تعذّر العثور على ملف الرواتب المرفوع."))
-	return frappe.get_doc("File", file_name).get_content()
+	file_extension = splitext(cstr(file_row.file_name or file_url).strip())[1].lower()
+	if file_extension not in ALLOWED_WORKBOOK_EXTENSIONS:
+		frappe.throw(
+			_("Only Excel workbook files are supported.<br>الملفات المدعومة هي ملفات Excel فقط."),
+			title=_("Invalid File Type / نوع ملف غير صالح"),
+		)
+	if flt(file_row.file_size) > MAX_WORKBOOK_FILE_SIZE_BYTES:
+		frappe.throw(
+			_("The uploaded workbook is too large. Please keep it under 10 MB.<br>ملف الرواتب كبير جداً. يرجى أن يكون أقل من 10 ميجابايت."),
+			title=_("Workbook Too Large / ملف كبير جداً"),
+		)
+	return frappe.get_doc("File", file_row.name).get_content()
+
+
+def _add_payroll_audit_comment(doc, message: str):
+	if not cstr(message or "").strip():
+		return
+	doc.add_comment("Comment", text=message)
 
 
 def _month_name_to_num(month_label: str) -> int:

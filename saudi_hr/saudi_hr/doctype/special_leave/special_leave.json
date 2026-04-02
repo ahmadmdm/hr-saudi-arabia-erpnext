@@ -240,9 +240,12 @@
    "write": 1
   },
   {
+    "create": 1,
+    "email": 1,
+    "print": 1,
    "read": 1,
    "role": "Employee",
-   "write": 0
+    "write": 1
   }
  ],
  "sort_field": "leave_start_date",

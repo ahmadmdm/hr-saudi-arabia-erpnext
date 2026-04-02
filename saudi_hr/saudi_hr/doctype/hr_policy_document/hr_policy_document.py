@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, get_datetime, getdate, today
 
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+
 
 class HRPolicyDocument(Document):
 
@@ -90,7 +92,7 @@ class HRPolicyDocument(Document):
 			if exists:
 				continue
 
-			frappe.get_doc(
+			acknowledgement = frappe.get_doc(
 				{
 					"doctype": "Policy Acknowledgement",
 					"policy_document": self.name,
@@ -105,7 +107,9 @@ class HRPolicyDocument(Document):
 					"assigned_on": today(),
 					"due_date": due_date,
 				}
-			).insert(ignore_permissions=True)
+			)
+			assert_doctype_permissions("Policy Acknowledgement", "create", doc=acknowledgement)
+			acknowledgement.insert()
 			created += 1
 
 		self.db_set("last_acknowledgement_sync_on", get_datetime(), update_modified=False)
@@ -119,6 +123,7 @@ class HRPolicyDocument(Document):
 @frappe.whitelist()
 def sync_policy_acknowledgements(policy_name: str):
 	policy = frappe.get_doc("HR Policy Document", policy_name)
+	frappe.has_permission("HR Policy Document", "read", doc=policy, throw=True)
 	created = policy.sync_policy_acknowledgements()
 	frappe.msgprint(
 		_("Created {0} acknowledgement records for policy {1}").format(created, policy.policy_title),

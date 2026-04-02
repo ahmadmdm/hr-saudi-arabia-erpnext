@@ -2,7 +2,60 @@
 utils.py — Helper functions for Saudi HR calculations.
 """
 import frappe
-from frappe.utils import date_diff, getdate, flt
+from frappe import _
+from frappe.utils import cstr, date_diff, flt, getdate
+
+
+def assert_doctype_permissions(doctype: str, permission_types, doc=None):
+	if isinstance(permission_types, str):
+		permission_types = (permission_types,)
+
+	for permission_type in permission_types:
+		frappe.has_permission(doctype, permission_type, doc=doc, throw=True)
+
+
+def text_matches_tokens(value, *tokens: str) -> bool:
+	normalized = cstr(value or "").strip().lower()
+	if not normalized:
+		return False
+	return any(cstr(token).strip().lower() in normalized for token in tokens if cstr(token).strip())
+
+
+def assert_positive_basic_salary(employee_label: str, basic_salary: float, context_label: str):
+	if flt(basic_salary) > 0:
+		return
+	frappe.throw(
+		_(
+			"Basic salary for {0} must be greater than zero before {1}.<br>"
+			"يجب أن يكون الراتب الأساسي للموظف {0} أكبر من صفر قبل {1}."
+		).format(employee_label, context_label),
+		title=_("Missing Basic Salary / راتب أساسي غير متوفر"),
+	)
+
+
+def get_overlap_days(start_date, end_date, range_start, range_end) -> int:
+	period_start = max(getdate(start_date), getdate(range_start))
+	period_end = min(getdate(end_date), getdate(range_end))
+	if period_end < period_start:
+		return 0
+	return date_diff(period_end, period_start) + 1
+
+
+def calculate_prorated_sick_leave_deduction(leave_rows: list, month_start, month_end, fallback_daily_salary: float = 0.0) -> float:
+	deduction = 0.0
+	for row in leave_rows or []:
+		overlap_days = get_overlap_days(row.get("from_date"), row.get("to_date"), month_start, month_end)
+		if overlap_days <= 0:
+			continue
+
+		total_days = flt(row.get("total_days") or overlap_days)
+		daily_salary = flt(row.get("daily_salary") or fallback_daily_salary)
+		full_pay = flt(overlap_days) * daily_salary
+		actual_pay = flt(row.get("leave_pay_amount")) * (flt(overlap_days) / total_days if total_days else 0)
+		if full_pay > actual_pay:
+			deduction += round(full_pay - actual_pay, 2)
+
+	return round(deduction, 2)
 
 
 def get_active_contract(employee: str, fields=None, as_dict=True):
@@ -54,14 +107,29 @@ def get_employee_salary_components(employee: str) -> dict:
 def get_annual_leave_days_taken(employee: str, leave_year: int, exclude_name: str | None = None) -> float:
 	filters = {
 		"employee": employee,
-		"leave_start_date": ["between", [f"{leave_year}-01-01", f"{leave_year}-12-31"]],
 		"docstatus": 1,
 	}
 	if exclude_name:
 		filters["name"] = ["!=", exclude_name]
 
-	rows = frappe.get_all("Saudi Annual Leave", filters=filters, fields=["total_leave_days"])
-	return sum(flt(row.total_leave_days) for row in rows)
+	rows = frappe.get_all(
+		"Saudi Annual Leave",
+		filters=filters,
+		fields=["leave_start_date", "leave_end_date", "total_leave_days", "half_day"],
+	)
+	year_start = f"{leave_year}-01-01"
+	year_end = f"{leave_year}-12-31"
+	total = 0.0
+	for row in rows:
+		overlap_days = get_overlap_days(row.leave_start_date, row.leave_end_date, year_start, year_end)
+		if overlap_days <= 0:
+			continue
+		if getattr(row, "half_day", 0):
+			total += 0.5
+			continue
+		document_days = max(flt(row.total_leave_days), flt(date_diff(row.leave_end_date, row.leave_start_date) + 1))
+		total += flt(row.total_leave_days or overlap_days) * (flt(overlap_days) / document_days if document_days else 0)
+	return round(total, 2)
 
 
 def get_annual_leave_balance(employee: str, reference_date: str | None = None, exclude_name: str | None = None) -> dict:
@@ -101,34 +169,19 @@ def get_eosb_amount(employee: str, termination_reason: str, termination_date: st
 		- eosb_net          (المستحق الفعلي)
 	"""
 	emp = frappe.get_doc("Employee", employee)
-	joining_date = getdate(emp.date_of_joining)
-	end_date = getdate(termination_date) if termination_date else getdate()
-
-	total_days = date_diff(end_date, joining_date)
-	years = total_days / 365.0
-
-	# الأجر الأساسي الأخير
-	basic_salary = get_employee_basic_salary(employee)
-
-	monthly_basic = basic_salary  # افتراض أن الراتب شهري
-
-	# حساب مكافأة نصف شهر عن السنوات 1-5 وشهر عن ما بعدها
-	if years < 1:
-		eosb_gross = 0.0
-	elif years <= 5:
-		eosb_gross = (monthly_basic / 2) * years
-	else:
-		eosb_gross = (monthly_basic / 2) * 5 + monthly_basic * (years - 5)
-
-	# معامل الاستقالة (م.84)
-	factor = _get_resignation_factor(years, termination_reason)
+	details = calculate_eosb_components(
+		emp.date_of_joining,
+		termination_date or getdate(),
+		get_employee_basic_salary(employee),
+		termination_reason,
+	)
 
 	return {
-		"years_of_service": round(years, 2),
-		"monthly_basic": monthly_basic,
-		"eosb_gross": round(eosb_gross, 2),
-		"resignation_factor": factor,
-		"eosb_net": round(eosb_gross * factor, 2),
+		"years_of_service": details["years_of_service"],
+		"monthly_basic": details["monthly_basic"],
+		"eosb_gross": details["eosb_gross"],
+		"resignation_factor": details["resignation_factor"],
+		"eosb_net": details["net_eosb"],
 	}
 
 
@@ -141,26 +194,103 @@ def _get_resignation_factor(years: float, termination_reason: str) -> float:
 	- إنهاء من صاحب العمل / انتهاء عقد / وفاة → 1.0
 	- فصل تأديبي (م.80) → 0
 	"""
-	resignation_reasons = {
-		"Resignation / استقالة",
-	}
-	dismissal_reasons = {
-		"Dismissal / فصل تأديبي (م.80)",
-	}
+	return get_eosb_factor_and_label(termination_reason, years)[0]
 
-	if termination_reason in dismissal_reasons:
-		return 0.0
 
-	if termination_reason in resignation_reasons:
+def get_eosb_factor_and_label(termination_reason: str, years: float) -> tuple[float, str]:
+	reason = termination_reason or ""
+	if text_matches_tokens(reason, "dismissal", "فصل"):
+		return 0.0, "فصل تأديبي (م.80) — لا مكافأة / Disciplinary Dismissal — No EOSB"
+
+	if text_matches_tokens(reason, "resignation", "استقالة"):
 		if years < 2:
-			return 0.0
-		elif years <= 10:
-			return 1 / 3
-		else:
-			return 2 / 3
+			return 0.0, "استقالة < سنتان — لا مكافأة / Resignation < 2 yrs — No EOSB"
+		if years <= 10:
+			return round(1 / 3, 4), "استقالة 2–10 سنوات — ثلث المكافأة / Resignation 2–10 yrs — 1/3 EOSB"
+		return round(2 / 3, 4), "استقالة > 10 سنوات — ثلثا المكافأة / Resignation > 10 yrs — 2/3 EOSB"
 
-	# إنهاء من صاحب العمل، انتهاء عقد محدد، وفاة
-	return 1.0
+	return 1.0, "مكافأة كاملة / Full EOSB"
+
+
+def build_eosb_notes(years, monthly_basic, eosb_years_1_5, eosb_years_above_5, eosb_gross, factor, label, net_eosb):
+	return (
+		f"سنوات الخدمة: {years:.2f} سنة\n"
+		f"الراتب الأساسي: {monthly_basic:,.2f}\n"
+		f"مكافأة السنوات 1-5: {eosb_years_1_5:,.2f}\n"
+		f"مكافأة السنوات >5: {eosb_years_above_5:,.2f}\n"
+		f"المكافأة الإجمالية: {eosb_gross:,.2f}\n"
+		f"معامل الاستقالة: {factor} ({label})\n"
+		f"صافي المكافأة: {net_eosb:,.2f}"
+	)
+
+
+def calculate_eosb_components(joining_date, termination_date, last_basic_salary, termination_reason, eosb_deductions=0) -> dict:
+	joining = getdate(joining_date)
+	termination = getdate(termination_date)
+	if termination <= joining:
+		frappe.throw(
+			_(
+				"Termination date must be after the joining date.<br>"
+				"تاريخ إنهاء الخدمة يجب أن يكون بعد تاريخ الالتحاق بالعمل."
+			),
+			title=_("Invalid Date / تاريخ غير صحيح"),
+		)
+
+	monthly_basic = flt(last_basic_salary)
+	if monthly_basic <= 0:
+		frappe.throw(
+			_("Last basic salary must be greater than zero.<br>يجب أن يكون الراتب الأساسي الأخير أكبر من صفر."),
+			title=_("Missing Basic Salary / راتب أساسي غير متوفر"),
+		)
+
+	deductions = flt(eosb_deductions)
+	if deductions < 0:
+		frappe.throw(
+			_("EOSB deductions cannot be negative.<br>خصومات مكافأة نهاية الخدمة لا يمكن أن تكون سالبة."),
+			title=_("Invalid Deduction / خصم غير صالح"),
+		)
+
+	total_days = date_diff(termination, joining)
+	years = total_days / 365.0
+	if years < 1:
+		eosb_years_1_5 = 0.0
+		eosb_years_above_5 = 0.0
+	elif years <= 5:
+		eosb_years_1_5 = round((monthly_basic / 2) * years, 2)
+		eosb_years_above_5 = 0.0
+	else:
+		eosb_years_1_5 = round((monthly_basic / 2) * 5, 2)
+		eosb_years_above_5 = round(monthly_basic * (years - 5), 2)
+
+	eosb_gross = round(eosb_years_1_5 + eosb_years_above_5, 2)
+	factor, label = get_eosb_factor_and_label(termination_reason, years)
+	net_eosb = round(eosb_gross * factor - deductions, 2)
+	if net_eosb < 0:
+		frappe.throw(
+			_("EOSB deductions exceed the payable amount.<br>خصومات مكافأة نهاية الخدمة تتجاوز المبلغ المستحق."),
+			title=_("Invalid Deduction / خصم غير صالح"),
+		)
+
+	return {
+		"years_of_service": round(years, 2),
+		"monthly_basic": monthly_basic,
+		"eosb_years_1_5": eosb_years_1_5,
+		"eosb_years_above_5": eosb_years_above_5,
+		"eosb_gross": eosb_gross,
+		"resignation_factor": factor,
+		"resignation_factor_label": label,
+		"net_eosb": net_eosb,
+		"calculation_notes": build_eosb_notes(
+			years,
+			monthly_basic,
+			eosb_years_1_5,
+			eosb_years_above_5,
+			eosb_gross,
+			factor,
+			label,
+			net_eosb,
+		),
+	}
 
 
 def get_gosi_rates(nationality: str) -> dict:

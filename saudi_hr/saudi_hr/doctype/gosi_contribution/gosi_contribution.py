@@ -3,7 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
-from saudi_hr.saudi_hr.utils import get_employee_basic_salary as get_current_basic_salary
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions, get_employee_basic_salary as get_current_basic_salary
 
 # الحد الأقصى لوعاء الاشتراك في التأمينات
 GOSI_MAX_BASE = 45000.0
@@ -166,7 +166,7 @@ def create_payroll_entries(doc, method=None):
 			},
 		],
 	})
-	je.flags.ignore_permissions = True
+	assert_doctype_permissions("Journal Entry", ("create", "submit"))
 	je.insert()
 	je.submit()
 
@@ -221,7 +221,7 @@ def generate_gosi_for_month(company: str, month: str, year: int):
 			"year": year,
 			"contribution_base": min(base, GOSI_MAX_BASE),
 		})
-		doc.insert(ignore_permissions=True)
+		doc.insert()
 		created += 1
 
 	frappe.msgprint(

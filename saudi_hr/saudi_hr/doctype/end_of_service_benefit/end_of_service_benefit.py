@@ -1,9 +1,9 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import date_diff, getdate, flt, nowdate
+from frappe.utils import flt, nowdate
 
-from saudi_hr.saudi_hr.utils import get_employee_basic_salary
+from saudi_hr.saudi_hr.utils import calculate_eosb_components, get_employee_basic_salary
 
 
 class EndofServiceBenefit(Document):
@@ -17,91 +17,24 @@ class EndofServiceBenefit(Document):
 		self.joining_date = emp.date_of_joining
 
 	def _calculate_eosb(self):
-		"""
-		حساب مكافأة نهاية الخدمة وفق المادة 84 من نظام العمل السعودي.
-
-		السنوات 1–5: نصف شهر (0.5) عن كل سنة.
-		أكثر من 5 سنوات: شهر كامل (1.0) عن كل سنة إضافية.
-		"""
 		if not self.joining_date or not self.termination_date:
 			return
 
-		# التحقق من ترتيب التواريخ
-		if getdate(self.termination_date) <= getdate(self.joining_date):
-			frappe.throw(
-				_("Termination date must be after the joining date.<br>"
-				  "تاريخ إنهاء الخدمة يجب أن يكون بعد تاريخ الالتحاق بالعمل."),
-				title=_("Invalid Date / تاريخ غير صحيح"),
-			)
-
-		total_days = date_diff(self.termination_date, self.joining_date)
-		years = total_days / 365.0
-		self.years_of_service = round(years, 2)
-
-		monthly_basic = flt(self.last_basic_salary)
-
-		# حساب المكافأة الإجمالية بالشريحتين
-		if years < 1:
-			self.eosb_years_1_5 = 0.0
-			self.eosb_years_above_5 = 0.0
-		elif years <= 5:
-			self.eosb_years_1_5 = round((monthly_basic / 2) * years, 2)
-			self.eosb_years_above_5 = 0.0
-		else:
-			self.eosb_years_1_5 = round((monthly_basic / 2) * 5, 2)
-			self.eosb_years_above_5 = round(monthly_basic * (years - 5), 2)
-
-		self.eosb_gross = round(
-			flt(self.eosb_years_1_5) + flt(self.eosb_years_above_5), 2
+		details = calculate_eosb_components(
+			self.joining_date,
+			self.termination_date,
+			self.last_basic_salary,
+			self.termination_reason,
+			self.eosb_deductions,
 		)
-
-		# معامل الاستقالة
-		factor, label = self._get_resignation_factor(years)
-		self.resignation_factor = factor
-		self.resignation_factor_label = label
-
-		# صافي المكافأة
-		self.net_eosb = round(
-			flt(self.eosb_gross) * factor - flt(self.eosb_deductions), 2
-		)
-
-		# ملاحظات الحساب
-		self.calculation_notes = self._build_notes(years, monthly_basic, factor, label)
-
-	def _get_resignation_factor(self, years: float):
-		"""
-		معامل الاستقالة وفق م.84:
-		  استقالة < 2 سنة     → 0      (لا مكافأة)
-		  استقالة 2–10 سنوات  → 1/3
-		  استقالة > 10 سنوات  → 2/3
-		  فصل تأديبي (م.80)   → 0
-		  إنهاء صاحب العمل / انتهاء عقد / وفاة / عجز → 1
-		"""
-		reason = self.termination_reason or ""
-
-		if "Dismissal" in reason or "فصل" in reason:
-			return 0.0, "فصل تأديبي (م.80) — لا مكافأة / Disciplinary Dismissal — No EOSB"
-
-		if "Resignation" in reason or "استقالة" in reason:
-			if years < 2:
-				return 0.0, "استقالة < سنتان — لا مكافأة / Resignation < 2 yrs — No EOSB"
-			elif years <= 10:
-				return round(1 / 3, 4), "استقالة 2–10 سنوات — ثلث المكافأة / Resignation 2–10 yrs — 1/3 EOSB"
-			else:
-				return round(2 / 3, 4), "استقالة > 10 سنوات — ثلثا المكافأة / Resignation >10 yrs — 2/3 EOSB"
-
-		return 1.0, "مكافأة كاملة / Full EOSB"
-
-	def _build_notes(self, years, monthly_basic, factor, label):
-		return (
-			f"سنوات الخدمة: {years:.2f} سنة\n"
-			f"الراتب الأساسي: {monthly_basic:,.2f}\n"
-			f"مكافأة السنوات 1-5: {self.eosb_years_1_5:,.2f}\n"
-			f"مكافأة السنوات >5: {self.eosb_years_above_5:,.2f}\n"
-			f"المكافأة الإجمالية: {self.eosb_gross:,.2f}\n"
-			f"معامل الاستقالة: {factor} ({label})\n"
-			f"صافي المكافأة: {self.net_eosb:,.2f}"
-		)
+		self.years_of_service = details["years_of_service"]
+		self.eosb_years_1_5 = details["eosb_years_1_5"]
+		self.eosb_years_above_5 = details["eosb_years_above_5"]
+		self.eosb_gross = details["eosb_gross"]
+		self.resignation_factor = details["resignation_factor"]
+		self.resignation_factor_label = details["resignation_factor_label"]
+		self.net_eosb = details["net_eosb"]
+		self.calculation_notes = details["calculation_notes"]
 
 	def on_submit(self):
 		"""تحديث حالة الموظف عند الاعتماد — دائماً يُعيَّن إلى 'Left'."""
@@ -121,56 +54,11 @@ def calculate_eosb_preview(joining_date, termination_date, last_basic_salary,
 	Standalone EOSB calculation for JS preview (mirrors _calculate_eosb logic).
 	Returns a dict with all computed fields.
 	"""
-	from frappe.utils import date_diff
-
-	total_days = date_diff(termination_date, joining_date)
-	years = total_days / 365.0
-	monthly_basic = flt(last_basic_salary)
-	eosb_deductions = flt(eosb_deductions)
-
-	if years < 1:
-		eosb_1_5 = 0.0
-		eosb_above_5 = 0.0
-	elif years <= 5:
-		eosb_1_5 = round((monthly_basic / 2) * years, 2)
-		eosb_above_5 = 0.0
-	else:
-		eosb_1_5 = round((monthly_basic / 2) * 5, 2)
-		eosb_above_5 = round(monthly_basic * (years - 5), 2)
-
-	eosb_gross = round(eosb_1_5 + eosb_above_5, 2)
-
-	reason = termination_reason or ""
-	if "Dismissal" in reason or "فصل" in reason:
-		factor, label = 0.0, "فصل تأديبي — لا مكافأة / Disciplinary Dismissal — No EOSB"
-	elif "Resignation" in reason or "استقالة" in reason:
-		if years < 2:
-			factor, label = 0.0, "استقالة < سنتان — لا مكافأة / Resignation < 2 yrs — No EOSB"
-		elif years <= 10:
-			factor, label = round(1 / 3, 4), "استقالة 2–10 سنوات — ثلث المكافأة / Resignation 2–10 yrs — 1/3 EOSB"
-		else:
-			factor, label = round(2 / 3, 4), "استقالة > 10 سنوات — ثلثا المكافأة / Resignation >10 yrs — 2/3 EOSB"
-	else:
-		factor, label = 1.0, "مكافأة كاملة / Full EOSB"
-
-	net_eosb = round(eosb_gross * factor - eosb_deductions, 2)
-	notes = (
-		f"سنوات الخدمة: {years:.2f}\n"
-		f"الراتب الأساسي: {monthly_basic:,.2f}\n"
-		f"مكافأة السنوات 1-5: {eosb_1_5:,.2f}\n"
-		f"مكافأة السنوات >5: {eosb_above_5:,.2f}\n"
-		f"الإجمالي: {eosb_gross:,.2f}\n"
-		f"المعامل: {factor} ({label})\n"
-		f"الصافي: {net_eosb:,.2f}"
+	details = calculate_eosb_components(
+		joining_date,
+		termination_date,
+		last_basic_salary,
+		termination_reason,
+		eosb_deductions,
 	)
-
-	return {
-		"years_of_service": round(years, 2),
-		"eosb_years_1_5": eosb_1_5,
-		"eosb_years_above_5": eosb_above_5,
-		"eosb_gross": eosb_gross,
-		"resignation_factor": factor,
-		"resignation_factor_label": label,
-		"net_eosb": net_eosb,
-		"calculation_notes": notes,
-	}
+	return details

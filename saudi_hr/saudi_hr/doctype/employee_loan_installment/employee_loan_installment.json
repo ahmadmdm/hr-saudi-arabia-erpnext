@@ -12,7 +12,8 @@
   "outstanding_amount",
   "deduction_status",
   "deduction_date",
-  "payroll_reference"
+    "payroll_reference",
+    "payroll_deducted_amount"
  ],
  "fields": [
   {"fieldname": "installment_number", "fieldtype": "Int", "in_list_view": 1, "label": "Installment # / رقم القسط", "read_only": 1},
@@ -22,7 +23,8 @@
   {"fieldname": "outstanding_amount", "fieldtype": "Currency", "label": "Outstanding / المتبقي", "options": "currency", "read_only": 1},
   {"fieldname": "deduction_status", "fieldtype": "Select", "in_list_view": 1, "label": "Status / الحالة", "options": "Pending / مستحق\nDeducted / مخصوم\nDeferred / مؤجل\nCancelled / ملغى", "default": "Pending / مستحق"},
   {"fieldname": "deduction_date", "fieldtype": "Date", "label": "Deduction Date / تاريخ الخصم", "read_only": 1},
-  {"fieldname": "payroll_reference", "fieldtype": "Link", "label": "Payroll / كشف الرواتب", "options": "Saudi Monthly Payroll", "read_only": 1}
+    {"fieldname": "payroll_reference", "fieldtype": "Link", "label": "Payroll / كشف الرواتب", "options": "Saudi Monthly Payroll", "read_only": 1},
+    {"fieldname": "payroll_deducted_amount", "fieldtype": "Currency", "label": "Payroll Deducted Amount / مبلغ الخصم من الرواتب", "options": "currency", "read_only": 1, "hidden": 1}
  ],
  "index_web_pages_for_search": 0,
  "istable": 1,

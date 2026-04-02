@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate
 
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+
 
 class LegalReferenceMatrix(Document):
 
@@ -59,7 +61,9 @@ class LegalReferenceMatrix(Document):
 				latest_name = existing
 				continue
 
-			task = frappe.get_doc(payload).insert(ignore_permissions=True)
+			task = frappe.get_doc(payload)
+			assert_doctype_permissions("Saudi Regulatory Task", "create", doc=task)
+			task.insert()
 			latest_name = task.name
 			created_names.append(task.name)
 

@@ -5,6 +5,9 @@ import frappe
 from frappe.utils import today, add_days, getdate
 
 
+DEFAULT_ALERT_MILESTONES = (30, 14, 7, 1, 0)
+
+
 def _get_saudi_hr_settings():
 	return frappe.get_single("Saudi HR Settings")
 
@@ -12,6 +15,36 @@ def _get_saudi_hr_settings():
 def _email_alerts_enabled():
 	settings = _get_saudi_hr_settings()
 	return bool(settings.send_email_alerts)
+
+
+def _get_alert_milestones(primary_day: int | None = None) -> set[int]:
+	milestones = set(DEFAULT_ALERT_MILESTONES)
+	if primary_day is not None:
+		milestones.add(int(primary_day))
+	return {day for day in milestones if day >= 0}
+
+
+def _should_send_days_left_alert(days_left: int, primary_day: int | None = None) -> bool:
+	return int(days_left) in _get_alert_milestones(primary_day)
+
+
+def _has_existing_alert(user: str, subject: str, doctype: str, docname=None) -> bool:
+	filters = {
+		"for_user": user,
+		"subject": subject,
+		"document_type": doctype,
+		"type": "Alert",
+	}
+	if docname:
+		filters["document_name"] = docname
+	return bool(frappe.db.exists("Notification Log", filters))
+
+
+def _get_pending_alert_recipients(recipients, subject: str, doctype: str, docname=None) -> list[str]:
+	return [
+		user for user in recipients
+		if not _has_existing_alert(user, subject, doctype, docname)
+	]
 
 
 def send_iqama_expiry_alerts():
@@ -30,6 +63,8 @@ def send_iqama_expiry_alerts():
 
 	for rec in records:
 		days_left = (getdate(rec.iqama_expiry_date) - getdate(today())).days
+		if not _should_send_days_left_alert(days_left, alert_days):
+			continue
 		_send_alert(
 			subject=f"تنبيه: انتهاء إقامة {rec.employee_name} خلال {days_left} يوم",
 			message=f"إقامة الموظف {rec.employee_name} ({rec.employee}) ستنتهي في {rec.iqama_expiry_date}.",
@@ -55,6 +90,8 @@ def send_contract_expiry_alerts():
 
 	for rec in records:
 		days_left = (getdate(rec.end_date) - getdate(today())).days
+		if not _should_send_days_left_alert(days_left, alert_days):
+			continue
 		_send_alert(
 			subject=f"تنبيه: انتهاء عقد {rec.employee_name} خلال {days_left} يوم",
 			message=f"عقد الموظف {rec.employee_name} ({rec.employee}) ينتهي في {rec.end_date}.",
@@ -79,6 +116,8 @@ def send_work_permit_expiry_alerts():
 
 	for rec in records:
 		days_left = (getdate(rec.work_permit_expiry_date) - getdate(today())).days
+		if not _should_send_days_left_alert(days_left, alert_days):
+			continue
 		_send_alert(
 			subject=f"تنبيه: انتهاء تصريح عمل {rec.employee_name} خلال {days_left} يوم",
 			message=f"تصريح عمل {rec.employee_name} ({rec.employee}) ينتهي في {rec.work_permit_expiry_date}.",
@@ -142,6 +181,9 @@ def _send_alert(subject, message, doctype, docname=None):
 		fields=["parent"],
 	)
 	recipients = [r.parent for r in hr_managers if r.parent != "Guest"]
+	recipients = _get_pending_alert_recipients(recipients, subject, doctype, docname)
+	if not recipients:
+		return
 
 	site_url = frappe.utils.get_url()
 	if docname:
@@ -190,7 +232,7 @@ def _send_alert(subject, message, doctype, docname=None):
 			"document_name": docname,
 			"for_user": user,
 			"type": "Alert",
-		}).insert(ignore_permissions=True)
+		}).insert()
 
 
 def send_sick_leave_threshold_alerts():
@@ -241,6 +283,8 @@ def send_probation_end_alerts():
 
 	for rec in records:
 		days_left = (getdate(rec.probation_end_date) - getdate(today())).days
+		if not _should_send_days_left_alert(days_left, 14):
+			continue
 		_send_alert(
 			subject=(
 				f"تنبيه فترة التجربة: {rec.employee_name} — تنتهي خلال {days_left} يوم"

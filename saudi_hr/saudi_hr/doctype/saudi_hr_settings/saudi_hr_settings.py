@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 from io import BytesIO
+from os.path import splitext
 
 import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils.file_manager import save_file
 from openpyxl import Workbook, load_workbook
+
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+
+
+ALLOWED_IMPORT_EXTENSIONS = {".xlsx", ".xlsm", ".xls"}
+MAX_IMPORT_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 
 class SaudiHRSettings(Document):
@@ -28,6 +35,7 @@ def _get_employee_directory_rows():
 
 def _sync_directory_table():
 	settings = frappe.get_single("Saudi HR Settings")
+	assert_doctype_permissions("Saudi HR Settings", "write", doc=settings)
 	settings.set("branch_employee_directory", [])
 	for row in _get_employee_directory_rows():
 		settings.append(
@@ -41,7 +49,7 @@ def _sync_directory_table():
 				"company": row.company,
 			},
 		)
-	settings.save(ignore_permissions=True)
+	settings.save()
 	frappe.db.commit()
 	return settings
 
@@ -73,10 +81,15 @@ def _normalize_header(value):
 
 
 def _get_file_bytes(file_url: str) -> bytes:
-	file_name = frappe.db.get_value("File", {"file_url": file_url}, "name")
-	if not file_name:
+	file_row = frappe.db.get_value("File", {"file_url": file_url}, ["name", "file_name", "file_size"], as_dict=True)
+	if not file_row:
 		frappe.throw(_("Unable to find the uploaded Excel file."))
-	file_doc = frappe.get_doc("File", file_name)
+	file_extension = splitext(str(file_row.file_name or file_url).strip())[1].lower()
+	if file_extension not in ALLOWED_IMPORT_EXTENSIONS:
+		frappe.throw(_("Only Excel workbook files are supported for branch imports."))
+	if (file_row.file_size or 0) > MAX_IMPORT_FILE_SIZE_BYTES:
+		frappe.throw(_("The uploaded Excel file is too large. Please keep it under 10 MB."))
+	file_doc = frappe.get_doc("File", file_row.name)
 	return file_doc.get_content()
 
 
@@ -85,7 +98,8 @@ def _ensure_branch(branch_name: str) -> str:
 	if not branch_name:
 		return ""
 	if not frappe.db.exists("Branch", branch_name):
-		frappe.get_doc({"doctype": "Branch", "branch": branch_name}).insert(ignore_permissions=True)
+		assert_doctype_permissions("Branch", "create")
+		frappe.get_doc({"doctype": "Branch", "branch": branch_name}).insert()
 	return branch_name
 
 

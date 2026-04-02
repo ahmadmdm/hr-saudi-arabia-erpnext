@@ -27,7 +27,7 @@
   "description",
   "legacy_reference",
   "amended_from"
- ],
+   ],
  "fields": [
   {
    "fieldname": "naming_series",
@@ -204,6 +204,13 @@
    "share": 1
   },
   {
+    "role": "Employee",
+    "read": 1,
+    "write": 1,
+    "create": 1,
+    "print": 1
+    },
+    {
    "role": "Employee Self Service",
    "read": 1,
    "write": 1,

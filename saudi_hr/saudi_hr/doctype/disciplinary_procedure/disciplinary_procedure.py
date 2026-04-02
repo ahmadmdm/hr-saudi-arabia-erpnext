@@ -3,6 +3,8 @@ from frappe.model.document import Document
 from frappe import _
 from frappe.utils import today
 
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+
 
 class DisciplinaryProcedure(Document):
 
@@ -81,6 +83,7 @@ class DisciplinaryProcedure(Document):
 @frappe.whitelist()
 def create_decision_log(doc_name):
     doc = frappe.get_doc("Disciplinary Procedure", doc_name)
+    frappe.has_permission("Disciplinary Procedure", "read", doc=doc, throw=True)
     if doc.disciplinary_decision_log and frappe.db.exists("Disciplinary Decision Log", doc.disciplinary_decision_log):
         return {"decision_log": doc.disciplinary_decision_log, "created": False}
 
@@ -116,7 +119,9 @@ def create_decision_log(doc_name):
             "decision_summary": doc.decision_notes or doc.incident_description,
             "appeal_deadline": doc.appeal_date,
         }
-    ).insert(ignore_permissions=True)
+    )
+    assert_doctype_permissions("Disciplinary Decision Log", "create", doc=decision_log)
+    decision_log.insert()
     doc.db_set("disciplinary_decision_log", decision_log.name, update_modified=False)
     return {"decision_log": decision_log.name, "created": True}
 

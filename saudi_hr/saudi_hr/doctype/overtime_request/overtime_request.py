@@ -3,7 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate
 
-from saudi_hr.saudi_hr.utils import get_employee_basic_salary as get_current_basic_salary
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_positive_basic_salary, get_employee_basic_salary as get_current_basic_salary, text_matches_tokens
 
 
 class OvertimeRequest(Document):
@@ -31,6 +31,7 @@ class OvertimeRequest(Document):
 	def _fetch_salary(self):
 		"""جلب الراتب الأساسي من العقد النشط للموظف."""
 		self.monthly_basic = get_current_basic_salary(self.employee)
+		assert_positive_basic_salary(self.employee_name or self.employee, self.monthly_basic, _("calculating overtime / احتساب العمل الإضافي"))
 		self.overtime_rate = self.OVERTIME_RATE
 		# الأجر الساعي = الراتب الشهري / 240
 		self.hourly_rate = round(self.monthly_basic / self.WORKING_HOURS_PER_MONTH, 4)
@@ -43,7 +44,7 @@ class OvertimeRequest(Document):
 
 	def on_submit(self):
 		"""عند الاعتماد: إنشاء قيد يومي بدلاً من Additional Salary."""
-		if self.approval_status != "Approved / موافق":
+		if not text_matches_tokens(self.approval_status, "approved", "موافق"):
 			frappe.throw(
 				_("Cannot submit unless Approval Status is 'Approved'.<br>"
 				  "لا يمكن الاعتماد إلا إذا كانت حالة الموافقة 'موافق'."),
@@ -132,7 +133,7 @@ class OvertimeRequest(Document):
 				},
 			],
 		})
-		je.flags.ignore_permissions = True
+		assert_doctype_permissions("Journal Entry", ("create", "submit"))
 		je.insert()
 		je.submit()
 

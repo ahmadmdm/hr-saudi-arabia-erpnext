@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.7.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.8.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.7.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -382,7 +382,42 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.7.0 — ١ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.8.0 — ٢ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**تقوية الصلاحيات والمسارات الحرجة | Runtime Permission Hardening:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Mobile Attendance API | واجهات حضور الجوال | إزالة `ignore_permissions` من تسجيل الدخول/الخروج وطلبات الإجازة بالجوال، والاعتماد على صلاحيات Doctype صريحة |
+| Compliance & Governance | الامتثال والحوكمة | إزالة تجاوزات الصلاحيات من إنشاء سجلات `HR Compliance Action Log`, `Policy Acknowledgement`, `Saudi Regulatory Task`, `Employee Warning Notice`, و`Disciplinary Decision Log` |
+| Settings Import | إعدادات التطبيق | تشديد مزامنة دليل الفروع واستيراد القوالب مع تحقق صلاحيات صريح والتحقق من نوع/حجم ملفات Excel |
+
+**الرواتب والامتثال المحاسبي | Payroll & Accounting Stability:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Saudi Monthly Payroll | مسير الرواتب | احتساب نسبي لخصم الإجازة المرضية عبر حدود الأشهر، منع الراتب الأساسي الصفري، وتسجيل ملاحظات تدقيق على الاستيراد وإنشاء الموظفين |
+| Employee Loan | قروض الموظفين | حماية من خصم القسط نفسه من أكثر من مسير رواتب مع قفل منطقي قبل الخصم |
+| Overtime / GOSI / Payroll JE | القيود المحاسبية | تحويل مسارات إنشاء القيود إلى صلاحيات صريحة بدل bypass داخلي |
+
+**مكافأة نهاية الخدمة والإجازات | EOSB & Leave Rules:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| End of Service Benefit | مكافأة نهاية الخدمة | توحيد منطق الحساب بين المستند والمعاينة والـ helpers، ورفض الخصومات السالبة أو الأعلى من المستحق |
+| Saudi Annual Leave | الإجازة السنوية | منع الطلبات التي تمتد عبر سنتين أو تبدأ قبل تاريخ مباشرة الموظف |
+| Leave Balance Helpers | مساعدات الإجازات | تحسين احتساب الأيام المأخوذة عند وجود تداخلات زمنية |
+
+**الاختبارات والتبعيات | Tests & Dependencies:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Test Suite | حزمة الاختبارات | توسيع التغطية إلى 77 اختبارًا تشمل الجوال، الصلاحيات، الرواتب، الإجازات، و`EOSB` |
+| Packaging | الحزم | التحقق من تطابق `pyproject.toml`, `setup.py`, و`requirements.txt` واستمرار الاعتماد على `openpyxl` و`openlocationcode` فقط |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يركز على تقوية التشغيل الفعلي والتدقيق والصلاحيات دون تغيير متطلبات التثبيت الأساسية للتطبيق.
+
+### v1.7.0 — ١ أبريل ٢٠٢٦
 
 **صيغة الطباعة الشاملة للموظف | Employee Complete File Print Format:**
 

@@ -226,6 +226,13 @@
    "submit": 1
   },
   {
+    "create": 1,
+    "print": 1,
+    "read": 1,
+    "role": "Employee",
+    "write": 1
+  },
+  {
    "role": "Employee Self Service",
    "read": 1,
    "write": 1,

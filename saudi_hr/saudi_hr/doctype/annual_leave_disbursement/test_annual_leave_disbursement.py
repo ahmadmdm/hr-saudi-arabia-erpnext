@@ -11,8 +11,11 @@ class TestAnnualLeaveDisbursement(FrappeTestCase):
 		with patch.object(
 			utils.frappe,
 			"get_all",
-			return_value=[frappe._dict(total_leave_days=5), frappe._dict(total_leave_days=2.5)],
+			return_value=[
+				frappe._dict(leave_start_date="2026-01-01", leave_end_date="2026-01-05", total_leave_days=5, half_day=0),
+				frappe._dict(leave_start_date="2025-12-31", leave_end_date="2026-01-01", total_leave_days=2, half_day=0),
+			],
 		):
 			total = utils.get_annual_leave_days_taken("EMP-0001", 2026)
 
-		self.assertEqual(total, 7.5)
+		self.assertEqual(total, 6)
