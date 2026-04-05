@@ -29,7 +29,9 @@
   "improvement_plan",
   "training_recommended",
   "promotion_recommended",
+  "promotion_transfer",
   "salary_adjustment_recommended",
+    "salary_adjustment",
   "amended_from"
  ],
  "fields": [
@@ -56,7 +58,9 @@
   {"fieldname": "improvement_plan", "fieldtype": "Text Editor", "label": "Improvement Plan / خطة التحسين"},
   {"fieldname": "training_recommended", "fieldtype": "Check", "label": "Training Recommended / يوصى بالتدريب", "default": "0"},
   {"fieldname": "promotion_recommended", "fieldtype": "Check", "label": "Promotion Recommended / يوصى بالترقية", "default": "0"},
+  {"fieldname": "promotion_transfer", "fieldtype": "Link", "label": "Promotion / Transfer / الترقية أو النقل", "options": "Promotion Transfer"},
   {"fieldname": "salary_adjustment_recommended", "fieldtype": "Check", "label": "Salary Adjustment Recommended / يوصى بتعديل الراتب", "default": "0"},
+    {"fieldname": "salary_adjustment", "fieldtype": "Link", "label": "Salary Adjustment / تعديل الراتب", "options": "Salary Adjustment"},
   {"fieldname": "amended_from", "fieldtype": "Link", "label": "Amended From", "no_copy": 1, "options": "Performance Review", "print_hide": 1, "read_only": 1}
  ],
  "modified": "2026-03-27 00:00:00.000000",

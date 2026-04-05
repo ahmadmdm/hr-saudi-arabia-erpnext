@@ -2,6 +2,14 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.9.0 - 2026-04-05
+
+- Added the new `Exit Interview` DocType and linked it to `Exit Clearance` so offboarding can track interview completion from the same separation workflow.
+- Added the new `Salary Adjustment` DocType with calculated adjustment amount/percentage and back-link synchronization to `Performance Review`.
+- Added the new `Promotion Transfer` DocType to capture employee movement decisions and synchronize recommendation state with `Performance Review`.
+- Extended the Saudi HR workspace so the new lifecycle features are grouped under `Performance & Development` and `Separation & Offboarding`.
+- Revalidated the new DocTypes on the live Frappe v15 site, including migration, asset build, cache clear, and direct UI route checks.
+
 ## v1.8.1 - 2026-04-02
 
 - Extended `Saudi Monthly Payroll Employee` rows to persist workbook-only payroll context fields: work location, designation, salary mode, GOSI registration, working days, absence days, and late hours.

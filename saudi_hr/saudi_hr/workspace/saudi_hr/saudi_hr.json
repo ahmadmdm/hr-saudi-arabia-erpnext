@@ -331,7 +331,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Performance & Development",
-   "link_count": 2,
+    "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -342,6 +342,26 @@
    "label": "Performance Review",
    "link_count": 0,
    "link_to": "Performance Review",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Salary Adjustment",
+   "link_count": 0,
+   "link_to": "Salary Adjustment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Promotion Transfer",
+   "link_count": 0,
+   "link_to": "Promotion Transfer",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -479,7 +499,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Separation & Offboarding",
-   "link_count": 4,
+    "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -514,6 +534,16 @@
    "onboard": 0,
    "type": "Link"
   },
+    {
+     "hidden": 0,
+     "is_query_report": 0,
+     "label": "Exit Interview",
+     "link_count": 0,
+     "link_to": "Exit Interview",
+     "link_type": "DocType",
+     "onboard": 0,
+     "type": "Link"
+    },
   {
    "hidden": 0,
    "is_query_report": 0,
