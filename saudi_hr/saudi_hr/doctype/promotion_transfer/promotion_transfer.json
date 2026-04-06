@@ -1,0 +1,267 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-04-05 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "department",
+  "movement_context_section",
+  "performance_review",
+  "salary_adjustment",
+  "movement_type",
+  "effective_date",
+  "column_break_2",
+  "status",
+  "approved_by",
+  "implementation_date",
+  "position_section",
+  "current_designation",
+  "new_designation",
+  "column_break_3",
+  "current_department",
+  "new_department",
+  "current_reports_to",
+  "new_reports_to",
+  "notes_section",
+  "business_justification",
+  "employee_readiness_notes",
+  "handover_plan",
+  "approval_notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-MOVE-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / الموظف",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name / اسم الموظف",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department / القسم",
+   "options": "Department"
+  },
+  {
+   "description": "Track the originating performance review and the type of movement being proposed.",
+   "fieldname": "movement_context_section",
+   "fieldtype": "Section Break",
+   "label": "Movement Context / سياق الحركة الوظيفية"
+  },
+  {
+   "fieldname": "performance_review",
+   "fieldtype": "Link",
+   "label": "Performance Review / تقييم الأداء",
+   "options": "Performance Review"
+  },
+  {
+   "fieldname": "salary_adjustment",
+   "fieldtype": "Link",
+   "label": "Salary Adjustment / تعديل الراتب",
+   "options": "Salary Adjustment"
+  },
+  {
+   "fieldname": "movement_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Movement Type / نوع الحركة",
+   "options": "Promotion / ترقية\nDepartment Transfer / نقل قسم\nRole Change / تغيير مسمى\nPromotion with Transfer / ترقية مع نقل",
+   "reqd": 1
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective Date / تاريخ السريان",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft / مسودة",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / الحالة",
+   "options": "Draft / مسودة\nUnder Review / قيد المراجعة\nApproved / معتمد\nImplemented / منفذ\nRejected / مرفوض"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By / اعتمد بواسطة",
+   "options": "User"
+  },
+  {
+   "fieldname": "implementation_date",
+   "fieldtype": "Date",
+   "label": "Implementation Date / تاريخ التنفيذ"
+  },
+  {
+   "description": "Capture the before/after role structure for the employee movement.",
+   "fieldname": "position_section",
+   "fieldtype": "Section Break",
+   "label": "Role Change / التغيير الوظيفي"
+  },
+  {
+   "fetch_from": "employee.designation",
+   "fieldname": "current_designation",
+   "fieldtype": "Link",
+   "label": "Current Designation / المسمى الحالي",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "new_designation",
+   "fieldtype": "Link",
+   "label": "New Designation / المسمى الجديد",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "current_department",
+   "fieldtype": "Link",
+   "label": "Current Department / القسم الحالي",
+   "options": "Department"
+  },
+  {
+   "fieldname": "new_department",
+   "fieldtype": "Link",
+   "label": "New Department / القسم الجديد",
+   "options": "Department"
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "current_reports_to",
+   "fieldtype": "Link",
+   "label": "Current Reports To / المدير الحالي",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "new_reports_to",
+   "fieldtype": "Link",
+   "label": "New Reports To / المدير الجديد",
+   "options": "Employee"
+  },
+  {
+   "description": "Document the rationale, readiness, and handover expectations for the move.",
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes / الملاحظات"
+  },
+  {
+   "fieldname": "business_justification",
+   "fieldtype": "Text Editor",
+   "label": "Business Justification / المبرر الإداري",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee_readiness_notes",
+   "fieldtype": "Text Editor",
+   "label": "Employee Readiness / جاهزية الموظف"
+  },
+  {
+   "fieldname": "handover_plan",
+   "fieldtype": "Text Editor",
+   "label": "Handover Plan / خطة التسليم"
+  },
+  {
+   "fieldname": "approval_notes",
+   "fieldtype": "Text Editor",
+   "label": "Approval Notes / ملاحظات الاعتماد"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Promotion Transfer",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-random",
+ "links": [
+  {
+   "group": "References",
+   "link_doctype": "Performance Review",
+   "link_fieldname": "promotion_transfer"
+  }
+ ],
+ "modified": "2026-04-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Promotion Transfer",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  },
+  {
+   "role": "HR User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "search_fields": "employee,employee_name,movement_type,status",
+ "sort_field": "effective_date",
+ "sort_order": "DESC",
+ "title_field": "employee_name",
+ "track_changes": 1
+}

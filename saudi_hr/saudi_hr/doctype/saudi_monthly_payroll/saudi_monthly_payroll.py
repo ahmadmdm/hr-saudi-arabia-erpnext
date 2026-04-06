@@ -7,7 +7,8 @@ from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt, getdate, today
 from frappe.utils.file_manager import save_file
 from frappe.utils.xlsxutils import make_xlsx
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Alignment, Font, PatternFill
 
 from saudi_hr.saudi_hr.doctype.employee_loan.employee_loan import apply_payroll_loan_deductions, get_due_loan_deduction, revert_payroll_loan_deductions
 from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_positive_basic_salary, calculate_prorated_sick_leave_deduction, get_employee_salary_components, get_gosi_rates, text_matches_tokens
@@ -34,6 +35,31 @@ EMPLOYEE_SETUP_TEMPLATE_HEADERS = [
 	"status",
 	"remarks",
 ]
+PAYROLL_IMPORT_TEMPLATE_HEADERS = [
+	"الرقم الوظيفي",
+	"الاسم",
+	"مركز التكلفة",
+	"مكان العمل",
+	"الوظيفة",
+	"بنك / كاش",
+	"الاساسي",
+	"بدل السكن",
+	"بدل المواصلات",
+	"بدلات اخرى",
+	"الاجمالي",
+	"ايام العمل",
+	"ايام الغياب",
+	"قيمة ايام الغياب",
+	"ساعات التأخير",
+	"قيمة التأخير",
+	"خصم التأمينات",
+	"إضافات",
+	"خصم",
+	"اجمالي الخصم",
+	"صافى الراتب",
+	"رقم الهوية",
+	"التأمينات",
+]
 
 WORKBOOK_HEADER_ALIASES = {
 	"employee_id": {"الرقم الوظيفي"},
@@ -41,6 +67,7 @@ WORKBOOK_HEADER_ALIASES = {
 	"designation": {"الوظيفة"},
 	"work_location": {"مكان العمل"},
 	"department": {"الإدارة"},
+	"cost_center": {"مركز التكلفة", "مركز تكلفة", "cost center", "cost centre"},
 	"salary_mode": {"بنك كاش", "بنك / كاش", "بنك/كاش"},
 	"basic_salary": {"الاساسي"},
 	"housing_allowance": {"بدل السكن"},
@@ -103,6 +130,7 @@ class SaudiMonthlyPayroll(Document):
 			row.gross_salary = gross
 			row.total_deductions = total_deductions
 			row.net_salary = round(gross + flt(row.overtime_addition) - total_deductions, 2)
+			row.cost_center = _resolve_cost_center_link(getattr(row, "cost_center", None), self.company) or getattr(row, "cost_center", None)
 
 	def _recalculate_totals(self):
 		"""إعادة حساب الإجماليات من الجدول الفرعي."""
@@ -238,6 +266,7 @@ def fetch_employees(doc_name: str):
 			"employee": emp["name"],
 			"employee_name": emp.get("employee_name", ""),
 			"department": emp.get("department", ""),
+			"cost_center": _get_company_default_cost_center(emp.get("company") or ""),
 			"nationality": emp.get("nationality", ""),
 			"work_location": "",
 			"designation": "",
@@ -258,6 +287,7 @@ def fetch_employees(doc_name: str):
 			"overtime_addition": overtime,
 			"loan_installments": ", ".join(loan_info.get("installment_names", [])),
 			"net_salary": net,
+			"cost_center": _get_company_default_cost_center(emp.get("company") or ""),
 		})
 
 	doc._recalculate_totals()
@@ -295,6 +325,15 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 	analysis = _preview_payroll_workbook(doc.company, workbook_url)
 	import_rows = analysis["import_rows"]
 	warnings = analysis["warnings"]
+	validation_summary = _validate_payroll_workbook_rows(doc.company, _extract_source_workbook_rows(_get_attached_file_content(workbook_url)))
+	if validation_summary["error_count"]:
+		sample_errors = "<br>".join(validation_summary["errors"][:10])
+		extra_errors = max(validation_summary["error_count"] - 10, 0)
+		extra_text = _("<br>ويوجد {0} أخطاء إضافية.").format(extra_errors) if extra_errors else ""
+		frappe.throw(
+			_("لا يمكن استيراد ملف الرواتب قبل معالجة أخطاء التحقق.<br>{0}{1}").format(sample_errors, extra_text),
+			title=_("أخطاء مانعة في ملف الرواتب / Blocking Payroll Workbook Errors"),
+		)
 
 	if not import_rows:
 		frappe.throw(
@@ -313,15 +352,19 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 	for row in import_rows:
 		doc.append("employees", row)
 
+	auto_create_result = _auto_create_missing_employees_for_import(doc)
+
 	doc._recalculate_employee_rows()
 	doc._recalculate_totals()
 	doc.save()
 	_add_payroll_audit_comment(
 		doc,
-		_("Imported {0} payroll rows from workbook {1}. Warnings: {2}.").format(
+		_("Imported {0} payroll rows from workbook {1}. Warnings: {2}. Auto-created employees: {3}. Remaining unlinked rows: {4}.").format(
 			len(import_rows),
 			workbook_url,
 			len(warnings),
+			auto_create_result["created_count"],
+			auto_create_result["remaining_unlinked_rows"],
 		),
 	)
 
@@ -329,6 +372,11 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 		"count": len(import_rows),
 		"warnings": warnings,
 		"total_net": doc.total_net_payable,
+		"auto_create_enabled": auto_create_result["enabled"],
+		"created_count": auto_create_result["created_count"],
+		"linked_count": auto_create_result["linked_count"],
+		"skipped": auto_create_result["skipped"],
+		"remaining_unlinked_rows": auto_create_result["remaining_unlinked_rows"],
 	}
 
 
@@ -341,6 +389,19 @@ def preview_payroll_workbook_import(doc_name: str, file_url: str | None = None):
 	if not workbook_url:
 		frappe.throw(_("Attach the source payroll workbook first.<br>أرفق ملف الرواتب المصدر أولاً."))
 	return _preview_payroll_workbook(doc.company, workbook_url)
+
+
+@frappe.whitelist()
+def validate_payroll_workbook(doc_name: str, file_url: str | None = None):
+	"""التحقق من ملف الرواتب قبل الاستيراد مع إظهار الأخطاء والتحذيرات."""
+	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
+	frappe.has_permission("Saudi Monthly Payroll", "read", doc=doc, throw=True)
+	workbook_url = file_url or doc.source_workbook
+	if not workbook_url:
+		frappe.throw(_("Attach the source payroll workbook first.<br>أرفق ملف الرواتب المصدر أولاً."))
+
+	raw_rows = _extract_source_workbook_rows(_get_attached_file_content(workbook_url))
+	return _validate_payroll_workbook_rows(doc.company, raw_rows)
 
 
 @frappe.whitelist()
@@ -363,6 +424,23 @@ def download_payroll_workbook_gap_report(doc_name: str, file_url: str | None = N
 	file_name = f"payroll-workbook-gaps-{doc.name}.xlsx"
 	file_doc = save_file(file_name, make_xlsx(gap_rows, "Payroll Gaps").getvalue(), doc.doctype, doc.name, is_private=1)
 	return {"file_url": file_doc.file_url, "file_name": file_doc.file_name, "row_count": len(gap_rows) - 1}
+
+
+@frappe.whitelist()
+def download_payroll_import_template(doc_name: str):
+	"""إنشاء قالب Excel فارغ لرفع الرواتب دفعة واحدة مع تعليمات مبسطة."""
+	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
+	frappe.has_permission("Saudi Monthly Payroll", "read", doc=doc, throw=True)
+
+	file_name = f"payroll-import-template-{doc.name}-{frappe.generate_hash(length=6)}.xlsx"
+	file_doc = save_file(
+		file_name,
+		_build_payroll_import_template_workbook(doc).getvalue(),
+		doc.doctype,
+		doc.name,
+		is_private=1,
+	)
+	return {"file_url": file_doc.file_url, "file_name": file_doc.file_name}
 
 
 @frappe.whitelist()
@@ -476,6 +554,52 @@ def create_basic_employees_from_payroll(
 	}
 
 
+def _auto_create_missing_employees_for_import(doc) -> dict:
+	remaining_unlinked = sum(1 for row in doc.employees if not cstr(row.employee or "").strip())
+	if not cint(getattr(doc, "auto_create_missing_employees", 0)):
+		return {
+			"enabled": False,
+			"created_count": 0,
+			"linked_count": 0,
+			"skipped": [],
+			"remaining_unlinked_rows": remaining_unlinked,
+		}
+
+	try:
+		assert_doctype_permissions("Employee", "create")
+	except frappe.PermissionError:
+		return {
+			"enabled": True,
+			"created_count": 0,
+			"linked_count": 0,
+			"skipped": [
+				_(
+					"Automatic employee creation is enabled, but you do not have permission to create Employee records. "
+					"The payroll rows were imported and remain unlinked until an authorized user creates the employee masters.<br>"
+					"تفعيل إنشاء الموظفين التلقائي موجود، لكن لا تملك صلاحية إنشاء سجلات Employee. "
+					"تم استيراد صفوف الرواتب وستبقى غير مرتبطة حتى يقوم مستخدم مخول بإنشاء سجلات الموظفين الأساسية."
+				)
+			],
+			"remaining_unlinked_rows": remaining_unlinked,
+		}
+
+	defaults = _normalize_basic_employee_creation_defaults(
+		cstr(getattr(doc, "auto_create_default_gender", None) or "Prefer not to say").strip() or "Prefer not to say",
+		getattr(doc, "auto_create_default_date_of_birth", None) or "1990-01-01",
+		getattr(doc, "auto_create_default_date_of_joining", None) or doc.posting_date,
+		"Active",
+	)
+	created, linked, skipped = _create_basic_employees_for_payroll(doc, defaults)
+	remaining_unlinked = sum(1 for row in doc.employees if not cstr(row.employee or "").strip())
+	return {
+		"enabled": True,
+		"created_count": len(created),
+		"linked_count": linked,
+		"skipped": skipped,
+		"remaining_unlinked_rows": remaining_unlinked,
+	}
+
+
 @frappe.whitelist()
 def create_journal_entry_from_payroll(doc_name: str):
 	"""
@@ -539,26 +663,27 @@ def create_journal_entry_from_payroll(doc_name: str):
 	# Dr. Salary Expense    → إجمالي الرواتب
 	# Cr. GOSI Payable      → اشتراكات GOSI للموظف
 	# Cr. Salary Payable    → صافي المستحق للموظفين
-	accounts = [
-		{
-			"account": expense_account,
-			"debit_in_account_currency": total_salary_cost,
-		},
-	]
+	accounts = []
+	company_cost_center = _get_company_default_cost_center(company)
+	accounts.extend(_build_payroll_expense_account_rows(doc, expense_account, company_cost_center))
 	if total_gosi > 0:
 		accounts.append({
 			"account": gosi_payable_account,
 			"credit_in_account_currency": total_gosi,
+			"cost_center": company_cost_center,
 		})
 	if total_loan > 0 and loan_receivable_account:
 		accounts.append({
 			"account": loan_receivable_account,
 			"credit_in_account_currency": total_loan,
+			"cost_center": company_cost_center,
 		})
 	accounts.append({
 		"account": payable_account,
 		"credit_in_account_currency": total_net,
+		"cost_center": company_cost_center,
 	})
+	accounts = _merge_journal_entry_accounts(accounts)
 
 	je = frappe.get_doc({
 		"doctype": "Journal Entry",
@@ -646,6 +771,262 @@ def _find_company_account(accounts: list[dict], root_type: str | None = None, ac
 			continue
 		return account.get("name")
 	return None
+
+
+def _get_company_default_cost_center(company: str) -> str:
+	company_name = cstr(company or "").strip()
+	if not company_name:
+		return ""
+
+	default_cost_center = cstr(frappe.db.get_value("Company", company_name, "cost_center") or "").strip()
+	resolved_default = _get_postable_cost_center(default_cost_center)
+	if resolved_default:
+		return resolved_default
+
+	company_cost_centers = frappe.get_all(
+		"Cost Center",
+		filters={"company": company_name, "is_group": 0},
+		fields=["name"],
+		order_by="lft asc",
+		limit=1,
+	)
+	return company_cost_centers[0]["name"] if company_cost_centers else ""
+
+
+def _get_company_root_cost_center(company: str) -> str:
+	company_name = cstr(company or "").strip()
+	if not company_name:
+		return ""
+
+	root_row = frappe.get_all(
+		"Cost Center",
+		filters={"company": company_name, "is_group": 1},
+		fields=["name"],
+		order_by="lft asc",
+		limit=1,
+	)
+	return root_row[0]["name"] if root_row else ""
+
+
+def _get_postable_cost_center(cost_center: str, company: str = "") -> str:
+	name = cstr(cost_center or "").strip()
+	if not name:
+		return ""
+	if not frappe.db.exists("Cost Center", name) and company:
+		name = cstr(frappe.db.get_value("Cost Center", {"company": company, "cost_center_name": name}, "name") or "").strip()
+	if not name or not frappe.db.exists("Cost Center", name):
+		return ""
+
+	row = frappe.db.get_value("Cost Center", name, ["is_group", "lft", "rgt"], as_dict=True)
+	if not row:
+		return ""
+	if not cint(row.is_group):
+		return name
+
+	child = frappe.get_all(
+		"Cost Center",
+		filters={
+			"is_group": 0,
+			"lft": [">", cint(row.lft or 0)],
+			"rgt": ["<", cint(row.rgt or 0)],
+		},
+		fields=["name"],
+		order_by="lft asc",
+		limit=1,
+	)
+	return child[0]["name"] if child else ""
+
+
+def _create_company_cost_center(company: str, cost_center_label: str) -> str:
+	company_name = cstr(company or "").strip()
+	label = cstr(cost_center_label or "").strip()
+	if not company_name or not label:
+		return ""
+
+	existing = _get_postable_cost_center(label, company_name)
+	if existing:
+		return existing
+
+	parent_cost_center = _get_company_root_cost_center(company_name)
+	if not parent_cost_center:
+		return ""
+
+	cost_center = frappe.get_doc({
+		"doctype": "Cost Center",
+		"cost_center_name": label,
+		"company": company_name,
+		"parent_cost_center": parent_cost_center,
+		"is_group": 0,
+	})
+	cost_center.insert(ignore_permissions=True)
+	return cost_center.name
+
+
+def _resolve_cost_center_link(value, company: str) -> str:
+	postable_cost_center = _get_postable_cost_center(value, company)
+	if postable_cost_center:
+		return postable_cost_center
+
+	created_cost_center = _create_company_cost_center(company, value)
+	if created_cost_center:
+		return created_cost_center
+
+	return _get_company_default_cost_center(company)
+
+
+def _build_payroll_expense_account_rows(doc, expense_account: str, default_cost_center: str) -> list[dict]:
+	grouped_amounts = {}
+	ordered_cost_centers = []
+
+	for row in doc.employees:
+		row_salary_cost = round(
+			flt(row.gross_salary)
+			+ flt(row.overtime_addition)
+			- flt(row.sick_leave_deduction)
+			- flt(getattr(row, "other_deductions", 0.0)),
+			2,
+		)
+		if not row_salary_cost:
+			continue
+
+		cost_center = _resolve_cost_center_link(getattr(row, "cost_center", None), doc.company) or default_cost_center
+		if cost_center not in grouped_amounts:
+			grouped_amounts[cost_center] = 0.0
+			ordered_cost_centers.append(cost_center)
+		grouped_amounts[cost_center] += row_salary_cost
+
+	accounts = []
+	for cost_center in ordered_cost_centers:
+		accounts.append({
+			"account": expense_account,
+			"debit_in_account_currency": round(grouped_amounts[cost_center], 2),
+			"cost_center": cost_center,
+		})
+
+	if not accounts:
+		accounts.append({
+			"account": expense_account,
+			"debit_in_account_currency": 0.0,
+			"cost_center": default_cost_center,
+		})
+
+	return accounts
+
+
+def _build_payroll_import_template_workbook(doc) -> BytesIO:
+	workbook = Workbook()
+	instructions_sheet = workbook.active
+	instructions_sheet.title = "Instructions"
+	instructions_sheet.sheet_view.rightToLeft = True
+	example_sheet = workbook.create_sheet("Example")
+	example_sheet.sheet_view.rightToLeft = True
+	payload_sheet = workbook.create_sheet(PREFERRED_SOURCE_WORKBOOK_SHEETS[0])
+	payload_sheet.sheet_view.rightToLeft = True
+
+	title_fill = PatternFill(fill_type="solid", fgColor="D9EAF7")
+	header_fill = PatternFill(fill_type="solid", fgColor="EAF2E3")
+	bold_font = Font(bold=True)
+	wrapped_alignment = Alignment(wrap_text=True, vertical="top")
+
+	instruction_rows = [
+		["قالب رفع الرواتب", "استخدم هذا الملف لرفع الرواتب دفعة واحدة من شاشة مسير الرواتب الشهري السعودي."],
+		["1", "املأ البيانات داخل ورقة كشف الرواتب فقط ولا تغير أسماء الأعمدة في الصف الأول."],
+		["2", "الحد الأدنى المطلوب لكل صف عادة: الرقم الوظيفي، الاسم، مركز التكلفة، الأساسي، الإجمالي، إجمالي الخصم، صافي الراتب."],
+		["3", "إذا كان راتب الموظف موزعاً على أكثر من مركز تكلفة، كرر نفس الموظف في أكثر من صف مع تغيير مركز التكلفة والقيم المالية لكل صف."],
+		["4", "صيغة مركز التكلفة في هذا القالب هي مركز التكلفة مباشرة. إذا رفعت ملفاً قديماً يستخدم الإدارة فسيتم التعامل معه أيضاً كمركز تكلفة."],
+		["5", f"اسم الشيت المطلوب للاستيراد: {PREFERRED_SOURCE_WORKBOOK_SHEETS[0]}"],
+		["6", "بعد تعبئة الملف، أرفقه في حقل ملف الرواتب المصدر ثم اضغط استيراد ملف الرواتب."],
+	]
+
+	for row_index, row in enumerate(instruction_rows, start=1):
+		for column_index, value in enumerate(row, start=1):
+			cell = instructions_sheet.cell(row=row_index, column=column_index, value=value)
+			cell.alignment = wrapped_alignment
+			if row_index == 1:
+				cell.font = bold_font
+				cell.fill = title_fill
+
+	instructions_sheet.column_dimensions["A"].width = 18
+	instructions_sheet.column_dimensions["B"].width = 110
+
+	example_rows = _build_payroll_import_example_rows(doc.company)
+	for column_index, header in enumerate(PAYROLL_IMPORT_TEMPLATE_HEADERS, start=1):
+		example_cell = example_sheet.cell(row=1, column=column_index, value=header)
+		example_cell.font = bold_font
+		example_cell.fill = header_fill
+		example_cell.alignment = Alignment(horizontal="center", vertical="center")
+		example_sheet.column_dimensions[example_cell.column_letter].width = 18
+
+		cell = payload_sheet.cell(row=1, column=column_index, value=header)
+		cell.font = bold_font
+		cell.fill = header_fill
+		cell.alignment = Alignment(horizontal="center", vertical="center")
+		payload_sheet.column_dimensions[cell.column_letter].width = 18
+
+	for row_index, row_values in enumerate(example_rows, start=2):
+		for column_index, value in enumerate(row_values, start=1):
+			example_sheet.cell(row=row_index, column=column_index, value=value)
+
+	example_sheet.freeze_panes = "A2"
+	example_sheet.auto_filter.ref = f"A1:{example_sheet.cell(row=1, column=len(PAYROLL_IMPORT_TEMPLATE_HEADERS)).column_letter}{len(example_rows) + 1}"
+	payload_sheet.freeze_panes = "A2"
+	payload_sheet.auto_filter.ref = f"A1:{payload_sheet.cell(row=1, column=len(PAYROLL_IMPORT_TEMPLATE_HEADERS)).column_letter}1"
+
+	output = BytesIO()
+	workbook.save(output)
+	output.seek(0)
+	return output
+
+
+def _build_payroll_import_example_rows(company: str) -> list[list]:
+	default_cost_center = _get_company_default_cost_center(company) or "Main"
+	second_cost_center = _get_second_postable_cost_center(company, default_cost_center) or "فرع تجريبي - A"
+	return [
+		["1001", "موظف تجريبي", default_cost_center, "الرياض", "محاسب", "Bank", 3000, 500, 300, 200, 4000, 30, 0, 0, 0, 0, 300, 0, 200, 500, 3500, "1234567890", "GOSI-1001"],
+		["1001", "موظف تجريبي", second_cost_center, "الرياض", "محاسب", "Bank", 1000, 0, 0, 0, 1000, 30, 0, 0, 0, 0, 100, 0, 0, 100, 900, "1234567890", "GOSI-1001"],
+		["1002", "موظف تجريبي 2", default_cost_center, "جدة", "سائق", "Cash", 2500, 300, 200, 0, 3000, 30, 1, 100, 0, 0, 225, 150, 125, 350, 2800, "2234567890", "GOSI-1002"],
+	]
+
+
+def _get_second_postable_cost_center(company: str, excluded_cost_center: str) -> str:
+	rows = frappe.get_all(
+		"Cost Center",
+		filters={"company": company, "is_group": 0},
+		fields=["name"],
+		order_by="lft asc",
+	)
+	for row in rows:
+		if row["name"] != excluded_cost_center:
+			return row["name"]
+	return ""
+
+
+def _merge_journal_entry_accounts(accounts: list[dict]) -> list[dict]:
+	merged = {}
+	ordered_keys = []
+
+	for row in accounts:
+		key = (
+			cstr(row.get("account") or "").strip(),
+			cstr(row.get("cost_center") or "").strip(),
+			cstr(row.get("party_type") or "").strip(),
+			cstr(row.get("party") or "").strip(),
+		)
+		if key not in merged:
+			merged[key] = {
+				"account": row.get("account"),
+				"cost_center": row.get("cost_center"),
+				"party_type": row.get("party_type"),
+				"party": row.get("party"),
+				"debit_in_account_currency": 0.0,
+				"credit_in_account_currency": 0.0,
+			}
+			ordered_keys.append(key)
+
+		merged[key]["debit_in_account_currency"] += flt(row.get("debit_in_account_currency"))
+		merged[key]["credit_in_account_currency"] += flt(row.get("credit_in_account_currency"))
+
+	return [merged[key] for key in ordered_keys]
 
 
 # ─── Private Helpers ────────────────────────────────────────────────────────────
@@ -772,6 +1153,77 @@ def _preview_payroll_workbook(company: str, workbook_url: str) -> dict:
 		"unmatched_details": unmatched_details,
 		"warnings": warnings,
 		"import_rows": import_rows,
+	}
+
+
+def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
+	lookup = _get_company_employee_lookup(company)
+	errors = []
+	warnings = []
+	would_create_cost_centers = []
+	duplicate_keys = {}
+	required_fields = {
+		"employee_id": _("Payroll ID / الرقم الوظيفي"),
+		"employee_name": _("Name / الاسم"),
+		"basic_salary": _("Basic / الأساسي"),
+		"gross_salary": _("Gross / الإجمالي"),
+		"total_deductions": _("Total Deductions / إجمالي الخصومات"),
+		"net_salary": _("Net / الصافي"),
+	}
+
+	for raw in raw_rows:
+		row_label = raw.get("source_row") or "?"
+		missing_fields = []
+		for fieldname, label in required_fields.items():
+			if _is_blank(raw.get(fieldname)):
+				missing_fields.append(label)
+		if _is_blank(raw.get("cost_center")) and _is_blank(raw.get("department")):
+			missing_fields.append(_("Cost Center / مركز التكلفة"))
+		if missing_fields:
+			errors.append(_("الصف {0}: توجد بيانات إلزامية ناقصة: {1}.").format(row_label, ", ".join(missing_fields)))
+
+		cost_center_label = cstr(raw.get("cost_center") or raw.get("department") or "").strip()
+		employee_key = cstr(raw.get("employee_id") or raw.get("employee_name") or "").strip().lower()
+		duplicate_key = (employee_key, cost_center_label.lower())
+		if employee_key and cost_center_label:
+			if duplicate_key in duplicate_keys:
+				errors.append(_("الصف {0}: الموظف مكرر على مركز التكلفة نفسه كما في الصف {1}.").format(row_label, duplicate_keys[duplicate_key]))
+			else:
+				duplicate_keys[duplicate_key] = row_label
+
+		basic = _to_currency(raw.get("basic_salary"))
+		gross = _to_currency(raw.get("gross_salary"))
+		total_deductions = _to_currency(raw.get("total_deductions"))
+		gosi = _to_currency(raw.get("gosi_deduction"))
+		overtime = _to_currency(raw.get("additions"))
+		manual_deduction = _to_currency(raw.get("manual_deduction"))
+		absence_value = _to_currency(raw.get("absence_value"))
+		late_value = _to_currency(raw.get("late_value"))
+		net = _to_currency(raw.get("net_salary"))
+		if basic < 0 or gross < 0 or total_deductions < 0 or net < 0:
+			errors.append(_("الصف {0}: لا يمكن أن تحتوي قيم الرواتب أو الخصومات على أرقام سالبة.").format(row_label))
+
+		calculated_deductions = total_deductions or round(gosi + manual_deduction + absence_value + late_value, 2)
+		calculated_net = round(gross + overtime - calculated_deductions, 2)
+		if not _is_blank(raw.get("net_salary")) and abs(net - calculated_net) > 0.01:
+			errors.append(_("الصف {0}: صافي الراتب لا يطابق المعادلة المحاسبية. المدخل {1:.2f} والمتوقع {2:.2f}.").format(row_label, net, calculated_net))
+
+		employee, matched_by = _match_workbook_employee(raw, lookup)
+		if not employee:
+			warnings.append(_("الصف {0}: الموظف {1} غير مرتبط حالياً بسجل Employee موجود داخل الشركة.").format(row_label, raw.get("employee_id") or raw.get("employee_name") or _("غير محدد")))
+		elif matched_by != "employee_id":
+			warnings.append(_("الصف {0}: تمت مطابقة الموظف باستخدام {1} بدلاً من الرقم الوظيفي.").format(row_label, matched_by))
+
+		if cost_center_label and not _get_postable_cost_center(cost_center_label, company):
+			would_create_cost_centers.append(cost_center_label)
+
+	return {
+		"total_rows": len(raw_rows),
+		"error_count": len(errors),
+		"warning_count": len(warnings),
+		"errors": errors,
+		"warnings": warnings,
+		"would_create_cost_centers": sorted({value for value in would_create_cost_centers if value}),
 	}
 
 
@@ -1161,7 +1613,7 @@ def _build_basic_employee_payload_from_payroll_row(company: str, row, defaults: 
 	for fieldname, value in (
 		("middle_name", middle_name),
 		("last_name", last_name),
-		("department", _resolve_department_link(getattr(row, "department", None) or getattr(row, "workbook_department", None))),
+		("department", _resolve_department_link(getattr(row, "department", None))),
 		("designation", _resolve_designation_link(getattr(row, "designation", None))),
 	):
 		if value and meta.has_field(fieldname):
@@ -1173,9 +1625,10 @@ def _build_basic_employee_payload_from_payroll_row(company: str, row, defaults: 
 def _hydrate_payroll_row_from_employee(row, employee: dict):
 	row.employee = employee.get("name") or row.employee
 	row.employee_name = employee.get("employee_name") or row.employee_name
-	department = _resolve_department_link(employee.get("department") or getattr(row, "department", None) or getattr(row, "workbook_department", None))
+	department = _resolve_department_link(employee.get("department") or getattr(row, "department", None))
 	if department:
 		row.department = department
+	row.cost_center = _resolve_cost_center_link(getattr(row, "cost_center", None), employee.get("company") or "") or getattr(row, "cost_center", None)
 	if employee.get("nationality"):
 		row.nationality = employee.get("nationality")
 
@@ -1301,12 +1754,13 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 			"payroll_employee_id": cstr(raw.get("employee_id") or "").strip(),
 			"employee": (employee or {}).get("name") or "",
 			"employee_name": (employee or {}).get("employee_name") or raw.get("employee_name") or "",
-			"workbook_department": cstr(raw.get("department") or "").strip(),
+			"workbook_department": cstr(raw.get("department") or raw.get("cost_center") or "").strip(),
 			"work_location": cstr(raw.get("work_location") or "").strip(),
 			"designation": cstr(raw.get("designation") or "").strip(),
 			"salary_mode": cstr(raw.get("salary_mode") or "").strip(),
 			"gosi_registration": cstr(raw.get("gosi_registration") or "").strip(),
-			"department": _resolve_department_link((employee or {}).get("department") or raw.get("department")),
+			"department": _resolve_department_link((employee or {}).get("department")),
+			"cost_center": _resolve_cost_center_link(raw.get("cost_center") or raw.get("department"), company),
 			"nationality": (employee or {}).get("nationality") or "",
 			"working_days": _to_number(raw.get("working_days")),
 			"absence_days": _to_number(raw.get("absence_days")),
@@ -1364,7 +1818,7 @@ def _normalize_workbook_gross_salary(raw_gross: float, component_gross: float, o
 
 
 def _get_company_employee_lookup(company: str) -> dict[str, dict]:
-	fields = ["name", "employee_name", "department", "employee_number"]
+	fields = ["name", "employee_name", "department", "employee_number", "company"]
 	meta = frappe.get_meta("Employee")
 	for optional_field in ("nationality", "passport_number", "iqama_number"):
 		if meta.has_field(optional_field):
@@ -1531,7 +1985,7 @@ def _month_name_to_num(month_label: str) -> int:
 
 
 def _get_employee_fetch_fields() -> list[str]:
-	fields = ["name", "employee_name", "department"]
+	fields = ["name", "employee_name", "department", "company"]
 	if frappe.get_meta("Employee").has_field("nationality"):
 		fields.append("nationality")
 	return fields

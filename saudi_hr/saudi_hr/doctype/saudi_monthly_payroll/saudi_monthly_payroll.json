@@ -18,6 +18,12 @@
   "payroll_journal_entry",
   "source_workbook",
   "employee_setup_workbook",
+  "auto_employee_creation_section",
+  "auto_create_missing_employees",
+  "column_break_auto_employee_creation",
+  "auto_create_default_gender",
+  "auto_create_default_date_of_birth",
+  "auto_create_default_date_of_joining",
   "employees_section",
   "employees",
   "totals_section",
@@ -111,6 +117,44 @@
    "fieldtype": "Attach",
     "hidden": 1,
    "label": "Employee Setup Workbook / ملف إعداد الموظفين"
+  },
+  {
+   "fieldname": "auto_employee_creation_section",
+   "fieldtype": "Section Break",
+   "label": "Missing Employee Handling / معالجة الموظفين غير الموجودين"
+  },
+  {
+   "default": "1",
+   "description": "When payroll rows do not match existing Employee records, create basic Employee masters during workbook import using the defaults below. / عند عدم مطابقة صفوف الرواتب مع سجلات Employee الحالية، يتم إنشاء سجلات موظفين أساسية أثناء الاستيراد باستخدام القيم الافتراضية أدناه.",
+   "fieldname": "auto_create_missing_employees",
+   "fieldtype": "Check",
+   "label": "Auto Create Missing Employees / إنشاء الموظفين غير الموجودين تلقائياً"
+  },
+  {
+   "fieldname": "column_break_auto_employee_creation",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Prefer not to say",
+   "depends_on": "eval:doc.auto_create_missing_employees",
+   "fieldname": "auto_create_default_gender",
+   "fieldtype": "Link",
+   "label": "Default Gender / الجنس الافتراضي",
+   "options": "Gender"
+  },
+  {
+   "default": "1990-01-01",
+   "depends_on": "eval:doc.auto_create_missing_employees",
+   "fieldname": "auto_create_default_date_of_birth",
+   "fieldtype": "Date",
+   "label": "Default Date of Birth / تاريخ الميلاد الافتراضي"
+  },
+  {
+   "depends_on": "eval:doc.auto_create_missing_employees",
+   "description": "If left blank, Posting Date will be used during automatic employee creation. / إذا تُرك فارغاً فسيُستخدم تاريخ الترحيل عند إنشاء الموظفين تلقائياً.",
+   "fieldname": "auto_create_default_date_of_joining",
+   "fieldtype": "Date",
+   "label": "Default Date of Joining / تاريخ المباشرة الافتراضي"
   },
   {
    "fieldname": "employees_section",

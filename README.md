@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.8.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.10.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.8.1-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.10.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -56,7 +56,7 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
 صُمّم خصيصاً للمنشآت العاملة في المملكة العربية السعودية، بجميع أحجامها، ويشمل:
 
-- **20 نوع بيانات** تغطي دورة حياة الموظف كاملاً
+- **23 نوع بيانات** تغطي دورة حياة الموظف كاملاً
 - **7 تقارير** للامتثال والرواتب والتحليل
 - **5 صيغ طباعة** عربية RTL رسمية
 - **2 سير عمل** معتمد للموافقات
@@ -72,7 +72,7 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
 Built for establishments of any size operating in Saudi Arabia. Includes:
 
-- **20 DocTypes** covering the full employee lifecycle
+- **23 DocTypes** covering the full employee lifecycle
 - **7 Reports** for compliance, payroll, and analytics
 - **5 Arabic RTL Print Formats** for official documents
 - **2 Approval Workflows** for key transactions
@@ -382,7 +382,36 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.8.1 — ٢ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.10.0 — ٦ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**أتمتة الرواتب وتحسين مساحة العمل | Payroll Automation & Workspace Refresh:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Saudi Monthly Payroll | مسير الرواتب الشهري | إضافة التحقق المسبق من ملف الرواتب مع منع الاستيراد عند وجود أخطاء مانعة ورسائل عربية أوضح للمراجعة |
+| Payroll Import Template | قالب رفع الرواتب | إضافة تنزيل قالب Excel فارغ يحتوي على ورقة `Instructions` وورقة `Example` وورقة الرفع الجاهزة |
+| Auto Employee Creation | إنشاء الموظفين تلقائياً | إنشاء سجلات `Employee` الأساسية تلقائياً عند عدم تطابق صفوف الرواتب، مع قيم افتراضية قابلة للتحكم من النموذج |
+| Cost Center Distribution | توزيع مراكز التكلفة | دعم الصف الواحد/الموظف الواحد على أكثر من مركز تكلفة، وإنشاء مراكز التكلفة الناقصة تلقائياً عند الحاجة، وتوزيع قيود الرواتب محاسبياً حسب مركز التكلفة |
+| Journal Entry Posting | القيود المحاسبية | دمج سطور الحسابات المكررة داخل قيد الرواتب ومنع تكرار أسطر الائتمان أو التجميع غير الدقيق |
+| Saudi HR Workspace | مساحة عمل Saudi HR | إعادة تنظيم الصفحة لتبدأ بـ `ابدأ من هنا` و`التشغيل اليومي`، تقليل الرسوم في الأعلى، وتعريب وتقسيم أقسام العلاقات والامتثال بشكل أوضح |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يركز على التشغيل الفعلي اليومي لمسير الرواتب في بيئات السعودية: استيراد أسرع، تحقق أوضح، إنشاء تلقائي للسجلات الأساسية، توزيع محاسبي أدق على مراكز التكلفة، ومساحة عمل أكثر عملية للمستخدم النهائي.
+
+### v1.9.0 — ٥ أبريل ٢٠٢٦
+
+**إدارة التطوير والمغادرة | Performance & Offboarding Expansion:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Exit Interview | مقابلة الخروج | إضافة DocType جديد لتوثيق مقابلة الخروج وربطه مباشرةً مع `Exit Clearance` وتحديث حالة الإكمال تلقائياً |
+| Salary Adjustment | تعديل الراتب | إضافة DocType جديد لحساب `adjustment_amount` و`adjustment_percentage` وربطه مع `Performance Review` |
+| Promotion Transfer | الترقية / النقل | إضافة DocType جديد لتوثيق قرارات الترقية أو النقل وربطها مع `Performance Review` |
+| Saudi HR Workspace | مساحة عمل Saudi HR | إضافة الروابط الجديدة داخل قسمي `Performance & Development` و`Separation & Offboarding` |
+| Live Validation | التحقق الحي | التحقق من `migrate` و`build` و`clear-cache` وفتح الصفحات الجديدة مباشرةً في النظام الحي |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يوسّع دورة حياة الموظف بإجراءات ما بعد التقييم وما قبل المغادرة، ويضيف ثلاث شاشات تشغيلية جديدة جاهزة للاستخدام في Frappe/ERPNext v15.
+
+### v1.8.1 — ٢ أبريل ٢٠٢٦
 
 **استيراد ملف الرواتب | Payroll Workbook Import Completion:**
 
