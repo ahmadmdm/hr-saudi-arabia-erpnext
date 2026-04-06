@@ -29,7 +29,7 @@
    "label": "Nationality Distribution"
   }
  ],
- "content": "[{\"id\":\"saudi_hr_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Saudi HR Lifecycle Hub</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Contracts\",\"col\":3}},{\"id\":\"saudi_hr_card_2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring Iqamas\",\"col\":3}},{\"id\":\"saudi_hr_card_3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Overtime\",\"col\":3}},{\"id\":\"saudi_hr_card_4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total GOSI This Month\",\"col\":3}},{\"id\":\"saudi_hr_spacer_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_chart_1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Active Contracts by Type\",\"col\":6}},{\"id\":\"saudi_hr_chart_2\",\"type\":\"chart\",\"data\":{\"chart_name\":\"GOSI Monthly Contributions\",\"col\":6}},{\"id\":\"saudi_hr_chart_3\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Compliance Actions by Area\",\"col\":4}},{\"id\":\"saudi_hr_chart_4\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Grievances by Type\",\"col\":4}},{\"id\":\"saudi_hr_chart_5\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Investigations by Case Type\",\"col\":4}},{\"id\":\"saudi_hr_spacer_2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick Actions</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Hiring Requisition\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Candidate Pipeline\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Onboarding\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Annual Leave\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Performance Review\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exit Clearance\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Mobile Attendance\",\"col\":2}},{\"id\":\"saudi_hr_spacer_3\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_3\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Lifecycle Stages</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_links_1\",\"type\":\"card\",\"data\":{\"card_name\":\"Strategy & Setup\",\"col\":4}},{\"id\":\"saudi_hr_card_links_2\",\"type\":\"card\",\"data\":{\"card_name\":\"Talent Acquisition\",\"col\":4}},{\"id\":\"saudi_hr_card_links_3\",\"type\":\"card\",\"data\":{\"card_name\":\"Onboarding & Employment\",\"col\":4}},{\"id\":\"saudi_hr_card_links_4\",\"type\":\"card\",\"data\":{\"card_name\":\"Time, Leave & Payroll\",\"col\":4}},{\"id\":\"saudi_hr_card_links_5\",\"type\":\"card\",\"data\":{\"card_name\":\"Performance & Development\",\"col\":4}},{\"id\":\"saudi_hr_card_links_6\",\"type\":\"card\",\"data\":{\"card_name\":\"Employee Relations & Legal\",\"col\":4}},{\"id\":\"saudi_hr_card_links_7\",\"type\":\"card\",\"data\":{\"card_name\":\"Separation & Offboarding\",\"col\":6}},{\"id\":\"saudi_hr_card_links_8\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports & Analytics\",\"col\":6}}]",
+ "content": "[{\"id\":\"saudi_hr_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>مركز دورة حياة الموارد البشرية السعودية</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_header_1\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>ابدأ من هنا</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi HR Settings\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Employment Contract\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Monthly Payroll\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Mobile Attendance\",\"col\":3}},{\"id\":\"saudi_hr_spacer_1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_card_1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Contracts\",\"col\":3}},{\"id\":\"saudi_hr_card_2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring Iqamas\",\"col\":3}},{\"id\":\"saudi_hr_card_3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Overtime\",\"col\":3}},{\"id\":\"saudi_hr_card_4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total GOSI This Month\",\"col\":3}},{\"id\":\"saudi_hr_spacer_2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>التشغيل اليومي</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Monthly Payroll\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Mobile Attendance\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Annual Leave\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exit Clearance\",\"col\":3}},{\"id\":\"saudi_hr_spacer_3\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_3\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>الإجراءات الأساسية</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Hiring Requisition\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_10\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Onboarding\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_11\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Performance Review\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_12\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary Adjustment\",\"col\":2}},{\"id\":\"saudi_hr_shortcut_13\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Promotion Transfer\",\"col\":2}},{\"id\":\"saudi_hr_spacer_4\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_4\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>ملخص المؤشرات</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_chart_1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Active Contracts by Type\",\"col\":4}},{\"id\":\"saudi_hr_chart_2\",\"type\":\"chart\",\"data\":{\"chart_name\":\"GOSI Monthly Contributions\",\"col\":4}},{\"id\":\"saudi_hr_chart_3\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Nationality Distribution\",\"col\":4}},{\"id\":\"saudi_hr_spacer_5\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_5\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>مراحل العمل</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_links_1\",\"type\":\"card\",\"data\":{\"card_name\":\"الوقت والإجازات والرواتب\",\"col\":4}},{\"id\":\"saudi_hr_card_links_2\",\"type\":\"card\",\"data\":{\"card_name\":\"الإعداد والتأسيس\",\"col\":4}},{\"id\":\"saudi_hr_card_links_3\",\"type\":\"card\",\"data\":{\"card_name\":\"الاستقطاب\",\"col\":4}},{\"id\":\"saudi_hr_card_links_4\",\"type\":\"card\",\"data\":{\"card_name\":\"التهيئة والتوظيف\",\"col\":4}},{\"id\":\"saudi_hr_card_links_5\",\"type\":\"card\",\"data\":{\"card_name\":\"الأداء والتطوير\",\"col\":4}},{\"id\":\"saudi_hr_card_links_6\",\"type\":\"card\",\"data\":{\"card_name\":\"علاقات الموظفين\",\"col\":4}},{\"id\":\"saudi_hr_card_links_7\",\"type\":\"card\",\"data\":{\"card_name\":\"الامتثال والشؤون القانونية\",\"col\":6}},{\"id\":\"saudi_hr_card_links_8\",\"type\":\"card\",\"data\":{\"card_name\":\"إنهاء الخدمة والمغادرة\",\"col\":6}},{\"id\":\"saudi_hr_card_links_9\",\"type\":\"card\",\"data\":{\"card_name\":\"التقارير والتحليلات\",\"col\":12}}]",
  "creation": "2026-03-25 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -44,7 +44,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Strategy & Setup",
+    "label": "الإعداد والتأسيس",
    "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
@@ -113,7 +113,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Talent Acquisition",
+    "label": "الاستقطاب",
    "link_count": 2,
    "link_type": "DocType",
    "onboard": 0,
@@ -142,8 +142,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Onboarding & Employment",
-   "link_count": 5,
+    "label": "التهيئة والتوظيف",
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -171,16 +171,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Training Record",
-   "link_count": 0,
-   "link_to": "Training Record",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Medical Examination",
    "link_count": 0,
    "link_to": "Medical Examination",
@@ -201,11 +191,21 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Time, Leave & Payroll",
+    "label": "الوقت والإجازات والرواتب",
    "link_count": 12,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Saudi Monthly Payroll",
+   "link_count": 0,
+   "link_to": "Saudi Monthly Payroll",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
    "hidden": 0,
@@ -240,66 +240,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Saudi Annual Leave",
-   "link_count": 0,
-   "link_to": "Saudi Annual Leave",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Employee Loan",
-   "link_count": 0,
-   "link_to": "Employee Loan",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Saudi Sick Leave",
-   "link_count": 0,
-   "link_to": "Saudi Sick Leave",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Maternity Paternity Leave",
-   "link_count": 0,
-   "link_to": "Maternity Paternity Leave",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Special Leave",
-   "link_count": 0,
-   "link_to": "Special Leave",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Saudi Monthly Payroll",
-   "link_count": 0,
-   "link_to": "Saudi Monthly Payroll",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Overtime Request",
    "link_count": 0,
    "link_to": "Overtime Request",
@@ -310,6 +250,56 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+    "label": "Saudi Annual Leave",
+    "link_count": 0,
+    "link_to": "Saudi Annual Leave",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Saudi Sick Leave",
+    "link_count": 0,
+    "link_to": "Saudi Sick Leave",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Maternity Paternity Leave",
+    "link_count": 0,
+    "link_to": "Maternity Paternity Leave",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Special Leave",
+    "link_count": 0,
+    "link_to": "Special Leave",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Employee Loan",
+    "link_count": 0,
+    "link_to": "Employee Loan",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
    "label": "GOSI Contribution",
    "link_count": 0,
    "link_to": "GOSI Contribution",
@@ -330,7 +320,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Performance & Development",
+    "label": "الأداء والتطوير",
     "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
@@ -379,8 +369,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Employee Relations & Legal",
-   "link_count": 11,
+    "label": "علاقات الموظفين",
+   "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -418,6 +408,35 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+    "label": "Absence Case",
+    "link_count": 0,
+    "link_to": "Absence Case",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Work Injury",
+    "link_count": 0,
+    "link_to": "Work Injury",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "الامتثال والشؤون القانونية",
+    "link_count": 6,
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Card Break"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
    "label": "Disciplinary Procedure",
    "link_count": 0,
    "link_to": "Disciplinary Procedure",
@@ -458,16 +477,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Absence Case",
-   "link_count": 0,
-   "link_to": "Absence Case",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "Labor Inspection",
    "link_count": 0,
    "link_to": "Labor Inspection",
@@ -488,17 +497,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Work Injury",
-   "link_count": 0,
-   "link_to": "Work Injury",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Separation & Offboarding",
+    "label": "إنهاء الخدمة والمغادرة",
     "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
@@ -517,6 +516,26 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+    "label": "Exit Clearance",
+    "link_count": 0,
+    "link_to": "Exit Clearance",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Exit Interview",
+    "link_count": 0,
+    "link_to": "Exit Interview",
+    "link_type": "DocType",
+    "onboard": 0,
+    "type": "Link"
+    },
+    {
+    "hidden": 0,
+    "is_query_report": 0,
    "label": "End of Service Benefit",
    "link_count": 0,
    "link_to": "End of Service Benefit",
@@ -534,30 +553,10 @@
    "onboard": 0,
    "type": "Link"
   },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-     "label": "Exit Interview",
-     "link_count": 0,
-     "link_to": "Exit Interview",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Exit Clearance",
-   "link_count": 0,
-   "link_to": "Exit Clearance",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Reports & Analytics",
+    "label": "التقارير والتحليلات",
    "link_count": 15,
    "link_type": "Report",
    "onboard": 0,
@@ -777,9 +776,30 @@
  "shortcuts": [
   {
    "color": "Blue",
-   "doc_view": "Form",
+    "doc_view": "List",
    "label": "Hiring Requisition",
    "link_to": "Hiring Requisition",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+    "doc_view": "List",
+   "label": "Saudi HR Settings",
+   "link_to": "Saudi HR Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "List",
+   "label": "Saudi Employment Contract",
+   "link_to": "Saudi Employment Contract",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Saudi Monthly Payroll",
+   "link_to": "Saudi Monthly Payroll",
    "type": "DocType"
   },
   {
@@ -811,17 +831,24 @@
    "type": "DocType"
   },
   {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Salary Adjustment",
+   "link_to": "Salary Adjustment",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Promotion Transfer",
+   "link_to": "Promotion Transfer",
+   "type": "DocType"
+  },
+  {
    "color": "Red",
    "doc_view": "List",
    "label": "Exit Clearance",
    "link_to": "Exit Clearance",
-   "type": "DocType"
-  },
-  {
-   "color": "Blue",
-   "doc_view": "Form",
-   "label": "Saudi HR Settings",
-   "link_to": "Saudi HR Settings",
    "type": "DocType"
   },
   {

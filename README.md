@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.9.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.10.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.9.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.10.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -382,7 +382,22 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.9.0 — ٥ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.10.0 — ٦ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**أتمتة الرواتب وتحسين مساحة العمل | Payroll Automation & Workspace Refresh:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Saudi Monthly Payroll | مسير الرواتب الشهري | إضافة التحقق المسبق من ملف الرواتب مع منع الاستيراد عند وجود أخطاء مانعة ورسائل عربية أوضح للمراجعة |
+| Payroll Import Template | قالب رفع الرواتب | إضافة تنزيل قالب Excel فارغ يحتوي على ورقة `Instructions` وورقة `Example` وورقة الرفع الجاهزة |
+| Auto Employee Creation | إنشاء الموظفين تلقائياً | إنشاء سجلات `Employee` الأساسية تلقائياً عند عدم تطابق صفوف الرواتب، مع قيم افتراضية قابلة للتحكم من النموذج |
+| Cost Center Distribution | توزيع مراكز التكلفة | دعم الصف الواحد/الموظف الواحد على أكثر من مركز تكلفة، وإنشاء مراكز التكلفة الناقصة تلقائياً عند الحاجة، وتوزيع قيود الرواتب محاسبياً حسب مركز التكلفة |
+| Journal Entry Posting | القيود المحاسبية | دمج سطور الحسابات المكررة داخل قيد الرواتب ومنع تكرار أسطر الائتمان أو التجميع غير الدقيق |
+| Saudi HR Workspace | مساحة عمل Saudi HR | إعادة تنظيم الصفحة لتبدأ بـ `ابدأ من هنا` و`التشغيل اليومي`، تقليل الرسوم في الأعلى، وتعريب وتقسيم أقسام العلاقات والامتثال بشكل أوضح |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يركز على التشغيل الفعلي اليومي لمسير الرواتب في بيئات السعودية: استيراد أسرع، تحقق أوضح، إنشاء تلقائي للسجلات الأساسية، توزيع محاسبي أدق على مراكز التكلفة، ومساحة عمل أكثر عملية للمستخدم النهائي.
+
+### v1.9.0 — ٥ أبريل ٢٠٢٦
 
 **إدارة التطوير والمغادرة | Performance & Offboarding Expansion:**
 

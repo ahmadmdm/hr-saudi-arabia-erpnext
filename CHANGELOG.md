@@ -2,6 +2,15 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.10.0 - 2026-04-06
+
+- Added payroll workbook validation with blocking errors so imports fail fast when net salary, required field, duplicate, or structural workbook issues are detected.
+- Added a downloadable payroll import template with `Instructions`, `Example`, and upload sheets to standardize payroll workbook preparation.
+- Added automatic Employee creation during payroll import with configurable default gender, date of birth, and joining date values on the payroll document.
+- Added row-level payroll cost center support, automatic cost center resolution/creation from workbook values, and cost-center-aware payroll expense posting.
+- Merged duplicate journal entry account rows during payroll posting to avoid repeated credit/debit lines for the same account and cost center combination.
+- Reorganized the Saudi HR workspace for operational use with Arabic section headings, start/daily action blocks, reduced top charts, and separated employee relations from compliance/legal sections.
+
 ## v1.9.0 - 2026-04-05
 
 - Added the new `Exit Interview` DocType and linked it to `Exit Clearance` so offboarding can track interview completion from the same separation workflow.
@@ -11,14 +20,6 @@ All notable changes to `saudi_hr` are documented in this file.
 - Revalidated the new DocTypes on the live Frappe v15 site, including migration, asset build, cache clear, and direct UI route checks.
 
 ## v1.8.1 - 2026-04-02
-
-- Extended `Saudi Monthly Payroll Employee` rows to persist workbook-only payroll context fields: work location, designation, salary mode, GOSI registration, working days, absence days, and late hours.
-- Updated payroll workbook import mapping so those fields survive the actual import flow and remain visible in imported payroll rows.
-- Normalized workbook gross salary when `إجمالي البدلات` already includes `الإضافي`, eliminating false `net salary mismatch` warnings during live payroll imports.
-- Allowed placeholder employee creation from imported payroll rows to reuse a valid `Designation` where available.
-- Expanded payroll regression coverage and reverified the full `saudi_hr` suite with 78 passing tests.
-
-## v1.8.0 - 2026-04-02
 
 - Removed remaining runtime `ignore_permissions` bypasses from mobile attendance/leave APIs and key compliance, policy, legal, and settings flows.
 - Added explicit doctype permission checks for journal entries, compliance actions, regulatory tasks, policy acknowledgements, employee warnings, and disciplinary decision logs.
