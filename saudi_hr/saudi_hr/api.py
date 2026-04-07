@@ -418,6 +418,67 @@ def _build_verification_mode(raw_mode, attachments):
 
 
 @frappe.whitelist()
+def get_employee_paid_payroll_history(employee, limit=10):
+	if not employee:
+		return []
+
+	limit = max(1, min(int(limit or 10), 50))
+	if not frappe.db.exists("Employee", employee):
+		frappe.throw(_("Employee not found."))
+
+	employee_doc = frappe.get_doc("Employee", employee)
+	frappe.has_permission("Employee", "read", doc=employee_doc, throw=True)
+
+	if not frappe.has_permission("Saudi Monthly Payroll", "read"):
+		return []
+
+	rows = frappe.db.sql(
+		"""
+		SELECT
+			parent.name AS payroll,
+			parent.period_label,
+			parent.month,
+			parent.year,
+			parent.posting_date,
+			parent.status,
+			parent.payroll_journal_entry,
+			child.gross_salary,
+			child.total_deductions,
+			child.net_salary,
+			child.salary_mode
+		FROM `tabSaudi Monthly Payroll Employee` child
+		INNER JOIN `tabSaudi Monthly Payroll` parent ON parent.name = child.parent
+		WHERE child.employee = %s
+			AND parent.docstatus = 1
+			AND IFNULL(parent.payroll_journal_entry, '') != ''
+		ORDER BY parent.posting_date DESC, parent.modified DESC
+		LIMIT %s
+		""",
+		(employee, limit),
+		as_dict=True,
+	)
+
+	history = []
+	for row in rows:
+		period_label = row.period_label or f"{row.month} {row.year}"
+		history.append(
+			{
+				"payroll": row.payroll,
+				"period_label": period_label,
+				"posting_date": str(row.posting_date) if row.posting_date else None,
+				"status": row.status,
+				"journal_entry": row.payroll_journal_entry,
+				"gross_salary": flt(row.gross_salary),
+				"total_deductions": flt(row.total_deductions),
+				"net_salary": flt(row.net_salary),
+				"salary_mode": row.salary_mode,
+			}
+		)
+
+	return history
+
+
+@frappe.whitelist()
 def get_attendance_status():
 	employee, profile = _require_employee_context()
 	today_checkins = _get_todays_checkins(employee)

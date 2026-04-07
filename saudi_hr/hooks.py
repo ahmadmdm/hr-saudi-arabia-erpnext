@@ -63,6 +63,10 @@ doc_events = {
 	},
 }
 
+doctype_js = {
+	"Employee": "public/js/employee.js",
+}
+
 # ─── Custom Fields on Employee ──────────────────────────────────────────────────
 # Added via install.py to avoid modifying ERPNext/HRMS directly
 # custom_fields = {}

@@ -21,12 +21,14 @@ frappe.ui.form.on('Saudi Monthly Payroll', {
             frm.set_value('month', monthNames[parseInt(parts[1]) - 1]);
         }
         _sync_workbook_fields(frm);
+        _sync_auto_create_defaults(frm);
         _add_buttons(frm);
         _setup_payroll_grid_state(frm);
     },
 
     refresh(frm) {
         _sync_workbook_fields(frm);
+        _sync_auto_create_defaults(frm);
         _add_buttons(frm);
         _setup_payroll_grid_state(frm);
     },
@@ -34,6 +36,11 @@ frappe.ui.form.on('Saudi Monthly Payroll', {
     company(frm)  { _update_period(frm); },
     month(frm)    { _update_period(frm); },
     year(frm)     { _update_period(frm); },
+    posting_date(frm) { _sync_auto_create_defaults(frm); },
+    auto_create_missing_employees(frm) {
+        _sync_auto_create_defaults(frm);
+        _refresh_payroll_grid_state(frm);
+    },
 });
 
 
@@ -70,6 +77,14 @@ function _add_buttons(frm) {
 
         frm.add_custom_button(__('Analyze Workbook / تحليل ملف الرواتب'), function() {
             _analyze_workbook(frm);
+        }, __('Actions / إجراءات'));
+
+        frm.add_custom_button(__('Validate Workbook / التحقق من ملف الرواتب'), function() {
+            _validate_workbook(frm);
+        }, __('Actions / إجراءات'));
+
+        frm.add_custom_button(__('Download Payroll Import Template / تنزيل قالب رفع الرواتب'), function() {
+            _download_payroll_import_template(frm);
         }, __('Actions / إجراءات'));
 
         frm.add_custom_button(__('Download Gap Report / تنزيل تقرير الفجوات'), function() {
@@ -124,6 +139,26 @@ function _sync_workbook_fields(frm) {
 }
 
 
+function _sync_auto_create_defaults(frm) {
+    const enabled = !!frm.doc.auto_create_missing_employees;
+    if (enabled && !frm.doc.auto_create_default_gender) {
+        frm.set_value('auto_create_default_gender', 'Prefer not to say');
+    }
+    if (enabled && !frm.doc.auto_create_default_date_of_birth) {
+        frm.set_value('auto_create_default_date_of_birth', '1990-01-01');
+    }
+    if (enabled && !frm.doc.auto_create_default_date_of_joining) {
+        frm.set_value('auto_create_default_date_of_joining', frm.doc.posting_date || frappe.datetime.get_today());
+    }
+
+    frm.toggle_display([
+        'auto_create_default_gender',
+        'auto_create_default_date_of_birth',
+        'auto_create_default_date_of_joining'
+    ], enabled);
+}
+
+
 function _setup_payroll_grid_state(frm) {
     _ensure_payroll_grid_styles();
     _bind_payroll_grid_events(frm);
@@ -173,10 +208,24 @@ function _bind_payroll_grid_events(frm) {
 
 function _refresh_payroll_grid_state(frm) {
     const count = _count_unlinked_payroll_rows(frm);
-    if (count > 0) {
+    const autoCreateEnabled = !!frm.doc.auto_create_missing_employees;
+    const defaultGender = frm.doc.auto_create_default_gender || __('Not set / غير محدد');
+    const defaultBirthDate = frm.doc.auto_create_default_date_of_birth || __('Not set / غير محدد');
+    const defaultJoiningDate = frm.doc.auto_create_default_date_of_joining || frm.doc.posting_date || __('Not set / غير محدد');
+    if (count > 0 && autoCreateEnabled) {
+        frm.set_intro(
+            __('There are {0} imported payroll rows without linked Employee records yet. Automatic employee creation is enabled and will use Gender {1}, Date of Birth {2}, and Joining Date {3}. Review the created employee masters after import.<br>يوجد {0} صف رواتب مستورد غير مرتبط بعد بسجل Employee. تم تفعيل الإنشاء التلقائي وسيستخدم الجنس {1} وتاريخ الميلاد {2} وتاريخ المباشرة {3}. يرجى مراجعة سجلات الموظفين التي سينشئها النظام بعد الاستيراد.', [count, defaultGender, defaultBirthDate, defaultJoiningDate]),
+            'orange'
+        );
+    } else if (count > 0) {
         frm.set_intro(
             __('There are {0} imported payroll rows without linked Employee records yet. You can still review payroll values now, or use Create Basic Employees to generate master records.', [count]),
             'orange'
+        );
+    } else if (autoCreateEnabled) {
+        frm.set_intro(
+            __('Automatic employee creation is enabled for unmatched payroll rows. Defaults: Gender {0}, Date of Birth {1}, Joining Date {2}.<br>إنشاء الموظفين التلقائي مفعل لصفوف الرواتب غير المطابقة. القيم الافتراضية: الجنس {0}، تاريخ الميلاد {1}، تاريخ المباشرة {2}.', [defaultGender, defaultBirthDate, defaultJoiningDate]),
+            'blue'
         );
     } else {
         frm.set_intro('');
@@ -300,6 +349,7 @@ function _import_workbook(frm) {
     }
 
     const do_import = function() {
+        const autoCreateEnabled = !!frm.doc.auto_create_missing_employees;
         frappe.call({
             method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.import_payroll_workbook',
             args: {
@@ -307,7 +357,9 @@ function _import_workbook(frm) {
                 file_url: frm.doc.source_workbook
             },
             freeze: true,
-            freeze_message: __('Importing workbook and matching employees...<br>جاري استيراد ملف الرواتب ومطابقة الموظفين...'),
+            freeze_message: autoCreateEnabled
+                ? __('Importing workbook, matching employees, and creating missing employee records...<br>جاري استيراد ملف الرواتب ومطابقة الموظفين وإنشاء سجلات الموظفين الناقصة...')
+                : __('Importing workbook and matching employees...<br>جاري استيراد ملف الرواتب ومطابقة الموظفين...'),
             callback(r) {
                 if (!r.message) {
                     return;
@@ -319,12 +371,27 @@ function _import_workbook(frm) {
                     indicator: 'green'
                 }, 6);
 
-                if (r.message.warnings && r.message.warnings.length) {
-                    const warningItems = r.message.warnings
+                if (r.message.auto_create_enabled) {
+                    frappe.msgprint({
+                        title: __('Workbook Import Result / نتيجة استيراد ملف الرواتب'),
+                        indicator: r.message.remaining_unlinked_rows ? 'orange' : 'green',
+                        message: `
+                            <p>${__('Imported payroll rows')}: <b>${r.message.count}</b></p>
+                            <p>${__('Auto-created employees')}: <b>${r.message.created_count || 0}</b></p>
+                            <p>${__('Linked existing rows')}: <b>${r.message.linked_count || 0}</b></p>
+                            <p>${__('Remaining unlinked rows')}: <b>${r.message.remaining_unlinked_rows || 0}</b></p>
+                            <p>${__('The system created basic Employee records automatically for unmatched payroll rows using the defaults shown on the form. Please review and enrich those employee records after import.')}<br>${__('أنشأ النظام سجلات Employee أساسية تلقائياً للصفوف غير المطابقة باستخدام القيم الافتراضية الظاهرة في النموذج. يرجى مراجعة هذه السجلات واستكمال بياناتها بعد الاستيراد.')}</p>
+                        `
+                    });
+                }
+
+                const combinedWarnings = [...(r.message.warnings || []), ...(r.message.skipped || [])];
+                if (combinedWarnings.length) {
+                    const warningItems = combinedWarnings
                         .slice(0, 10)
                         .map((warning) => `<li>${frappe.utils.escape_html(warning)}</li>`)
                         .join('');
-                    const extraCount = Math.max(r.message.warnings.length - 10, 0);
+                    const extraCount = Math.max(combinedWarnings.length - 10, 0);
                     const extraText = extraCount ? `<p>${__('Additional warnings')}: ${extraCount}</p>` : '';
 
                     frappe.msgprint({
@@ -402,6 +469,69 @@ function _analyze_workbook(frm) {
 }
 
 
+function _validate_workbook(frm) {
+    if (!frm.doc.company) {
+        frappe.msgprint(__('Please select a Company first.<br>يرجى اختيار الشركة أولاً.'));
+        return;
+    }
+    if (!frm.doc.source_workbook) {
+        frappe.msgprint(__('Attach the source payroll workbook first.<br>أرفق ملف الرواتب المصدر أولاً.'));
+        return;
+    }
+
+    const do_validate = function() {
+        frappe.call({
+            method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.validate_payroll_workbook',
+            args: {
+                doc_name: frm.doc.name,
+                file_url: frm.doc.source_workbook
+            },
+            freeze: true,
+            freeze_message: __('Validating payroll workbook before import...<br>جاري التحقق من ملف الرواتب قبل الاستيراد...'),
+            callback(r) {
+                if (!r.message) {
+                    return;
+                }
+
+                const summary = r.message;
+                const errorItems = (summary.errors || [])
+                    .slice(0, 15)
+                    .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+                    .join('');
+                const warningItems = (summary.warnings || [])
+                    .slice(0, 15)
+                    .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+                    .join('');
+                const costCenterItems = (summary.would_create_cost_centers || [])
+                    .slice(0, 15)
+                    .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+                    .join('');
+
+                frappe.msgprint({
+                    title: __('Workbook Validation / التحقق من ملف الرواتب'),
+                    indicator: summary.error_count ? 'red' : (summary.warning_count ? 'orange' : 'green'),
+                    wide: true,
+                    message: `
+                        <p>${__('عدد صفوف الملف')}: <b>${summary.total_rows}</b></p>
+                        <p>${__('عدد الأخطاء المانعة')}: <b>${summary.error_count}</b></p>
+                        <p>${__('عدد التحذيرات')}: <b>${summary.warning_count}</b></p>
+                        ${(summary.would_create_cost_centers || []).length ? `<p><b>${__('مراكز التكلفة التي سيقوم النظام بإنشائها تلقائياً')}</b></p><ul>${costCenterItems}</ul>` : ''}
+                        ${errorItems ? `<p><b>${__('الأخطاء التي تمنع الاستيراد')}</b></p><ul>${errorItems}</ul>` : ''}
+                        ${warningItems ? `<p><b>${__('ملاحظات تحتاج مراجعة')}</b></p><ul>${warningItems}</ul>` : ''}
+                    `
+                });
+            }
+        });
+    };
+
+    if (frm.is_new()) {
+        frm.save().then(do_validate);
+    } else {
+        do_validate();
+    }
+}
+
+
 function _download_gap_report(frm) {
     if (!frm.doc.company) {
         frappe.msgprint(__('Please select a Company first.<br>يرجى اختيار الشركة أولاً.'));
@@ -428,6 +558,41 @@ function _download_gap_report(frm) {
                 window.open(r.message.file_url, '_blank');
                 frappe.show_alert({
                     message: __(`Gap report generated with ${r.message.row_count} rows.`),
+                    indicator: 'green'
+                }, 5);
+            }
+        });
+    };
+
+    if (frm.is_new()) {
+        frm.save().then(do_download);
+    } else {
+        do_download();
+    }
+}
+
+
+function _download_payroll_import_template(frm) {
+    if (!frm.doc.company) {
+        frappe.msgprint(__('Please select a Company first.<br>يرجى اختيار الشركة أولاً.'));
+        return;
+    }
+
+    const do_download = function() {
+        frappe.call({
+            method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.download_payroll_import_template',
+            args: {
+                doc_name: frm.doc.name
+            },
+            freeze: true,
+            freeze_message: __('Generating payroll import template...<br>جاري إنشاء قالب رفع الرواتب...'),
+            callback(r) {
+                if (!r.message || !r.message.file_url) {
+                    return;
+                }
+                window.open(r.message.file_url, '_blank');
+                frappe.show_alert({
+                    message: __('Payroll import template is ready / تم تجهيز قالب رفع الرواتب'),
                     indicator: 'green'
                 }, 5);
             }
@@ -587,21 +752,21 @@ function _create_basic_employees(frm) {
                 options: 'Gender',
                 label: __('Default Gender / الجنس الافتراضي'),
                 reqd: 1,
-                default: 'Prefer not to say'
+                default: frm.doc.auto_create_default_gender || 'Prefer not to say'
             },
             {
                 fieldname: 'default_date_of_birth',
                 fieldtype: 'Date',
                 label: __('Default Date of Birth / تاريخ الميلاد الافتراضي'),
                 reqd: 1,
-                default: '1990-01-01'
+                default: frm.doc.auto_create_default_date_of_birth || '1990-01-01'
             },
             {
                 fieldname: 'default_date_of_joining',
                 fieldtype: 'Date',
                 label: __('Default Date of Joining / تاريخ المباشرة الافتراضي'),
                 reqd: 1,
-                default: frm.doc.posting_date || frappe.datetime.get_today()
+                default: frm.doc.auto_create_default_date_of_joining || frm.doc.posting_date || frappe.datetime.get_today()
             }
         ],
         primary_action_label: __('Create / إنشاء'),

@@ -2,6 +2,13 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.11.0 - 2026-04-07
+
+- Added employee paid payroll history directly on the Employee salary tab, sourced from completed Saudi Monthly Payroll runs with linked journal entries.
+- Introduced Salary Adjustment, Promotion Transfer, and Exit Interview DocTypes and linked them into performance review and exit clearance workflows.
+- Expanded Saudi Monthly Payroll with workbook validation, import templates, automatic employee creation defaults, cost-center-aware payroll distribution, and grouped journal entry generation.
+- Refreshed the Saudi HR workspace structure and shortcuts to surface daily operations, payroll, and lifecycle navigation more clearly.
+
 ## v1.8.1 - 2026-04-02
 
 - Extended `Saudi Monthly Payroll Employee` rows to persist workbook-only payroll context fields: work location, designation, salary mode, GOSI registration, working days, absence days, and late hours.
