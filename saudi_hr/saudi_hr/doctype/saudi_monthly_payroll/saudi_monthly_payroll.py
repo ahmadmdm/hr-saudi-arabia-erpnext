@@ -233,13 +233,19 @@ def fetch_employees(doc_name: str):
 
 	# مسح الجدول الحالي
 	doc.set("employees", [])
+	warnings = []
+	skipped_employees = []
 
 	for emp in employees:
 		contract = contract_map.get(emp["name"])
 		basic = flt(contract["basic_salary"]) if contract else 0.0
 		if not basic:
 			basic = get_employee_salary_components(emp["name"])["basic_salary"]
-		assert_positive_basic_salary(emp.get("employee_name") or emp["name"], basic, _("fetching payroll / جلب الرواتب"))
+		if flt(basic) <= 0:
+			employee_label = emp.get("employee_name") or emp["name"]
+			warnings.append(_get_zero_basic_salary_skip_warning(employee_label))
+			skipped_employees.append(employee_label)
+			continue
 		housing = flt(contract["housing_allowance"]) if contract else 0.0
 		transport = flt(contract["transport_allowance"]) if contract else 0.0
 		other = flt(contract["other_allowances"]) if contract else 0.0
@@ -291,7 +297,23 @@ def fetch_employees(doc_name: str):
 
 	doc._recalculate_totals()
 	doc.save()
-	return {"count": len(employees), "total_net": doc.total_net_payable}
+	if warnings:
+		sample_names = ", ".join(skipped_employees[:5])
+		extra_count = max(len(skipped_employees) - 5, 0)
+		extra_text = _(" (+{0} more)").format(extra_count) if extra_count else ""
+		_add_payroll_audit_comment(
+			doc,
+			_(
+				"Fetched payroll rows for {0} employees and skipped {1} because their basic salary is zero: {2}{3}."
+			).format(len(doc.employees), len(skipped_employees), sample_names, extra_text),
+		)
+	return {
+		"count": len(doc.employees),
+		"source_count": len(employees),
+		"skipped_count": len(skipped_employees),
+		"warnings": warnings,
+		"total_net": doc.total_net_payable,
+	}
 
 
 @frappe.whitelist()
@@ -354,17 +376,22 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 		doc.append("employees", row)
 
 	auto_create_result = _auto_create_missing_employees_for_import(doc)
+	enriched_count = _sync_linked_employee_master_fields_from_payroll(
+		doc,
+		set(auto_create_result.get("created_employees") or []),
+	)
 
 	doc._recalculate_employee_rows()
 	doc._recalculate_totals()
 	doc.save()
 	_add_payroll_audit_comment(
 		doc,
-		_("Imported {0} payroll rows from workbook {1}. Warnings: {2}. Auto-created employees: {3}. Remaining unlinked rows: {4}.").format(
+		_("Imported {0} payroll rows from workbook {1}. Warnings: {2}. Auto-created employees: {3}. Enriched employee masters: {4}. Remaining unlinked rows: {5}.").format(
 			len(import_rows),
 			workbook_url,
 			len(warnings),
 			auto_create_result["created_count"],
+			enriched_count,
 			auto_create_result["remaining_unlinked_rows"],
 		),
 	)
@@ -375,6 +402,7 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 		"total_net": doc.total_net_payable,
 		"auto_create_enabled": auto_create_result["enabled"],
 		"created_count": auto_create_result["created_count"],
+		"enriched_employee_count": enriched_count,
 		"linked_count": auto_create_result["linked_count"],
 		"skipped": auto_create_result["skipped"],
 		"remaining_unlinked_rows": auto_create_result["remaining_unlinked_rows"],
@@ -535,13 +563,15 @@ def create_basic_employees_from_payroll(
 	)
 	assert_doctype_permissions("Employee", "create")
 	created, linked, skipped = _create_basic_employees_for_payroll(doc, defaults)
+	enriched_count = _sync_linked_employee_master_fields_from_payroll(doc, set(created))
 	doc.save()
 	_add_payroll_audit_comment(
 		doc,
-		_("Created {0} placeholder employees from payroll. Linked existing rows: {1}. Skipped rows: {2}.").format(
+		_("Created {0} placeholder employees from payroll. Linked existing rows: {1}. Skipped rows: {2}. Enriched employee masters: {3}.").format(
 			len(created),
 			linked,
 			len(skipped),
+			enriched_count,
 		),
 	)
 
@@ -549,10 +579,55 @@ def create_basic_employees_from_payroll(
 	return {
 		"created_count": len(created),
 		"linked_count": linked,
+		"enriched_employee_count": enriched_count,
 		"created_employees": created,
 		"skipped": skipped,
 		"remaining_unlinked_rows": remaining_unlinked,
 	}
+
+
+@frappe.whitelist()
+def sync_linked_employee_master_fields(doc_name: str):
+	"""Backfill safe Employee master fields from linked payroll rows."""
+	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
+	frappe.has_permission("Saudi Monthly Payroll", "write", doc=doc, throw=True)
+	assert_doctype_permissions("Employee", "write")
+	updated_count = _sync_linked_employee_master_fields_from_payroll(doc)
+	if updated_count:
+		doc.save()
+		_add_payroll_audit_comment(
+			doc,
+			_("Backfilled safe Employee master fields from linked payroll rows: {0}.").format(updated_count),
+		)
+	return {"updated_count": updated_count}
+
+
+@frappe.whitelist()
+def delete_draft_payroll(doc_name: str):
+	"""Delete a draft payroll document using write access plus explicit safety checks."""
+	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
+	frappe.has_permission("Saudi Monthly Payroll", "write", doc=doc, throw=True)
+
+	if cint(doc.docstatus) != 0:
+		frappe.throw(
+			_("Only draft payroll documents can be deleted.<br>يمكن حذف مسير الرواتب وهو في وضع المسودة فقط."),
+			title=_("Draft Only / المسودة فقط"),
+		)
+
+	if cstr(getattr(doc, "payroll_journal_entry", "") or "").strip():
+		frappe.throw(
+			_("Payroll documents linked to a Journal Entry cannot be deleted.<br>لا يمكن حذف مسير رواتب مرتبط بقيد يومي."),
+			title=_("Linked Journal Entry / قيد يومي مرتبط"),
+		)
+
+	if frappe.db.count("Employee Loan Installment", {"payroll_reference": doc.name}):
+		frappe.throw(
+			_("Payroll documents linked to loan installments cannot be deleted.<br>لا يمكن حذف مسير رواتب مرتبط بأقساط قروض."),
+			title=_("Linked Loan Installments / أقساط مرتبطة"),
+		)
+
+	frappe.delete_doc("Saudi Monthly Payroll", doc.name, ignore_permissions=True)
+	return {"deleted": True, "name": doc_name}
 
 
 def _auto_create_missing_employees_for_import(doc) -> dict:
@@ -562,6 +637,7 @@ def _auto_create_missing_employees_for_import(doc) -> dict:
 			"enabled": False,
 			"created_count": 0,
 			"linked_count": 0,
+			"created_employees": [],
 			"skipped": [],
 			"remaining_unlinked_rows": remaining_unlinked,
 		}
@@ -573,6 +649,7 @@ def _auto_create_missing_employees_for_import(doc) -> dict:
 			"enabled": True,
 			"created_count": 0,
 			"linked_count": 0,
+			"created_employees": [],
 			"skipped": [
 				_(
 					"Automatic employee creation is enabled, but you do not have permission to create Employee records. "
@@ -596,6 +673,7 @@ def _auto_create_missing_employees_for_import(doc) -> dict:
 		"enabled": True,
 		"created_count": len(created),
 		"linked_count": linked,
+		"created_employees": created,
 		"skipped": skipped,
 		"remaining_unlinked_rows": remaining_unlinked,
 	}
@@ -1195,13 +1273,21 @@ def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
 				duplicate_keys[duplicate_key] = row_label
 
 		basic = _to_currency(raw.get("basic_salary"))
-		gross = _to_currency(raw.get("gross_salary"))
+		raw_gross = _to_currency(raw.get("gross_salary"))
 		total_deductions = _to_currency(raw.get("total_deductions"))
 		gosi = _to_currency(raw.get("gosi_deduction"))
 		overtime = _to_currency(raw.get("additions"))
 		manual_deduction = _to_currency(raw.get("manual_deduction"))
 		absence_value = _to_currency(raw.get("absence_value"))
 		late_value = _to_currency(raw.get("late_value"))
+		component_gross = round(
+			basic
+			+ _to_currency(raw.get("housing_allowance"))
+			+ _to_currency(raw.get("transport_allowance"))
+			+ _to_currency(raw.get("other_allowances")),
+			2,
+		)
+		gross = _normalize_workbook_gross_salary(raw_gross, component_gross, overtime)
 		net = _to_currency(raw.get("net_salary"))
 		if basic < 0 or gross < 0 or total_deductions < 0 or net < 0:
 			errors.append(_("الصف {0}: لا يمكن أن تحتوي قيم الرواتب أو الخصومات على أرقام سالبة.").format(row_label))
@@ -1531,6 +1617,7 @@ def _normalize_basic_employee_creation_defaults(
 
 def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str], int, list[str]]:
 	lookup = _get_company_employee_lookup(doc.company)
+	group_lookup: dict[str, dict | None] = {}
 	created = []
 	linked = 0
 	skipped = []
@@ -1541,6 +1628,12 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 		for row in doc.employees:
 			if cstr(row.employee or "").strip():
 				continue
+
+			group_key = _get_payroll_row_duplicate_group_key(
+				getattr(row, "payroll_employee_id", None),
+				getattr(row, "employee_name", None),
+				getattr(row, "nationality", None),
+			)
 
 			raw = {
 				"employee_id": getattr(row, "payroll_employee_id", None),
@@ -1553,8 +1646,11 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 				allow_related_employee_id=not has_payroll_employee_id,
 				allow_name_match=not has_payroll_employee_id,
 			)
+			if not employee and group_key:
+				employee = group_lookup.get(group_key)
 			if employee:
 				_hydrate_payroll_row_from_employee(row, employee)
+				_register_group_employee_alias(group_lookup, group_key, employee)
 				linked += 1
 				continue
 
@@ -1565,13 +1661,16 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 				continue
 
 			payload = _build_basic_employee_payload_from_payroll_row(doc.company, row, defaults)
+			_apply_blank_overrides_for_invalid_default_links("Employee", payload)
 			employee_doc = frappe.get_doc(payload)
+			_clear_invalid_default_link_values(employee_doc, payload)
 			employee_doc.insert()
 
 			employee_data = {
 				"name": employee_doc.name,
 				"employee_name": employee_doc.get("employee_name") or cstr(getattr(row, "employee_name", "") or "").strip(),
 				"department": employee_doc.get("department") or "",
+				"designation": employee_doc.get("designation") or "",
 				"nationality": employee_doc.get("nationality") or "",
 				"employee_number": employee_doc.get("employee_number") or payload.get("employee_number") or "",
 			}
@@ -1582,6 +1681,7 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 				(employee_data.get("employee_name"), "employee_name"),
 			):
 				_merge_employee_lookup(lookup, employee_data, source, matched_by)
+			_register_group_employee_alias(group_lookup, group_key, employee_data)
 
 			_hydrate_payroll_row_from_employee(row, employee_data)
 			created.append(employee_doc.name)
@@ -1592,6 +1692,138 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 		frappe.db.release_savepoint(savepoint)
 
 	return created, linked, skipped
+
+
+def _sync_linked_employee_master_fields_from_payroll(doc, employee_names: set[str] | None = None) -> int:
+	if employee_names is not None and not employee_names:
+		return 0
+
+	meta = frappe.get_meta("Employee")
+	fields = ["name", "employee_number", "department"]
+	if meta.has_field("designation"):
+		fields.append("designation")
+	if meta.has_field("nationality"):
+		fields.append("nationality")
+
+	employee_cache: dict[str, dict] = {}
+	updated_count = 0
+
+	for row in doc.employees:
+		employee_name = cstr(getattr(row, "employee", "") or "").strip()
+		if not employee_name:
+			continue
+		if employee_names is not None and employee_name not in employee_names:
+			continue
+
+		employee_data = employee_cache.get(employee_name)
+		if employee_data is None:
+			employee_data = frappe.db.get_value("Employee", employee_name, fields, as_dict=True) or {"name": employee_name}
+			employee_cache[employee_name] = employee_data
+
+		updates = {}
+		if not cstr(employee_data.get("employee_number") or "").strip():
+			payroll_employee_id = cstr(getattr(row, "payroll_employee_id", "") or "").strip()
+			if payroll_employee_id:
+				updates["employee_number"] = payroll_employee_id
+
+		if not cstr(employee_data.get("department") or "").strip():
+			department = _resolve_department_link(getattr(row, "department", None) or getattr(row, "workbook_department", None))
+			if department:
+				updates["department"] = department
+
+		if meta.has_field("designation") and not cstr(employee_data.get("designation") or "").strip():
+			designation = _resolve_designation_link(getattr(row, "designation", None))
+			if designation:
+				updates["designation"] = designation
+
+		if meta.has_field("nationality") and not cstr(employee_data.get("nationality") or "").strip():
+			nationality = cstr(getattr(row, "nationality", "") or "").strip()
+			if nationality:
+				updates["nationality"] = nationality
+
+		if updates:
+			frappe.db.set_value("Employee", employee_name, updates, update_modified=False)
+			employee_data.update(updates)
+			updated_count += 1
+
+		if employee_data.get("department"):
+			row.department = employee_data["department"]
+		if employee_data.get("designation"):
+			row.designation = employee_data["designation"]
+		if employee_data.get("nationality"):
+			row.nationality = employee_data["nationality"]
+
+	return updated_count
+
+
+def _get_payroll_row_duplicate_group_key(employee_id=None, employee_name=None, national_id=None) -> str | None:
+	name_key = _normalize_lookup_key(employee_name)
+	if not name_key:
+		return None
+
+	for candidate in (employee_id, national_id):
+		candidate_keys = _candidate_lookup_keys(candidate, allow_related_key=True)
+		if candidate_keys:
+			return f"{name_key}::{candidate_keys[-1]}"
+
+	return None
+
+
+def _register_group_employee_alias(group_lookup: dict[str, dict | None], group_key: str | None, employee: dict | None):
+	if not group_key or not employee or not employee.get("name"):
+		return
+
+	existing = group_lookup.get(group_key)
+	if existing and existing.get("name") != employee.get("name"):
+		group_lookup[group_key] = None
+		return
+
+	group_lookup[group_key] = employee
+
+
+def _apply_blank_overrides_for_invalid_default_links(doctype: str, payload: dict):
+	meta = frappe.get_meta(doctype)
+	for field in getattr(meta, "fields", []) or []:
+		if getattr(field, "fieldtype", None) != "Link":
+			continue
+		fieldname = getattr(field, "fieldname", None)
+		if not fieldname or fieldname in payload:
+			continue
+
+		default_value = cstr(getattr(field, "default", "") or "").strip()
+		options = cstr(getattr(field, "options", "") or "").strip()
+		if not default_value or not options:
+			continue
+
+		if not frappe.db.exists(options, default_value):
+			payload[fieldname] = ""
+
+
+def _clear_invalid_default_link_values(doc, payload: dict):
+	meta = getattr(doc, "meta", None) or frappe.get_meta(doc.doctype)
+	payload_fields = set((payload or {}).keys())
+
+	for field in getattr(meta, "fields", []) or []:
+		if getattr(field, "fieldtype", None) != "Link":
+			continue
+		if getattr(field, "fieldname", None) in payload_fields:
+			continue
+
+		default_value = cstr(getattr(field, "default", "") or "").strip()
+		if not default_value:
+			continue
+
+		fieldname = field.fieldname
+		current_value = cstr(doc.get(fieldname) or "").strip()
+		if current_value != default_value:
+			continue
+
+		options = cstr(getattr(field, "options", "") or "").strip()
+		if not options:
+			continue
+
+		if not frappe.db.exists(options, current_value):
+			doc.set(fieldname, "")
 
 
 def _build_basic_employee_payload_from_payroll_row(company: str, row, defaults: dict) -> dict:
@@ -1616,8 +1848,9 @@ def _build_basic_employee_payload_from_payroll_row(company: str, row, defaults: 
 	for fieldname, value in (
 		("middle_name", middle_name),
 		("last_name", last_name),
-		("department", _resolve_department_link(getattr(row, "department", None))),
+		("department", _resolve_department_link(getattr(row, "department", None) or getattr(row, "workbook_department", None))),
 		("designation", _resolve_designation_link(getattr(row, "designation", None))),
+		("nationality", cstr(getattr(row, "nationality", "") or "").strip()),
 	):
 		if value and meta.has_field(fieldname):
 			payload[fieldname] = value
@@ -1631,6 +1864,9 @@ def _hydrate_payroll_row_from_employee(row, employee: dict):
 	department = _resolve_department_link(employee.get("department") or getattr(row, "department", None))
 	if department:
 		row.department = department
+	designation = _resolve_designation_link(employee.get("designation") or getattr(row, "designation", None))
+	if designation:
+		row.designation = designation
 	row.cost_center = _resolve_cost_center_link(getattr(row, "cost_center", None), employee.get("company") or "") or getattr(row, "cost_center", None)
 	if employee.get("nationality"):
 		row.nationality = employee.get("nationality")
@@ -1821,7 +2057,7 @@ def _normalize_workbook_gross_salary(raw_gross: float, component_gross: float, o
 
 
 def _get_company_employee_lookup(company: str) -> dict[str, dict]:
-	fields = ["name", "employee_name", "department", "employee_number", "company"]
+	fields = ["name", "employee_name", "department", "designation", "employee_number", "company"]
 	meta = frappe.get_meta("Employee")
 	for optional_field in ("nationality", "passport_number", "iqama_number"):
 		if meta.has_field(optional_field):
@@ -1992,6 +2228,12 @@ def _get_employee_fetch_fields() -> list[str]:
 	if frappe.get_meta("Employee").has_field("nationality"):
 		fields.append("nationality")
 	return fields
+
+
+def _get_zero_basic_salary_skip_warning(employee_label: str) -> str:
+	return _(
+		"Skipped employee {0} because basic salary is zero. Update the active Saudi Employment Contract or Employee CTC, then recalculate payroll. / تم تجاوز الموظف {0} لأن الراتب الأساسي صفر. حدّث عقد العمل السعودي النشط أو CTC الموظف ثم أعد احتساب الرواتب."
+	).format(employee_label)
 
 
 def _get_payable_account(company: str) -> str:

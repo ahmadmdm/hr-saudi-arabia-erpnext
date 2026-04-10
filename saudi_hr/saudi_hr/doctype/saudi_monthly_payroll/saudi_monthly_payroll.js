@@ -115,6 +115,12 @@ function _add_buttons(frm) {
                 _create_journal_entry(frm);
             }).addClass('btn-primary');
         }
+
+        if (!frm.is_new()) {
+            frm.add_custom_button(__('Delete Draft Payroll / حذف مسودة المسير'), function() {
+                _delete_draft_payroll(frm);
+            }).addClass('btn-danger');
+        }
     }
 
     // زر فتح Journal Entry الموجود
@@ -296,20 +302,27 @@ function _fetch_employees(frm) {
             callback(r) {
                 if (r.message) {
                     frm.reload_doc();
+                    const skippedCount = r.message.skipped_count || 0;
+                    const sourceCount = r.message.source_count || r.message.count || 0;
                     frappe.show_alert({
-                        message: __(`Fetched ${r.message.count} employees. Total Net: ${format_currency(r.message.total_net)}`),
-                        indicator: 'green'
+                        message: skippedCount
+                            ? __(`Fetched ${r.message.count} of ${sourceCount} employees. Skipped ${skippedCount} with missing basic salary.`)
+                            : __(`Fetched ${r.message.count} employees. Total Net: ${format_currency(r.message.total_net)}`),
+                        indicator: skippedCount ? 'orange' : 'green'
                     }, 5);
+                    _show_payroll_warning_list(__('Fetch Warnings / ملاحظات الجلب'), r.message.warnings || []);
                 }
             }
         });
     };
 
-    if (frm.is_new()) {
-        frm.save().then(do_fetch);
-    } else {
-        do_fetch();
-    }
+    _confirm_workbook_contract_action(frm, function() {
+        if (frm.is_new()) {
+            frm.save().then(do_fetch);
+        } else {
+            do_fetch();
+        }
+    });
 }
 
 
@@ -319,17 +332,65 @@ function _recalculate_all(frm) {
         return;
     }
 
-    frappe.call({
-        method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.fetch_employees',
-        args: { doc_name: frm.doc.name },
-        freeze: true,
-        freeze_message: __('Recalculating...<br>جارٍ إعادة الحساب...'),
-        callback(r) {
-            if (r.message) {
-                frm.reload_doc();
-                frappe.show_alert({ message: __('Salaries recalculated / تم إعادة الحساب'), indicator: 'blue' }, 4);
+    _confirm_workbook_contract_action(frm, function() {
+        frappe.call({
+            method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.fetch_employees',
+            args: { doc_name: frm.doc.name },
+            freeze: true,
+            freeze_message: __('Recalculating...<br>جارٍ إعادة الحساب...'),
+            callback(r) {
+                if (r.message) {
+                    frm.reload_doc();
+                    const skippedCount = r.message.skipped_count || 0;
+                    frappe.show_alert({
+                        message: skippedCount
+                            ? __('Salaries recalculated with warnings / تمت إعادة الحساب مع ملاحظات')
+                            : __('Salaries recalculated / تم إعادة الحساب'),
+                        indicator: skippedCount ? 'orange' : 'blue'
+                    }, 4);
+                    _show_payroll_warning_list(__('Recalculation Warnings / ملاحظات إعادة الحساب'), r.message.warnings || []);
+                }
             }
-        }
+        });
+    });
+}
+
+
+function _confirm_workbook_contract_action(frm, proceed) {
+    if (!frm.doc.source_workbook) {
+        proceed();
+        return;
+    }
+
+    const rowMessage = (frm.doc.employees || []).length
+        ? __('Current payroll rows: {0}.<br>عدد صفوف الرواتب الحالية: {0}.', [(frm.doc.employees || []).length])
+        : __('No payroll rows are currently loaded.<br>لا توجد صفوف رواتب محملة حالياً.');
+
+    frappe.confirm(
+        __('A source workbook is attached to this payroll. Fetch Employees and Recalculate use contract data and may replace workbook-imported rows.<br>يوجد ملف رواتب مرفق بهذا المسير. جلب الموظفين وإعادة الحساب يعتمدان بيانات العقود وقد يستبدلان الصفوف المستوردة من الملف.')
+        + '<br><br>' + rowMessage
+        + '<br><br>' + __('Continue only if you intentionally want contract-based payroll rows.<br>تابع فقط إذا كنت تريد صفوف رواتب مبنية على العقود.'),
+        proceed
+    );
+}
+
+
+function _show_payroll_warning_list(title, warnings) {
+    if (!warnings || !warnings.length) {
+        return;
+    }
+
+    const warningItems = warnings
+        .slice(0, 10)
+        .map((warning) => `<li>${frappe.utils.escape_html(warning)}</li>`)
+        .join('');
+    const extraCount = Math.max(warnings.length - 10, 0);
+    const extraText = extraCount ? `<p>${__('Additional warnings')}: ${extraCount}</p>` : '';
+
+    frappe.msgprint({
+        title,
+        indicator: 'orange',
+        message: `<ul>${warningItems}</ul>${extraText}`
     });
 }
 
@@ -829,6 +890,30 @@ function _create_journal_entry(frm) {
                 callback(r) {
                     if (r.message) {
                         frm.reload_doc();
+                    }
+                }
+            });
+        }
+    );
+}
+
+
+function _delete_draft_payroll(frm) {
+    frappe.confirm(
+        __('Delete this draft payroll and its attached draft files?<br>حذف مسير الرواتب هذا وهو في المسودة مع ملفاته المرفقة؟'),
+        function() {
+            frappe.call({
+                method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.delete_draft_payroll',
+                args: { doc_name: frm.doc.name },
+                freeze: true,
+                freeze_message: __('Deleting draft payroll...<br>جارٍ حذف مسير الرواتب المسودة...'),
+                callback(r) {
+                    if (r.message && r.message.deleted) {
+                        frappe.show_alert({
+                            message: __('Draft payroll deleted / تم حذف مسير الرواتب المسودة'),
+                            indicator: 'red'
+                        }, 5);
+                        frappe.set_route('List', 'Saudi Monthly Payroll');
                     }
                 }
             });

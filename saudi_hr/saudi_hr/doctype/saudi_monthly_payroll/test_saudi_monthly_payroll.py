@@ -75,6 +75,77 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(row["sick_leave_deduction"], 250)
 		self.assertEqual(row["net_salary"], 2750)
 
+	def test_fetch_employees_skips_zero_basic_salary_and_returns_warning(self):
+		class FakePayrollDoc:
+			def __init__(self):
+				self.company = "amd"
+				self.month = "March / مارس"
+				self.year = 2026
+				self.employees = []
+				self.total_net_payable = 0.0
+				self.saved = False
+				self.comments = []
+
+			def set(self, fieldname, value):
+				setattr(self, fieldname, value)
+
+			def append(self, fieldname, value):
+				getattr(self, fieldname).append(value)
+
+			def _recalculate_totals(self):
+				self.total_net_payable = round(sum(row.get("net_salary", 0.0) for row in self.employees), 2)
+
+			def save(self):
+				self.saved = True
+
+			def add_comment(self, comment_type, text):
+				self.comments.append((comment_type, text))
+
+		fake_doc = FakePayrollDoc()
+		employees = [
+			{"name": "EMP-VALID", "employee_name": "Valid Employee", "department": "HR", "company": "amd", "nationality": "Saudi"},
+			{"name": "EMP-ZERO", "employee_name": "Zero Employee", "department": "HR", "company": "amd", "nationality": "Saudi"},
+		]
+		contract_rows = [
+			{
+				"employee": "EMP-VALID",
+				"basic_salary": 5000,
+				"housing_allowance": 500,
+				"transport_allowance": 250,
+				"other_allowances": 100,
+				"total_salary": 5850,
+			},
+			{
+				"employee": "EMP-ZERO",
+				"basic_salary": 0,
+				"housing_allowance": 0,
+				"transport_allowance": 0,
+				"other_allowances": 0,
+				"total_salary": 0,
+			},
+		]
+
+		with patch.object(payroll_module.frappe, "get_doc", return_value=fake_doc), \
+		     patch.object(payroll_module.frappe, "has_permission"), \
+		     patch.object(payroll_module.frappe, "get_all", return_value=employees), \
+		     patch.object(payroll_module.frappe.db, "sql", side_effect=[contract_rows, [], []]), \
+		     patch.object(payroll_module, "_get_employee_fetch_fields", return_value=["name", "employee_name", "department", "company", "nationality"]), \
+		     patch.object(payroll_module, "get_employee_salary_components", side_effect=[{"basic_salary": 0}]), \
+		     patch.object(payroll_module, "get_gosi_rates", return_value={"employee_rate": 10.0}), \
+		     patch.object(payroll_module, "get_due_loan_deduction", return_value={"loan_deduction": 0, "installment_names": []}), \
+		     patch.object(payroll_module, "_get_company_default_cost_center", return_value="Main - AMD"):
+			result = payroll_module.fetch_employees("SAU-PAY-TEST")
+
+		self.assertTrue(fake_doc.saved)
+		self.assertEqual(result["count"], 1)
+		self.assertEqual(result["source_count"], 2)
+		self.assertEqual(result["skipped_count"], 1)
+		self.assertEqual(len(fake_doc.employees), 1)
+		self.assertEqual(fake_doc.employees[0]["employee"], "EMP-VALID")
+		self.assertEqual(fake_doc.total_net_payable, 5350.0)
+		self.assertIn("Zero Employee", result["warnings"][0])
+		self.assertIn("skipped 1", fake_doc.comments[0][1])
+
 	def test_recalculate_totals_includes_loan_and_sick_deductions(self):
 		doc = frappe.get_doc({
 			"doctype": "Saudi Monthly Payroll",
@@ -297,6 +368,35 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(rows[0]["overtime_addition"], 1111)
 		self.assertEqual(rows[0]["net_salary"], 5981)
 
+	def test_validate_workbook_rows_accepts_gross_that_already_includes_additions(self):
+		raw_rows = [{
+			"source_row": 61,
+			"employee_id": 20501,
+			"employee_name": "FRANCIS RENARD ADRIANO",
+			"basic_salary": 1997,
+			"housing_allowance": 0,
+			"transport_allowance": 0,
+			"other_allowances": 544,
+			"gross_salary": 3428,
+			"additions": 887,
+			"gosi_deduction": 0,
+			"total_deductions": 0,
+			"net_salary": 3428,
+			"cost_center": "Central Region - Orbit - d",
+		}]
+
+		lookup = {
+			"20501": {"employee": {"name": "20501", "employee_name": "FRANCIS RENARD ADRIANO"}, "matched_by": "employee_id"}
+		}
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value=lookup), patch.object(
+			payroll_module, "_get_postable_cost_center", return_value="Central Region - Orbit - d"
+		):
+			summary = payroll_module._validate_payroll_workbook_rows("ideaorbit company", raw_rows)
+
+		self.assertEqual(summary["error_count"], 0)
+		self.assertEqual(summary["errors"], [])
+
 	def test_map_workbook_rows_to_payroll_keeps_unmatched_workbook_rows(self):
 		raw_rows = [{
 			"source_row": 8,
@@ -374,6 +474,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			department="",
 			workbook_department="Finance",
 			designation="Analyst",
+			nationality="Saudi",
 		)
 		defaults = {
 			"gender": "Prefer not to say",
@@ -382,7 +483,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			"status": "Active",
 		}
 
-		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"middle_name", "last_name", "department", "designation"})), patch.object(
+		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"middle_name", "last_name", "department", "designation", "nationality"})), patch.object(
 			payroll_module.frappe.db, "exists", side_effect=lambda doctype, name=None: True if (doctype == "Department" and name == "Finance") or (doctype == "Designation" and name == "Analyst") else False
 		):
 			payload = payroll_module._build_basic_employee_payload_from_payroll_row("amd", row, defaults)
@@ -392,6 +493,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(payload["last_name"], "ALI")
 		self.assertEqual(payload["department"], "Finance")
 		self.assertEqual(payload["designation"], "Analyst")
+		self.assertEqual(payload["nationality"], "Saudi")
 		self.assertEqual(payload["gender"], "Prefer not to say")
 
 	def test_create_basic_employees_for_payroll_creates_and_links_rows(self):
@@ -441,7 +543,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(row_two.employee, "EMP-7803A")
 		self.assertEqual(row_one.department, "Finance")
 
-	def test_create_basic_employees_for_payroll_keeps_suffix_variants_separate(self):
+	def test_create_basic_employees_for_payroll_reuses_same_employee_for_suffix_variants(self):
 		inserted = []
 
 		class _EmployeeDoc:
@@ -480,12 +582,187 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		):
 			created, linked, skipped = payroll_module._create_basic_employees_for_payroll(doc, defaults)
 
-		self.assertEqual(created, ["EMP-7803", "EMP-7803A"])
+		self.assertEqual(created, ["EMP-7803"])
+		self.assertEqual(linked, 1)
+		self.assertEqual(skipped, [])
+		self.assertEqual(len(inserted), 1)
+		self.assertEqual(row_one.employee, "EMP-7803")
+		self.assertEqual(row_two.employee, "EMP-7803")
+
+	def test_create_basic_employees_for_payroll_keeps_same_name_with_unrelated_ids_separate(self):
+		inserted = []
+
+		class _EmployeeDoc:
+			def __init__(self, payload):
+				self.payload = payload
+				self.flags = SimpleNamespace(ignore_permissions=False)
+				self.name = f"EMP-{payload.get('employee_number') or payload['first_name']}"
+				self.employee_name = " ".join(filter(None, [payload.get("first_name"), payload.get("middle_name"), payload.get("last_name")])).strip()
+				self.department = payload.get("department")
+				self.nationality = payload.get("nationality")
+				self.employee_number = payload.get("employee_number")
+
+			def insert(self):
+				inserted.append(self.payload)
+				return self
+
+			def get(self, key):
+				return getattr(self, key, self.payload.get(key))
+
+		row_one = SimpleNamespace(idx=1, payroll_employee_id="7803", employee="", employee_name="MAJID ALI", workbook_department="Finance", department="", nationality="")
+		row_two = SimpleNamespace(idx=2, payroll_employee_id="9811", employee="", employee_name="MAJID ALI", workbook_department="Finance", department="", nationality="")
+		doc = SimpleNamespace(company="amd", employees=[row_one, row_two])
+		defaults = {
+			"gender": "Prefer not to say",
+			"date_of_birth": getdate("1990-01-01"),
+			"date_of_joining": getdate("2026-03-28"),
+			"status": "Active",
+		}
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value={}), patch.object(
+			payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"middle_name", "last_name", "department"})
+		), patch.object(
+			payroll_module.frappe, "get_doc", side_effect=lambda payload: _EmployeeDoc(payload)
+		), patch.object(
+			payroll_module.frappe.db, "exists", side_effect=lambda doctype, name=None: True if doctype == "Department" and name == "Finance" else False
+		):
+			created, linked, skipped = payroll_module._create_basic_employees_for_payroll(doc, defaults)
+
+		self.assertEqual(created, ["EMP-7803", "EMP-9811"])
 		self.assertEqual(linked, 0)
 		self.assertEqual(skipped, [])
 		self.assertEqual(len(inserted), 2)
 		self.assertEqual(row_one.employee, "EMP-7803")
-		self.assertEqual(row_two.employee, "EMP-7803A")
+		self.assertEqual(row_two.employee, "EMP-9811")
+
+	def test_clear_invalid_default_link_values_removes_invalid_custom_default(self):
+		field = SimpleNamespace(fieldtype="Link", fieldname="salary_slip", options="Salary Slip", default="Salary Slip")
+
+		class _Doc:
+			doctype = "Employee"
+			meta = SimpleNamespace(fields=[field])
+
+			def __init__(self):
+				self.salary_slip = "Salary Slip"
+
+			def get(self, key):
+				return getattr(self, key, None)
+
+			def set(self, key, value):
+				setattr(self, key, value)
+
+		doc = _Doc()
+
+		with patch.object(payroll_module.frappe.db, "exists", return_value=False):
+			payroll_module._clear_invalid_default_link_values(doc, {"doctype": "Employee", "company": "amd"})
+
+		self.assertEqual(doc.salary_slip, "")
+
+	def test_apply_blank_overrides_for_invalid_default_links_sets_empty_payload_value(self):
+		field = SimpleNamespace(fieldtype="Link", fieldname="salary_slip", options="Salary Slip", default="Salary Slip")
+		payload = {"doctype": "Employee", "company": "amd"}
+
+		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(fields=[field])), patch.object(
+			payroll_module.frappe.db, "exists", return_value=False
+		):
+			payroll_module._apply_blank_overrides_for_invalid_default_links("Employee", payload)
+
+		self.assertEqual(payload["salary_slip"], "")
+
+	def test_sync_linked_employee_master_fields_from_payroll_updates_blank_safe_fields(self):
+		row = SimpleNamespace(
+			employee="EMP-7803A",
+			payroll_employee_id="7803A",
+			workbook_department="Finance",
+			department="",
+			designation="Analyst",
+			nationality="Saudi",
+		)
+		doc = SimpleNamespace(employees=[row])
+		updates = []
+
+		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"designation", "nationality"})), patch.object(
+			payroll_module.frappe.db, "get_value", return_value={
+				"name": "EMP-7803A",
+				"employee_number": "",
+				"department": "",
+				"designation": "",
+				"nationality": "",
+			}
+		), patch.object(
+			payroll_module.frappe.db, "set_value", side_effect=lambda doctype, name, values, update_modified=False: updates.append((doctype, name, values, update_modified))
+		), patch.object(
+			payroll_module.frappe.db, "exists", side_effect=lambda doctype, name=None: True if (doctype == "Department" and name == "Finance") or (doctype == "Designation" and name == "Analyst") else False
+		):
+			updated_count = payroll_module._sync_linked_employee_master_fields_from_payroll(doc, {"EMP-7803A"})
+
+		self.assertEqual(updated_count, 1)
+		self.assertEqual(updates[0][0], "Employee")
+		self.assertEqual(updates[0][1], "EMP-7803A")
+		self.assertEqual(updates[0][2], {
+			"employee_number": "7803A",
+			"department": "Finance",
+			"designation": "Analyst",
+			"nationality": "Saudi",
+		})
+		self.assertFalse(updates[0][3])
+		self.assertEqual(row.department, "Finance")
+		self.assertEqual(row.designation, "Analyst")
+		self.assertEqual(row.nationality, "Saudi")
+
+	def test_sync_linked_employee_master_fields_from_payroll_keeps_existing_values(self):
+		row = SimpleNamespace(
+			employee="EMP-7803A",
+			payroll_employee_id="7803A",
+			workbook_department="Finance",
+			department="",
+			designation="Analyst",
+			nationality="Saudi",
+		)
+		doc = SimpleNamespace(employees=[row])
+
+		with patch.object(payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"designation", "nationality"})), patch.object(
+			payroll_module.frappe.db, "get_value", return_value={
+				"name": "EMP-7803A",
+				"employee_number": "EXISTING-1",
+				"department": "Existing Department",
+				"designation": "Existing Designation",
+				"nationality": "Jordanian",
+			}
+		), patch.object(
+			payroll_module.frappe.db, "set_value"
+		) as set_value:
+			updated_count = payroll_module._sync_linked_employee_master_fields_from_payroll(doc, {"EMP-7803A"})
+
+		self.assertEqual(updated_count, 0)
+		set_value.assert_not_called()
+		self.assertEqual(row.department, "Existing Department")
+		self.assertEqual(row.designation, "Existing Designation")
+		self.assertEqual(row.nationality, "Jordanian")
+
+	def test_delete_draft_payroll_uses_write_permission_and_deletes_doc(self):
+		fake_doc = SimpleNamespace(name="SAU-PAY-TEST", docstatus=0, payroll_journal_entry="")
+
+		with patch.object(payroll_module.frappe, "get_doc", return_value=fake_doc), patch.object(
+			payroll_module.frappe, "has_permission"
+		), patch.object(
+			payroll_module.frappe.db, "count", return_value=0
+		), patch.object(
+			payroll_module.frappe, "delete_doc"
+		) as delete_doc:
+			result = payroll_module.delete_draft_payroll("SAU-PAY-TEST")
+
+		delete_doc.assert_called_once_with("Saudi Monthly Payroll", "SAU-PAY-TEST", ignore_permissions=True)
+		self.assertEqual(result, {"deleted": True, "name": "SAU-PAY-TEST"})
+
+	def test_delete_draft_payroll_rejects_non_draft_docs(self):
+		fake_doc = SimpleNamespace(name="SAU-PAY-TEST", docstatus=1, payroll_journal_entry="")
+
+		with patch.object(payroll_module.frappe, "get_doc", return_value=fake_doc), patch.object(
+			payroll_module.frappe, "has_permission"
+		):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module.delete_draft_payroll("SAU-PAY-TEST")
 
 	def test_normalize_basic_employee_creation_defaults_validates_gender_and_dates(self):
 		with patch.object(payroll_module, "today", return_value="2026-04-02"), patch.object(
