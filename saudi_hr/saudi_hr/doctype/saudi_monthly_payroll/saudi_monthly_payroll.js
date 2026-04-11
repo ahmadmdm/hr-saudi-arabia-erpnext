@@ -22,6 +22,7 @@ frappe.ui.form.on('Saudi Monthly Payroll', {
         }
         _sync_workbook_fields(frm);
         _sync_auto_create_defaults(frm);
+        _render_source_workbook_guidance(frm);
         _add_buttons(frm);
         _setup_payroll_grid_state(frm);
     },
@@ -29,6 +30,7 @@ frappe.ui.form.on('Saudi Monthly Payroll', {
     refresh(frm) {
         _sync_workbook_fields(frm);
         _sync_auto_create_defaults(frm);
+        _render_source_workbook_guidance(frm);
         _add_buttons(frm);
         _setup_payroll_grid_state(frm);
     },
@@ -85,6 +87,10 @@ function _add_buttons(frm) {
 
         frm.add_custom_button(__('Download Payroll Import Template / تنزيل قالب رفع الرواتب'), function() {
             _download_payroll_import_template(frm);
+        }, __('Actions / إجراءات'));
+
+        frm.add_custom_button(__('Download Simple Payroll Template / تنزيل قالب رفع الرواتب المبسط'), function() {
+            _download_simple_payroll_import_template(frm);
         }, __('Actions / إجراءات'));
 
         frm.add_custom_button(__('Download Gap Report / تنزيل تقرير الفجوات'), function() {
@@ -162,6 +168,127 @@ function _sync_auto_create_defaults(frm) {
         'auto_create_default_date_of_birth',
         'auto_create_default_date_of_joining'
     ], enabled);
+}
+
+
+function _render_source_workbook_guidance(frm) {
+    const field = frm.get_field('source_workbook');
+    if (!field || !field.$wrapper) {
+        return;
+    }
+
+    let helpBox = field.$wrapper.find('.saudi-payroll-workbook-guidance');
+    if (!helpBox.length) {
+        helpBox = $(
+            `<div class="saudi-payroll-workbook-guidance" style="margin-top: 10px; padding: 12px 14px; border-radius: 8px; background: #fff8db; border: 1px solid #f0d27a; line-height: 1.7;"></div>`
+        );
+        field.$wrapper.append(helpBox);
+    }
+
+    helpBox.html(_get_workbook_upload_guidance_html(frm));
+}
+
+
+function _get_workbook_upload_guidance_html(frm) {
+    const templateHint = frm.doc.company
+        ? __('For the safest format, use Download Payroll Import Template before preparing the file.<br>لأفضل نتيجة استخدم زر تنزيل قالب رفع الرواتب قبل تجهيز الملف.')
+        : __('Select the company first so you can download the approved payroll import template.<br>اختر الشركة أولاً حتى تتمكن من تنزيل قالب رفع الرواتب المعتمد.');
+
+    return `
+        <div><b>${__('Workbook Upload Rules / تعليمات رفع ملف الرواتب')}</b></div>
+        <div>${templateHint}</div>
+        <ul style="margin: 8px 0 0; padding-inline-start: 18px;">
+            <li>${__('Enter the correct payroll employee ID whenever it exists. Do not rely on name-only matching when an ID is available.<br>أدخل الرقم الوظيفي الصحيح متى ما كان موجوداً، ولا تعتمد على الاسم فقط إذا كان الرقم متاحاً.')}</li>
+            <li>${__('If the same employee name appears more than once, separate rows using cost center and payroll ID.<br>عند تكرار الاسم نفسه يجب التفريق بين الصفوف باستخدام مركز التكلفة والرقم الوظيفي.')}</li>
+            <li>${__('Rows with zero salary or zero net salary are treated as leave rows and will be skipped during import.<br>أي صف راتبه أو صافي راتبه صفر سيُعتبر إجازة وسيتم تجاهله عند الاستيراد.')}</li>
+            <li>${__('Do not change the first-row column headers, merge cells, or insert notes inside the payroll data table.<br>لا تغيّر أسماء أعمدة الصف الأول، ولا تدمج الخلايا، ولا تضع ملاحظات داخل جدول البيانات نفسه.')}</li>
+            <li>${__('Keep salary fields numeric only, and keep cost center filled for every repeated or split row.<br>اجعل حقول الرواتب أرقاماً فقط، واحرص على تعبئة مركز التكلفة لكل صف مكرر أو موزع.')}</li>
+        </ul>
+    `;
+}
+
+
+function _confirm_workbook_import(frm, proceed) {
+    const currentRows = (frm.doc.employees || []).length;
+    const rowMessage = currentRows
+        ? __('Current payroll rows on this document: {0}. Importing will replace them with workbook rows.<br>عدد صفوف الرواتب الحالية في هذا المستند: {0}. الاستيراد سيستبدلها بصفوف الملف.', [currentRows])
+        : __('No payroll rows are loaded yet. Importing will fill this document from the workbook.<br>لا توجد صفوف رواتب محملة حالياً. الاستيراد سيقوم بتعبئة المستند من الملف.');
+
+    frappe.call({
+        method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.validate_payroll_workbook',
+        args: {
+            doc_name: frm.doc.name,
+            file_url: frm.doc.source_workbook
+        },
+        freeze: true,
+        freeze_message: __('Running final workbook checks before import...<br>جاري تنفيذ التحقق النهائي من الملف قبل الاستيراد...'),
+        callback(r) {
+            if (!r.message) {
+                return;
+            }
+
+            const summary = r.message;
+            if (summary.error_count || summary.critical_warning_count) {
+                _show_workbook_validation_summary(summary);
+                return;
+            }
+
+            const criticalItems = (summary.critical_warnings || [])
+                .slice(0, 5)
+                .map((warning) => `<li>${frappe.utils.escape_html(warning)}</li>`)
+                .join('');
+            const criticalBlock = criticalItems
+                ? `<div style="margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #fff1f3; border: 1px solid #f0a3ad; color: #b42318;"><b>${__('Critical review items / نقاط حرجة للمراجعة')}</b><ul style="margin: 8px 0 0; padding-inline-start: 18px;">${criticalItems}</ul></div>`
+                : '';
+
+            frappe.confirm(
+                __('Before import, confirm the workbook follows these rules:<br>قبل الاستيراد تأكد من الآتي:')
+                + '<br><br>• ' + __('Payroll ID is filled whenever available.<br>تم تعبئة الرقم الوظيفي متى ما كان موجوداً.')
+                + '<br>• ' + __('Repeated names are distinguished by cost center.<br>الأسماء المكررة تم التفريق بينها بمركز التكلفة.')
+                + '<br>• ' + __('Zero-salary rows are intentionally leave rows.<br>الصفوف ذات الراتب الصفري مقصود بها الإجازات.')
+                + '<br>• ' + __('Column headers were not changed.<br>لم يتم تغيير أسماء الأعمدة.')
+                + '<br><br>' + rowMessage
+                + criticalBlock,
+                proceed
+            );
+        }
+    });
+}
+
+
+function _show_workbook_validation_summary(summary) {
+    const errorItems = (summary.errors || [])
+        .slice(0, 15)
+        .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+        .join('');
+    const criticalItems = (summary.critical_warnings || [])
+        .slice(0, 15)
+        .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+        .join('');
+    const warningItems = (summary.warnings || [])
+        .slice(0, 15)
+        .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+        .join('');
+    const costCenterItems = (summary.would_create_cost_centers || [])
+        .slice(0, 15)
+        .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+        .join('');
+
+    frappe.msgprint({
+        title: __('Workbook Validation / التحقق من ملف الرواتب'),
+        indicator: summary.error_count || summary.critical_warning_count ? 'red' : (summary.warning_count ? 'orange' : 'green'),
+        wide: true,
+        message: `
+            <p>${__('عدد صفوف الملف')}: <b>${summary.total_rows}</b></p>
+            <p>${__('عدد الأخطاء المانعة')}: <b>${summary.error_count}</b></p>
+            <p>${__('عدد التحذيرات الحرجة')}: <b>${summary.critical_warning_count || 0}</b></p>
+            <p>${__('عدد التحذيرات')}: <b>${summary.warning_count}</b></p>
+            ${(summary.would_create_cost_centers || []).length ? `<p><b>${__('مراكز التكلفة التي سيقوم النظام بإنشائها تلقائياً')}</b></p><ul>${costCenterItems}</ul>` : ''}
+            ${errorItems ? `<p><b>${__('الأخطاء التي تمنع الاستيراد')}</b></p><ul>${errorItems}</ul>` : ''}
+            ${criticalItems ? `<p style="color:#b42318;"><b>${__('تحذيرات حرجة تحتاج مراجعة قبل الاستيراد')}</b></p><ul>${criticalItems}</ul>` : ''}
+            ${warningItems ? `<p><b>${__('ملاحظات تحتاج مراجعة')}</b></p><ul>${warningItems}</ul>` : ''}
+        `
+    });
 }
 
 
@@ -465,11 +592,15 @@ function _import_workbook(frm) {
         });
     };
 
-    if (frm.is_new()) {
-        frm.save().then(do_import);
-    } else {
-        do_import();
-    }
+    const startImport = function() {
+        if (frm.is_new()) {
+            frm.save().then(() => _confirm_workbook_import(frm, do_import));
+            return;
+        }
+        _confirm_workbook_import(frm, do_import);
+    };
+
+    startImport();
 }
 
 
@@ -504,16 +635,22 @@ function _analyze_workbook(frm) {
                 const matchedItems = (summary.sample_matched || [])
                     .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
                     .join('');
+                const criticalItems = (summary.critical_warnings || [])
+                    .slice(0, 10)
+                    .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
+                    .join('');
 
                 frappe.msgprint({
                     title: __('Workbook Analysis / تحليل ملف الرواتب'),
-                    indicator: summary.importable_rows ? 'green' : 'orange',
+                    indicator: summary.critical_warning_count ? 'red' : (summary.importable_rows ? 'green' : 'orange'),
                     wide: true,
                     message: `
                         <p>${__('Workbook rows')}: <b>${summary.total_rows}</b></p>
                         <p>${__('Importable rows')}: <b>${summary.importable_rows}</b></p>
                         <p>${__('Unmatched rows')}: <b>${summary.unmatched_rows}</b></p>
+                        <p>${__('Critical review items')}: <b>${summary.critical_warning_count || 0}</b></p>
                         <p>${__('Employees in company')}: <b>${summary.company_employee_count}</b></p>
+                        ${criticalItems ? `<p style="color:#b42318;"><b>${__('Critical rows to review before import')}</b></p><ul>${criticalItems}</ul>` : ''}
                         ${matchedItems ? `<p><b>${__('Sample matched rows')}</b></p><ul>${matchedItems}</ul>` : ''}
                         ${unmatchedItems ? `<p><b>${__('Sample unmatched rows')}</b></p><ul>${unmatchedItems}</ul>` : ''}
                     `
@@ -554,33 +691,7 @@ function _validate_workbook(frm) {
                     return;
                 }
 
-                const summary = r.message;
-                const errorItems = (summary.errors || [])
-                    .slice(0, 15)
-                    .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
-                    .join('');
-                const warningItems = (summary.warnings || [])
-                    .slice(0, 15)
-                    .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
-                    .join('');
-                const costCenterItems = (summary.would_create_cost_centers || [])
-                    .slice(0, 15)
-                    .map((row) => `<li>${frappe.utils.escape_html(row)}</li>`)
-                    .join('');
-
-                frappe.msgprint({
-                    title: __('Workbook Validation / التحقق من ملف الرواتب'),
-                    indicator: summary.error_count ? 'red' : (summary.warning_count ? 'orange' : 'green'),
-                    wide: true,
-                    message: `
-                        <p>${__('عدد صفوف الملف')}: <b>${summary.total_rows}</b></p>
-                        <p>${__('عدد الأخطاء المانعة')}: <b>${summary.error_count}</b></p>
-                        <p>${__('عدد التحذيرات')}: <b>${summary.warning_count}</b></p>
-                        ${(summary.would_create_cost_centers || []).length ? `<p><b>${__('مراكز التكلفة التي سيقوم النظام بإنشائها تلقائياً')}</b></p><ul>${costCenterItems}</ul>` : ''}
-                        ${errorItems ? `<p><b>${__('الأخطاء التي تمنع الاستيراد')}</b></p><ul>${errorItems}</ul>` : ''}
-                        ${warningItems ? `<p><b>${__('ملاحظات تحتاج مراجعة')}</b></p><ul>${warningItems}</ul>` : ''}
-                    `
-                });
+                _show_workbook_validation_summary(r.message);
             }
         });
     };
@@ -654,6 +765,41 @@ function _download_payroll_import_template(frm) {
                 window.open(r.message.file_url, '_blank');
                 frappe.show_alert({
                     message: __('Payroll import template is ready / تم تجهيز قالب رفع الرواتب'),
+                    indicator: 'green'
+                }, 5);
+            }
+        });
+    };
+
+    if (frm.is_new()) {
+        frm.save().then(do_download);
+    } else {
+        do_download();
+    }
+}
+
+
+function _download_simple_payroll_import_template(frm) {
+    if (!frm.doc.company) {
+        frappe.msgprint(__('Please select a Company first.<br>يرجى اختيار الشركة أولاً.'));
+        return;
+    }
+
+    const do_download = function() {
+        frappe.call({
+            method: 'saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.download_simple_payroll_import_template',
+            args: {
+                doc_name: frm.doc.name
+            },
+            freeze: true,
+            freeze_message: __('Generating simplified payroll import template...<br>جاري إنشاء قالب رفع الرواتب المبسط...'),
+            callback(r) {
+                if (!r.message || !r.message.file_url) {
+                    return;
+                }
+                window.open(r.message.file_url, '_blank');
+                frappe.show_alert({
+                    message: __('Simple payroll template is ready / تم تجهيز قالب رفع الرواتب المبسط'),
                     indicator: 'green'
                 }, 5);
             }

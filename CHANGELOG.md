@@ -2,6 +2,15 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.12.0 - 2026-04-11
+
+- Hardened Saudi Monthly Payroll workbook imports with blocking validation for missing required columns and critical duplicate-name warnings when rows omit an explicit cost center.
+- Added persistent upload guidance on the payroll form, plus a pre-import review gate so risky workbooks are stopped before import.
+- Expanded workbook analysis and validation dialogs to surface critical review items directly in the UI.
+- Strengthened the detailed payroll import template with highlighted required fields, dropdown-based cost center and payout mode inputs, and numeric validation rules.
+- Added a simplified Arabic payroll upload template for end users alongside the detailed administrative template.
+- Extended payroll regression coverage for required workbook headers, critical warning detection, zero-salary leave skipping, stricter employee matching, and generated template validations.
+
 ## v1.11.0 - 2026-04-07
 
 - Added employee paid payroll history directly on the Employee salary tab, sourced from completed Saudi Monthly Payroll runs with linked journal entries.

@@ -106,7 +106,7 @@
    "read_only": 1
   },
   {
-   "description": "Attach the external payroll workbook, then use Import Workbook to populate payroll rows. / أرفق ملف الرواتب الخارجي ثم استخدم زر استيراد ملف الرواتب لتعبئة الصفوف.",
+    "description": "Attach the payroll workbook, then use Analyze Workbook or Validate Workbook before Import Workbook. Enter payroll IDs whenever available, keep cost center filled for repeated names, and note that zero-salary rows are treated as leave and skipped. / أرفق ملف الرواتب ثم استخدم تحليل الملف أو التحقق من الملف قبل استيراد ملف الرواتب. أدخل الرقم الوظيفي متى ما كان متاحاً، واحرص على تعبئة مركز التكلفة عند تكرار الأسماء، مع العلم أن الصفوف ذات الراتب الصفري تُعامل كإجازة ويتم تجاهلها.",
    "fieldname": "source_workbook",
    "fieldtype": "Attach",
    "label": "Source Workbook / ملف الرواتب المصدر"

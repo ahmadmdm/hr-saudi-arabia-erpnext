@@ -287,6 +287,19 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(rows[0]["total_deductions"], 900)
 		self.assertEqual(rows[0]["net_salary"], 5950)
 
+	def test_extract_source_workbook_rows_rejects_missing_required_headers(self):
+		workbook = Workbook()
+		worksheet = workbook.active
+		worksheet.title = "كشف المصدر"
+		worksheet.append(["الرقم الوظيفي", "الاسم", "الاساسي", "صافى الراتب"])
+		worksheet.append([1001, "موظف", 1500, 1500])
+
+		output = BytesIO()
+		workbook.save(output)
+
+		with self.assertRaises(frappe.ValidationError):
+			payroll_module._extract_source_workbook_rows(output.getvalue())
+
 	def test_map_workbook_rows_to_payroll_preserves_other_deductions(self):
 		raw_rows = [{
 			"source_row": 6,
@@ -397,6 +410,41 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(summary["error_count"], 0)
 		self.assertEqual(summary["errors"], [])
 
+	def test_validate_workbook_rows_reports_critical_duplicate_name_without_cost_center(self):
+		raw_rows = [
+			{
+				"source_row": 10,
+				"employee_id": "1001A",
+				"employee_name": "محمد علي",
+				"department": "الإدارة",
+				"basic_salary": 1000,
+				"gross_salary": 1000,
+				"total_deductions": 0,
+				"net_salary": 1000,
+			},
+			{
+				"source_row": 11,
+				"employee_id": "1001B",
+				"employee_name": "محمد علي",
+				"department": "المبيعات",
+				"basic_salary": 1000,
+				"gross_salary": 1000,
+				"total_deductions": 0,
+				"net_salary": 1000,
+			},
+		]
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value={}), patch.object(
+			payroll_module, "_get_postable_cost_center", return_value=""
+		):
+			summary = payroll_module._validate_payroll_workbook_rows("amd", raw_rows)
+
+		self.assertEqual(summary["critical_warning_count"], 1)
+		self.assertIn("محمد علي", summary["critical_warnings"][0])
+		self.assertIn("10", summary["critical_warnings"][0])
+		self.assertIn("11", summary["critical_warnings"][0])
+		self.assertEqual(summary["error_count"], 0)
+
 	def test_map_workbook_rows_to_payroll_keeps_unmatched_workbook_rows(self):
 		raw_rows = [{
 			"source_row": 8,
@@ -424,6 +472,52 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertIn("could not match employee 7803A", warnings[0])
 		self.assertIn("without a linked Employee record", warnings[1])
 
+	def test_map_workbook_rows_to_payroll_skips_zero_salary_leave_rows(self):
+		raw_rows = [{
+			"source_row": 14,
+			"employee_id": "3010",
+			"employee_name": "Leave Employee",
+			"department": "Operations",
+			"basic_salary": 2500,
+			"gross_salary": 3000,
+			"gosi_deduction": 0,
+			"total_deductions": 3000,
+			"net_salary": 0,
+		}]
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value={}):
+			rows, warnings = payroll_module._map_workbook_rows_to_payroll("amd", raw_rows)
+
+		self.assertEqual(rows, [])
+		self.assertEqual(len(warnings), 1)
+		self.assertIn("skipped because salary is zero", warnings[0])
+
+	def test_map_workbook_rows_to_payroll_does_not_match_by_name_when_employee_id_exists(self):
+		raw_rows = [{
+			"source_row": 9,
+			"employee_id": "7803A",
+			"employee_name": "MAJID ALI",
+			"department": "Finance",
+			"basic_salary": 750,
+			"gross_salary": 750,
+			"gosi_deduction": 0,
+			"total_deductions": 0,
+			"net_salary": 750,
+		}]
+
+		lookup = {
+			"majid ali": {"employee": {"name": "EMP-OLD", "employee_name": "MAJID ALI", "department": "Finance", "nationality": "Saudi"}, "matched_by": "employee_name"}
+		}
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value=lookup), patch.object(
+			payroll_module.frappe.db, "exists", return_value=True
+		):
+			rows, warnings = payroll_module._map_workbook_rows_to_payroll("amd", raw_rows)
+
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["employee"], "")
+		self.assertIn("could not match employee 7803A", warnings[0])
+
 	def test_match_workbook_employee_allows_trailing_letter_suffix(self):
 		lookup = {
 			"1090": {"employee": {"name": "EMP-1090", "employee_name": "Demo Employee"}, "matched_by": "employee_id"}
@@ -443,6 +537,8 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		]), patch.object(payroll_module, "_get_attached_file_content", return_value=b"xlsx"), patch.object(payroll_module, "_map_workbook_rows_to_payroll", return_value=([{"employee_name": "Missing Employee"}], ["Row 6: could not match employee 2960."])), patch.object(
 			payroll_module, "_collect_unmatched_workbook_rows", return_value=[{"source_row": 6, "employee_id": 2960, "employee_name": "Missing Employee"}]
 		), patch.object(
+			payroll_module, "_get_duplicate_name_without_cost_center_warnings", return_value=["critical row"]
+		), patch.object(
 			payroll_module.frappe.db, "count", return_value=1
 		):
 			summary = payroll_module._preview_payroll_workbook("amd", "/private/files/sample.xlsx")
@@ -451,6 +547,8 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(summary["importable_rows"], 1)
 		self.assertEqual(summary["unmatched_rows"], 1)
 		self.assertEqual(summary["company_employee_count"], 1)
+		self.assertEqual(summary["critical_warning_count"], 1)
+		self.assertEqual(summary["critical_warnings"], ["critical row"])
 		self.assertEqual(summary["sample_unmatched"], ["Row 6: could not match employee 2960."])
 		self.assertEqual(summary["unmatched_details"][0]["employee_id"], 2960)
 
@@ -634,6 +732,52 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(len(inserted), 2)
 		self.assertEqual(row_one.employee, "EMP-7803")
 		self.assertEqual(row_two.employee, "EMP-9811")
+
+	def test_create_basic_employees_for_payroll_keeps_same_name_separate_when_cost_center_differs(self):
+		inserted = []
+
+		class _EmployeeDoc:
+			def __init__(self, payload):
+				self.payload = payload
+				self.flags = SimpleNamespace(ignore_permissions=False)
+				self.name = f"EMP-{payload.get('employee_number') or payload['first_name']}"
+				self.employee_name = " ".join(filter(None, [payload.get("first_name"), payload.get("middle_name"), payload.get("last_name")])).strip()
+				self.department = payload.get("department")
+				self.nationality = payload.get("nationality")
+				self.employee_number = payload.get("employee_number")
+
+			def insert(self):
+				inserted.append(self.payload)
+				return self
+
+			def get(self, key):
+				return getattr(self, key, self.payload.get(key))
+
+		row_one = SimpleNamespace(idx=1, payroll_employee_id="3271A", employee="", employee_name="محمود محمد مكاوي", workbook_department="مستفيد - d", cost_center="مستفيد - d", department="", nationality="")
+		row_two = SimpleNamespace(idx=2, payroll_employee_id="3271B", employee="", employee_name="محمود محمد مكاوي", workbook_department="ذمم - d", cost_center="ذمم - d", department="", nationality="")
+		doc = SimpleNamespace(company="amd", employees=[row_one, row_two])
+		defaults = {
+			"gender": "Prefer not to say",
+			"date_of_birth": getdate("1990-01-01"),
+			"date_of_joining": getdate("2026-03-28"),
+			"status": "Active",
+		}
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value={}), patch.object(
+			payroll_module.frappe, "get_meta", return_value=SimpleNamespace(has_field=lambda field: field in {"middle_name", "last_name", "department"})
+		), patch.object(
+			payroll_module.frappe, "get_doc", side_effect=lambda payload: _EmployeeDoc(payload)
+		), patch.object(
+			payroll_module.frappe.db, "exists", return_value=False
+		):
+			created, linked, skipped = payroll_module._create_basic_employees_for_payroll(doc, defaults)
+
+		self.assertEqual(created, ["EMP-3271A", "EMP-3271B"])
+		self.assertEqual(linked, 0)
+		self.assertEqual(skipped, [])
+		self.assertEqual(len(inserted), 2)
+		self.assertEqual(row_one.employee, "EMP-3271A")
+		self.assertEqual(row_two.employee, "EMP-3271B")
 
 	def test_clear_invalid_default_link_values_removes_invalid_custom_default(self):
 		field = SimpleNamespace(fieldtype="Link", fieldname="salary_slip", options="Salary Slip", default="Salary Slip")
@@ -935,6 +1079,35 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			"gender", "date_of_birth", "date_of_joining", "status", "remarks",
 		]
 		self.assertEqual(payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS, required)
+
+	def test_build_payroll_import_template_adds_payload_validations(self):
+		doc = SimpleNamespace(company="amd")
+
+		with patch.object(payroll_module, "_get_company_default_cost_center", return_value="Main - d"), patch.object(
+			payroll_module, "_get_second_postable_cost_center", return_value="فرع تجريبي - A"
+		), patch.object(
+			payroll_module, "_get_payroll_template_cost_centers", return_value=["Main - d", "فرع تجريبي - A"]
+		):
+			content = payroll_module._build_payroll_import_template_workbook(doc)
+
+		workbook = load_workbook(content)
+		payload_sheet = workbook[payroll_module.PREFERRED_SOURCE_WORKBOOK_SHEETS[0]]
+
+		self.assertEqual(workbook["_Lists"].sheet_state, "hidden")
+		self.assertGreaterEqual(len(payload_sheet.data_validations.dataValidation), 3)
+		self.assertEqual(payload_sheet["A1"].fill.fgColor.rgb[-6:], "FFF4CC")
+		self.assertEqual(payload_sheet["C2"].fill.fgColor.rgb[-6:], "FFF4CC")
+
+	def test_build_simple_payroll_import_template_contains_arabic_instruction_sheet(self):
+		doc = SimpleNamespace(company="amd")
+
+		with patch.object(payroll_module, "_get_payroll_template_cost_centers", return_value=["Main - d"]):
+			content = payroll_module._build_simple_payroll_import_template_workbook(doc)
+
+		workbook = load_workbook(content)
+		self.assertIn("تعليمات", workbook.sheetnames)
+		self.assertIn(payroll_module.PREFERRED_SOURCE_WORKBOOK_SHEETS[0], workbook.sheetnames)
+		self.assertEqual(workbook["_Lists"].sheet_state, "hidden")
 
 	def test_employee_setup_template_empty_when_no_unmatched_rows(self):
 		"""إذا لم توجد صفوف غير مطابقة، القالب يُعيد رأساً فقط بدون بيانات."""

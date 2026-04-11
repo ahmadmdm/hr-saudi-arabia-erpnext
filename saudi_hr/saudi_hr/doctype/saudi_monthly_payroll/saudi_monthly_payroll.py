@@ -8,6 +8,7 @@ from frappe.utils import cint, cstr, flt, getdate, today
 from frappe.utils.file_manager import save_file
 from frappe.utils.xlsxutils import make_xlsx
 from openpyxl import Workbook, load_workbook
+from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.styles import Alignment, Font, PatternFill
 
 from saudi_hr.saudi_hr.doctype.employee_loan.employee_loan import apply_payroll_loan_deductions, get_due_loan_deduction, revert_payroll_loan_deductions
@@ -87,6 +88,17 @@ WORKBOOK_HEADER_ALIASES = {
 	"national_id": {"رقم الهوية"},
 	"gosi_registration": {"التأمينات", "رقم اشتراك التأمينات"},
 }
+
+
+def _required_workbook_field_labels() -> dict[str, str]:
+	return {
+		"employee_id": _("Payroll ID / الرقم الوظيفي"),
+		"employee_name": _("Name / الاسم"),
+		"basic_salary": _("Basic / الأساسي"),
+		"gross_salary": _("Gross / الإجمالي"),
+		"total_deductions": _("Total Deductions / إجمالي الخصومات"),
+		"net_salary": _("Net / الصافي"),
+	}
 
 
 class SaudiMonthlyPayroll(Document):
@@ -358,6 +370,17 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 			title=_("أخطاء مانعة في ملف الرواتب / Blocking Payroll Workbook Errors"),
 		)
 
+	if validation_summary.get("critical_warning_count"):
+		sample_warnings = "<br>".join(validation_summary.get("critical_warnings", [])[:10])
+		extra_warnings = max(validation_summary["critical_warning_count"] - 10, 0)
+		extra_text = _("<br>ويوجد {0} تحذيرات حرجة إضافية.").format(extra_warnings) if extra_warnings else ""
+		frappe.throw(
+			_(
+				"لا يمكن استيراد ملف الرواتب قبل معالجة التحذيرات الحرجة التالية.<br>{0}{1}"
+			).format(sample_warnings, extra_text),
+			title=_("Critical Workbook Warnings / تحذيرات حرجة في ملف الرواتب"),
+		)
+
 	if not import_rows:
 		frappe.throw(
 			_(
@@ -465,6 +488,23 @@ def download_payroll_import_template(doc_name: str):
 	file_doc = save_file(
 		file_name,
 		_build_payroll_import_template_workbook(doc).getvalue(),
+		doc.doctype,
+		doc.name,
+		is_private=1,
+	)
+	return {"file_url": file_doc.file_url, "file_name": file_doc.file_name}
+
+
+@frappe.whitelist()
+def download_simple_payroll_import_template(doc_name: str):
+	"""إنشاء قالب Excel عربي مبسط للمستخدم النهائي مع ورقة إدخال واحدة وإرشادات مختصرة."""
+	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
+	frappe.has_permission("Saudi Monthly Payroll", "read", doc=doc, throw=True)
+
+	file_name = f"payroll-import-template-simple-{doc.name}-{frappe.generate_hash(length=6)}.xlsx"
+	file_doc = save_file(
+		file_name,
+		_build_simple_payroll_import_template_workbook(doc).getvalue(),
 		doc.doctype,
 		doc.name,
 		is_private=1,
@@ -1002,20 +1042,27 @@ def _build_payroll_import_template_workbook(doc) -> BytesIO:
 	example_sheet.sheet_view.rightToLeft = True
 	payload_sheet = workbook.create_sheet(PREFERRED_SOURCE_WORKBOOK_SHEETS[0])
 	payload_sheet.sheet_view.rightToLeft = True
+	lists_sheet = workbook.create_sheet("_Lists")
+	lists_sheet.sheet_state = "hidden"
 
 	title_fill = PatternFill(fill_type="solid", fgColor="D9EAF7")
 	header_fill = PatternFill(fill_type="solid", fgColor="EAF2E3")
+	required_fill = PatternFill(fill_type="solid", fgColor="FFF4CC")
 	bold_font = Font(bold=True)
 	wrapped_alignment = Alignment(wrap_text=True, vertical="top")
 
 	instruction_rows = [
 		["قالب رفع الرواتب", "استخدم هذا الملف لرفع الرواتب دفعة واحدة من شاشة مسير الرواتب الشهري السعودي."],
 		["1", "املأ البيانات داخل ورقة كشف الرواتب فقط ولا تغير أسماء الأعمدة في الصف الأول."],
-		["2", "الحد الأدنى المطلوب لكل صف عادة: الرقم الوظيفي، الاسم، مركز التكلفة، الأساسي، الإجمالي، إجمالي الخصم، صافي الراتب."],
-		["3", "إذا كان راتب الموظف موزعاً على أكثر من مركز تكلفة، كرر نفس الموظف في أكثر من صف مع تغيير مركز التكلفة والقيم المالية لكل صف."],
-		["4", "صيغة مركز التكلفة في هذا القالب هي مركز التكلفة مباشرة. إذا رفعت ملفاً قديماً يستخدم الإدارة فسيتم التعامل معه أيضاً كمركز تكلفة."],
-		["5", f"اسم الشيت المطلوب للاستيراد: {PREFERRED_SOURCE_WORKBOOK_SHEETS[0]}"],
-		["6", "بعد تعبئة الملف، أرفقه في حقل ملف الرواتب المصدر ثم اضغط استيراد ملف الرواتب."],
+		["2", "الحقول الأهم لكل صف: الرقم الوظيفي، الاسم، مركز التكلفة، الأساسي، الإجمالي، إجمالي الخصم، وصافي الراتب."],
+		["3", "إذا توفر الرقم الوظيفي للموظف فيجب إدخاله كما هو، ولا تعتمد على الاسم فقط إذا كان الرقم معروفاً."],
+		["4", "إذا كان نفس الاسم يتكرر في أكثر من مركز تكلفة، كرر الموظف في أكثر من صف مع تغيير مركز التكلفة والقيم المالية لكل صف."],
+		["5", "أي صف راتبه الأساسي أو صافي راتبه يساوي صفراً سيُعامل كإجازة وسيتم تجاهله عند الاستيراد."],
+		["6", "صيغة مركز التكلفة في هذا القالب هي مركز التكلفة مباشرة. إذا رفعت ملفاً قديماً يستخدم الإدارة فسيتم التعامل معه أيضاً كمركز تكلفة."],
+		["7", "لا تدمج الخلايا، ولا تضف صفوف ملاحظات داخل الجدول، واجعل حقول الرواتب أرقاماً فقط بدون نصوص أو رموز إضافية."],
+		["8", f"اسم الشيت المطلوب للاستيراد: {PREFERRED_SOURCE_WORKBOOK_SHEETS[0]}"],
+		["9", "الأعمدة الإلزامية في ورقة الإدخال ملوّنة، وبعض الحقول تحتوي قوائم منسدلة أو تحقق رقمي لتقليل الأخطاء قبل الرفع."],
+		["10", "بعد تعبئة الملف، أرفقه في حقل ملف الرواتب المصدر ثم استخدم تحليل الملف أو التحقق من الملف قبل ضغط استيراد ملف الرواتب."],
 	]
 
 	for row_index, row in enumerate(instruction_rows, start=1):
@@ -1039,7 +1086,7 @@ def _build_payroll_import_template_workbook(doc) -> BytesIO:
 
 		cell = payload_sheet.cell(row=1, column=column_index, value=header)
 		cell.font = bold_font
-		cell.fill = header_fill
+		cell.fill = required_fill if header in _get_required_template_headers() else header_fill
 		cell.alignment = Alignment(horizontal="center", vertical="center")
 		payload_sheet.column_dimensions[cell.column_letter].width = 18
 
@@ -1051,6 +1098,7 @@ def _build_payroll_import_template_workbook(doc) -> BytesIO:
 	example_sheet.auto_filter.ref = f"A1:{example_sheet.cell(row=1, column=len(PAYROLL_IMPORT_TEMPLATE_HEADERS)).column_letter}{len(example_rows) + 1}"
 	payload_sheet.freeze_panes = "A2"
 	payload_sheet.auto_filter.ref = f"A1:{payload_sheet.cell(row=1, column=len(PAYROLL_IMPORT_TEMPLATE_HEADERS)).column_letter}1"
+	_apply_payload_sheet_input_rules(lists_sheet, payload_sheet, doc.company, required_fill)
 
 	output = BytesIO()
 	workbook.save(output)
@@ -1068,6 +1116,60 @@ def _build_payroll_import_example_rows(company: str) -> list[list]:
 	]
 
 
+def _build_simple_payroll_import_template_workbook(doc) -> BytesIO:
+	workbook = Workbook()
+	instructions_sheet = workbook.active
+	instructions_sheet.title = "تعليمات"
+	instructions_sheet.sheet_view.rightToLeft = True
+	payload_sheet = workbook.create_sheet(PREFERRED_SOURCE_WORKBOOK_SHEETS[0])
+	payload_sheet.sheet_view.rightToLeft = True
+	lists_sheet = workbook.create_sheet("_Lists")
+	lists_sheet.sheet_state = "hidden"
+
+	title_fill = PatternFill(fill_type="solid", fgColor="D9EAF7")
+	header_fill = PatternFill(fill_type="solid", fgColor="EAF2E3")
+	required_fill = PatternFill(fill_type="solid", fgColor="FFF4CC")
+	bold_font = Font(bold=True)
+	wrapped_alignment = Alignment(wrap_text=True, vertical="top")
+
+	instruction_rows = [
+		["قالب رفع الرواتب المبسط", "هذا القالب مخصص للمستخدم النهائي. املأ فقط ورقة كشف الرواتب ثم ارفع الملف في النظام."],
+		["1", "لا تغيّر أسماء الأعمدة في الصف الأول."],
+		["2", "املأ الرقم الوظيفي متى ما كان موجوداً."],
+		["3", "عند تكرار الاسم يجب تعبئة مركز التكلفة لكل صف."],
+		["4", "أي صف راتبه أو صافي راتبه صفر سيُعتبر إجازة وسيتم تجاهله."],
+		["5", "الخانات الملوّنة إلزامية، وبعض الأعمدة تحتوي قائمة اختيار أو تحقق رقمي."],
+		["6", f"اسم ورقة الإدخال المطلوب: {PREFERRED_SOURCE_WORKBOOK_SHEETS[0]}"],
+	]
+
+	for row_index, row in enumerate(instruction_rows, start=1):
+		for column_index, value in enumerate(row, start=1):
+			cell = instructions_sheet.cell(row=row_index, column=column_index, value=value)
+			cell.alignment = wrapped_alignment
+			if row_index == 1:
+				cell.font = bold_font
+				cell.fill = title_fill
+
+	instructions_sheet.column_dimensions["A"].width = 18
+	instructions_sheet.column_dimensions["B"].width = 90
+
+	for column_index, header in enumerate(PAYROLL_IMPORT_TEMPLATE_HEADERS, start=1):
+		cell = payload_sheet.cell(row=1, column=column_index, value=header)
+		cell.font = bold_font
+		cell.fill = required_fill if header in _get_required_template_headers() else header_fill
+		cell.alignment = Alignment(horizontal="center", vertical="center")
+		payload_sheet.column_dimensions[cell.column_letter].width = 18
+
+	payload_sheet.freeze_panes = "A2"
+	payload_sheet.auto_filter.ref = f"A1:{payload_sheet.cell(row=1, column=len(PAYROLL_IMPORT_TEMPLATE_HEADERS)).column_letter}1"
+	_apply_payload_sheet_input_rules(lists_sheet, payload_sheet, doc.company, required_fill)
+
+	output = BytesIO()
+	workbook.save(output)
+	output.seek(0)
+	return output
+
+
 def _get_second_postable_cost_center(company: str, excluded_cost_center: str) -> str:
 	rows = frappe.get_all(
 		"Cost Center",
@@ -1079,6 +1181,104 @@ def _get_second_postable_cost_center(company: str, excluded_cost_center: str) ->
 		if row["name"] != excluded_cost_center:
 			return row["name"]
 	return ""
+
+
+def _get_required_template_headers() -> set[str]:
+	return {
+		"الرقم الوظيفي",
+		"الاسم",
+		"مركز التكلفة",
+		"الاساسي",
+		"الاجمالي",
+		"اجمالي الخصم",
+		"صافى الراتب",
+	}
+
+
+def _apply_payload_sheet_input_rules(lists_sheet, payload_sheet, company: str, required_fill: PatternFill) -> None:
+	header_indexes = {
+		header: index + 1 for index, header in enumerate(PAYROLL_IMPORT_TEMPLATE_HEADERS)
+	}
+	max_row = 500
+
+	for header in _get_required_template_headers():
+		column_index = header_indexes.get(header)
+		if not column_index:
+			continue
+		for row_index in range(2, max_row + 1):
+			payload_sheet.cell(row=row_index, column=column_index).fill = required_fill
+
+	cost_centers = _get_payroll_template_cost_centers(company)
+	for row_index, value in enumerate(cost_centers, start=1):
+		lists_sheet.cell(row=row_index, column=1, value=value)
+
+	if cost_centers:
+		cost_center_column = payload_sheet.cell(row=1, column=header_indexes["مركز التكلفة"]).column_letter
+		cost_center_validation = DataValidation(
+			type="list",
+			formula1=f"'_Lists'!$A$1:$A${len(cost_centers)}",
+			allow_blank=False,
+		)
+		cost_center_validation.promptTitle = "Cost Center"
+		cost_center_validation.prompt = "اختر مركز تكلفة من القائمة المعتمدة."
+		cost_center_validation.errorTitle = "Invalid Cost Center"
+		cost_center_validation.error = "اختر مركز تكلفة صالحاً من القائمة أو نزّل القالب مجدداً بعد اختيار الشركة الصحيحة."
+		payload_sheet.add_data_validation(cost_center_validation)
+		cost_center_validation.add(f"{cost_center_column}2:{cost_center_column}{max_row}")
+
+	salary_mode_column = payload_sheet.cell(row=1, column=header_indexes["بنك / كاش"]).column_letter
+	salary_mode_validation = DataValidation(
+		type="list",
+		formula1='"Bank,Cash,Mudad,mudad,MudadMK,mudadmk,Oasis"',
+		allow_blank=True,
+	)
+	salary_mode_validation.promptTitle = "Salary Mode"
+	salary_mode_validation.prompt = "اختر طريقة الصرف من القائمة إن وجدت."
+	salary_mode_validation.errorTitle = "Invalid Salary Mode"
+	salary_mode_validation.error = "طريقة الصرف يجب أن تكون قيمة معروفة من القائمة."
+	payload_sheet.add_data_validation(salary_mode_validation)
+	salary_mode_validation.add(f"{salary_mode_column}2:{salary_mode_column}{max_row}")
+
+	for header in [
+		"الاساسي",
+		"بدل السكن",
+		"بدل المواصلات",
+		"بدلات اخرى",
+		"الاجمالي",
+		"ايام العمل",
+		"ايام الغياب",
+		"قيمة ايام الغياب",
+		"ساعات التأخير",
+		"قيمة التأخير",
+		"خصم التأمينات",
+		"إضافات",
+		"خصم",
+		"اجمالي الخصم",
+		"صافى الراتب",
+	]:
+		column_letter = payload_sheet.cell(row=1, column=header_indexes[header]).column_letter
+		numeric_validation = DataValidation(
+			type="decimal",
+			operator="greaterThanOrEqual",
+			formula1="0",
+			allow_blank=True,
+		)
+		numeric_validation.promptTitle = "Numbers Only"
+		numeric_validation.prompt = "أدخل أرقاماً فقط بدون نصوص أو رموز إضافية."
+		numeric_validation.errorTitle = "Invalid Number"
+		numeric_validation.error = "هذه الخانة تقبل أرقاماً غير سالبة فقط."
+		payload_sheet.add_data_validation(numeric_validation)
+		numeric_validation.add(f"{column_letter}2:{column_letter}{max_row}")
+
+
+def _get_payroll_template_cost_centers(company: str) -> list[str]:
+	rows = frappe.get_all(
+		"Cost Center",
+		filters={"company": company, "is_group": 0},
+		pluck="name",
+		order_by="lft asc",
+	)
+	return rows[:500]
 
 
 def _merge_journal_entry_accounts(accounts: list[dict]) -> list[dict]:
@@ -1198,6 +1398,7 @@ def _extract_source_workbook_rows(content: bytes) -> list[dict]:
 	workbook = load_workbook(BytesIO(content), data_only=True, read_only=True)
 	worksheet = _get_source_workbook_sheet(workbook)
 	header_row_index, header_map = _find_source_header_row(worksheet)
+	_assert_required_workbook_headers(header_map)
 	rows = []
 
 	for row_index, values in enumerate(
@@ -1216,9 +1417,29 @@ def _extract_source_workbook_rows(content: bytes) -> list[dict]:
 	return rows
 
 
+def _assert_required_workbook_headers(header_map: dict[str, int]) -> None:
+	missing = []
+	for fieldname, label in _required_workbook_field_labels().items():
+		if fieldname not in header_map:
+			missing.append(label)
+
+	if "cost_center" not in header_map and "department" not in header_map:
+		missing.append(_("Cost Center / مركز التكلفة"))
+
+	if missing:
+		frappe.throw(
+			_(
+				"The workbook is missing required columns: {0}. Please use the approved payroll import template.<br>"
+				"ملف الرواتب لا يحتوي على الأعمدة الإلزامية التالية: {0}. يرجى استخدام قالب رفع الرواتب المعتمد."
+			).format(", ".join(missing)),
+			title=_("Missing Workbook Columns / أعمدة إلزامية مفقودة"),
+		)
+
+
 def _preview_payroll_workbook(company: str, workbook_url: str) -> dict:
 	raw_rows = _extract_source_workbook_rows(_get_attached_file_content(workbook_url))
 	import_rows, warnings = _map_workbook_rows_to_payroll(company, raw_rows)
+	critical_warnings = _get_duplicate_name_without_cost_center_warnings(raw_rows)
 	unmatched_rows = [warning for warning in warnings if "could not match employee" in warning]
 	matched_fallbacks = [warning for warning in warnings if "matched employee" in warning]
 	unmatched_details = _collect_unmatched_workbook_rows(company, raw_rows)
@@ -1231,6 +1452,8 @@ def _preview_payroll_workbook(company: str, workbook_url: str) -> dict:
 		"company_employee_count": company_employee_count,
 		"sample_unmatched": unmatched_rows[:10],
 		"sample_matched": matched_fallbacks[:10],
+		"critical_warning_count": len(critical_warnings),
+		"critical_warnings": critical_warnings,
 		"unmatched_details": unmatched_details,
 		"warnings": warnings,
 		"import_rows": import_rows,
@@ -1241,19 +1464,17 @@ def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
 	lookup = _get_company_employee_lookup(company)
 	errors = []
 	warnings = []
+	critical_warnings = _get_duplicate_name_without_cost_center_warnings(raw_rows)
 	would_create_cost_centers = []
 	duplicate_keys = {}
-	required_fields = {
-		"employee_id": _("Payroll ID / الرقم الوظيفي"),
-		"employee_name": _("Name / الاسم"),
-		"basic_salary": _("Basic / الأساسي"),
-		"gross_salary": _("Gross / الإجمالي"),
-		"total_deductions": _("Total Deductions / إجمالي الخصومات"),
-		"net_salary": _("Net / الصافي"),
-	}
+	required_fields = _required_workbook_field_labels()
 
 	for raw in raw_rows:
 		row_label = raw.get("source_row") or "?"
+		if _is_zero_salary_leave_row(raw):
+			warnings.append(_("الصف {0}: تم تجاهل الموظف لأن صافي الراتب في الملف صفر ويُعامل كإجازة.").format(row_label))
+			continue
+
 		missing_fields = []
 		for fieldname, label in required_fields.items():
 			if _is_blank(raw.get(fieldname)):
@@ -1297,7 +1518,7 @@ def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
 		if not _is_blank(raw.get("net_salary")) and abs(net - calculated_net) > 0.01:
 			errors.append(_("الصف {0}: صافي الراتب لا يطابق المعادلة المحاسبية. المدخل {1:.2f} والمتوقع {2:.2f}.").format(row_label, net, calculated_net))
 
-		employee, matched_by = _match_workbook_employee(raw, lookup)
+		employee, matched_by = _match_workbook_employee_for_import(raw, lookup)
 		if not employee:
 			warnings.append(_("الصف {0}: الموظف {1} غير مرتبط حالياً بسجل Employee موجود داخل الشركة.").format(row_label, raw.get("employee_id") or raw.get("employee_name") or _("غير محدد")))
 		elif matched_by != "employee_id":
@@ -1310,8 +1531,10 @@ def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
 		"total_rows": len(raw_rows),
 		"error_count": len(errors),
 		"warning_count": len(warnings),
+		"critical_warning_count": len(critical_warnings),
 		"errors": errors,
 		"warnings": warnings,
+		"critical_warnings": critical_warnings,
 		"would_create_cost_centers": sorted({value for value in would_create_cost_centers if value}),
 	}
 
@@ -1320,7 +1543,9 @@ def _collect_unmatched_workbook_rows(company: str, raw_rows: list[dict]) -> list
 	lookup = _get_company_employee_lookup(company)
 	missing = []
 	for raw in raw_rows:
-		employee, _matched_by = _match_workbook_employee(raw, lookup)
+		if _is_zero_salary_leave_row(raw):
+			continue
+		employee, _matched_by = _match_workbook_employee_for_import(raw, lookup)
 		if employee:
 			continue
 		missing.append(raw)
@@ -1633,6 +1858,7 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 				getattr(row, "payroll_employee_id", None),
 				getattr(row, "employee_name", None),
 				getattr(row, "nationality", None),
+				getattr(row, "cost_center", None) or getattr(row, "workbook_department", None),
 			)
 
 			raw = {
@@ -1756,15 +1982,21 @@ def _sync_linked_employee_master_fields_from_payroll(doc, employee_names: set[st
 	return updated_count
 
 
-def _get_payroll_row_duplicate_group_key(employee_id=None, employee_name=None, national_id=None) -> str | None:
+def _get_payroll_row_duplicate_group_key(employee_id=None, employee_name=None, national_id=None, cost_center=None) -> str | None:
 	name_key = _normalize_lookup_key(employee_name)
 	if not name_key:
 		return None
+	cost_center_key = _normalize_lookup_key(cost_center)
 
 	for candidate in (employee_id, national_id):
 		candidate_keys = _candidate_lookup_keys(candidate, allow_related_key=True)
 		if candidate_keys:
+			if cost_center_key:
+				return f"{name_key}::{cost_center_key}::{candidate_keys[-1]}"
 			return f"{name_key}::{candidate_keys[-1]}"
+
+	if cost_center_key:
+		return f"{name_key}::{cost_center_key}"
 
 	return None
 
@@ -1943,13 +2175,71 @@ def _is_empty_source_row(payload: dict) -> bool:
 	return all(_is_blank(value) for value in key_fields)
 
 
+def _is_zero_salary_leave_row(raw: dict) -> bool:
+	net_salary = raw.get("net_salary")
+	basic_salary = raw.get("basic_salary")
+
+	if not _is_blank(net_salary) and _to_currency(net_salary) <= 0:
+		return True
+
+	if not _is_blank(basic_salary) and _to_currency(basic_salary) <= 0:
+		return True
+
+	return False
+
+
+def _get_duplicate_name_without_cost_center_warnings(raw_rows: list[dict]) -> list[str]:
+	groups = {}
+	for raw in raw_rows:
+		if _is_zero_salary_leave_row(raw):
+			continue
+
+		name_value = cstr(raw.get("employee_name") or "").strip()
+		name_key = _normalize_lookup_key(name_value)
+		if not name_key:
+			continue
+
+		group = groups.setdefault(name_key, {
+			"display_name": name_value,
+			"all_rows": [],
+			"rows_without_cost_center": [],
+		})
+		row_label = cstr(raw.get("source_row") or "?")
+		group["all_rows"].append(row_label)
+		if _is_blank(raw.get("cost_center")):
+			group["rows_without_cost_center"].append(row_label)
+
+	warnings = []
+	for group in groups.values():
+		if len(group["all_rows"]) < 2 or not group["rows_without_cost_center"]:
+			continue
+		warnings.append(
+			_(
+				"الاسم {0} مكرر في الصفوف {1}، وبعض هذه الصفوف ({2}) لا تحتوي على مركز تكلفة صريح. "
+				"يرجى تعبئة مركز التكلفة لتجنب المطابقة الخاطئة."
+			).format(
+				group["display_name"],
+				", ".join(group["all_rows"][:10]),
+				", ".join(group["rows_without_cost_center"][:10]),
+			)
+		)
+
+	return warnings
+
+
 def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[list[dict], list[str]]:
 	employees_by_key = _get_company_employee_lookup(company)
 	import_rows = []
 	warnings = []
 
 	for raw in raw_rows:
-		employee, matched_by = _match_workbook_employee(raw, employees_by_key)
+		if _is_zero_salary_leave_row(raw):
+			warnings.append(
+				_(f"Row {raw.get('source_row')}: skipped because salary is zero in the workbook, so the employee is treated as on leave.")
+			)
+			continue
+
+		employee, matched_by = _match_workbook_employee_for_import(raw, employees_by_key)
 		if not employee:
 			warnings.append(
 				_(f"Row {raw.get('source_row')}: could not match employee {raw.get('employee_id') or raw.get('employee_name')}.")
@@ -2032,6 +2322,15 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 			)
 
 	return import_rows, warnings
+
+
+def _match_workbook_employee_for_import(raw: dict, lookup: dict[str, dict]):
+	has_payroll_employee_id = bool(cstr(raw.get("employee_id") or "").strip())
+	return _match_workbook_employee(
+		raw,
+		lookup,
+		allow_name_match=not has_payroll_employee_id,
+	)
 
 
 def _resolve_department_link(value) -> str:
