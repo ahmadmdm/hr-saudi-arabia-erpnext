@@ -32,3 +32,14 @@ ignore = [
 
 [tool.ruff.format]
 indent-style = "tab"
+
+[tool.pytest.ini_options]
+# Standalone unit tests that run without a live Frappe site.
+# The FrappeTestCase-based tests in test_saudi_monthly_payroll.py require
+# `bench run-tests`; they are excluded here to avoid setup errors.
+testpaths = [
+    "saudi_hr/saudi_hr/doctype/saudi_monthly_payroll",
+]
+python_files = ["test_payroll_employee_fetch.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

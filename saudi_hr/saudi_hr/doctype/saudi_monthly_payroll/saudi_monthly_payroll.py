@@ -1865,13 +1865,7 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 				"employee_id": getattr(row, "payroll_employee_id", None),
 				"employee_name": getattr(row, "employee_name", None),
 			}
-			has_payroll_employee_id = bool(cstr(getattr(row, "payroll_employee_id", "") or "").strip())
-			employee, _matched_by = _match_workbook_employee(
-				raw,
-				lookup,
-				allow_related_employee_id=not has_payroll_employee_id,
-				allow_name_match=not has_payroll_employee_id,
-			)
+			employee, _matched_by = _match_workbook_employee_for_import(raw, lookup)
 			if not employee and group_key:
 				employee = group_lookup.get(group_key)
 			if employee:
@@ -1983,20 +1977,21 @@ def _sync_linked_employee_master_fields_from_payroll(doc, employee_names: set[st
 
 
 def _get_payroll_row_duplicate_group_key(employee_id=None, employee_name=None, national_id=None, cost_center=None) -> str | None:
-	name_key = _normalize_lookup_key(employee_name)
-	if not name_key:
+	full_name_key = _normalize_lookup_key(employee_name)
+	if not full_name_key:
 		return None
 	cost_center_key = _normalize_lookup_key(cost_center)
+	compact_name_key = _get_compact_person_name_lookup_key(employee_name) or full_name_key
 
 	for candidate in (employee_id, national_id):
 		candidate_keys = _candidate_lookup_keys(candidate, allow_related_key=True)
 		if candidate_keys:
 			if cost_center_key:
-				return f"{name_key}::{cost_center_key}::{candidate_keys[-1]}"
-			return f"{name_key}::{candidate_keys[-1]}"
+				return f"{compact_name_key}::{cost_center_key}::{candidate_keys[-1]}"
+			return f"{compact_name_key}::{candidate_keys[-1]}"
 
 	if cost_center_key:
-		return f"{name_key}::{cost_center_key}"
+		return f"{full_name_key}::{cost_center_key}"
 
 	return None
 
@@ -2195,7 +2190,7 @@ def _get_duplicate_name_without_cost_center_warnings(raw_rows: list[dict]) -> li
 			continue
 
 		name_value = cstr(raw.get("employee_name") or "").strip()
-		name_key = _normalize_lookup_key(name_value)
+		name_key = _get_duplicate_name_warning_key(name_value)
 		if not name_key:
 			continue
 
@@ -2326,10 +2321,19 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 
 def _match_workbook_employee_for_import(raw: dict, lookup: dict[str, dict]):
 	has_payroll_employee_id = bool(cstr(raw.get("employee_id") or "").strip())
-	return _match_workbook_employee(
+	employee, matched_by = _match_workbook_employee(
 		raw,
 		lookup,
 		allow_name_match=not has_payroll_employee_id,
+	)
+	if employee or not has_payroll_employee_id:
+		return employee, matched_by
+
+	return _match_workbook_employee(
+		raw,
+		lookup,
+		allow_name_match=False,
+		allow_compact_name_match=True,
 	)
 
 
@@ -2403,14 +2407,17 @@ def _get_company_employee_lookup(company: str) -> dict[str, dict]:
 
 
 def _merge_employee_lookup(lookup: dict[str, dict], employee: dict, source, matched_by: str):
-	key = _normalize_lookup_key(source)
-	if not key:
-		return
-	existing = lookup.get(key)
-	if existing and existing["employee"] and existing["employee"]["name"] != employee["name"]:
-		lookup[key] = {"employee": None, "matched_by": matched_by}
-		return
-	lookup[key] = {"employee": employee, "matched_by": matched_by}
+	if matched_by == "employee_name":
+		keys = _candidate_person_name_lookup_keys(source)
+	else:
+		keys = _candidate_lookup_keys(source, allow_related_key=False)
+
+	for key in keys:
+		existing = lookup.get(key)
+		if existing and existing["employee"] and existing["employee"]["name"] != employee["name"]:
+			lookup[key] = {"employee": None, "matched_by": matched_by}
+			continue
+		lookup[key] = {"employee": employee, "matched_by": matched_by}
 
 
 def _match_workbook_employee(
@@ -2419,16 +2426,21 @@ def _match_workbook_employee(
 	*,
 	allow_related_employee_id: bool = True,
 	allow_name_match: bool = True,
+	allow_compact_name_match: bool = False,
 ):
 	for candidate, matched_by, allow_related_key in (
 		(raw.get("employee_id"), "employee_id", allow_related_employee_id),
 		(raw.get("national_id"), "iqama_number", False),
 		(raw.get("employee_name"), "employee_name", False),
 	):
-		if matched_by == "employee_name" and not allow_name_match:
-			continue
+		if matched_by == "employee_name":
+			if not allow_name_match and not allow_compact_name_match:
+				continue
+			keys = _candidate_person_name_lookup_keys(candidate, compact_only=allow_compact_name_match and not allow_name_match)
+		else:
+			keys = _candidate_lookup_keys(candidate, allow_related_key=allow_related_key)
 
-		for key in _candidate_lookup_keys(candidate, allow_related_key=allow_related_key):
+		for key in keys:
 			match = lookup.get(key)
 			if match and match.get("employee"):
 				return match["employee"], match.get("matched_by") or matched_by
@@ -2447,6 +2459,45 @@ def _candidate_lookup_keys(value, allow_related_key: bool = True) -> list[str]:
 		candidates.append(base_key)
 
 	return candidates
+
+
+def _candidate_person_name_lookup_keys(value, compact_only: bool = False) -> list[str]:
+	tokens = _tokenize_person_name(value)
+	if not tokens:
+		return []
+
+	compact_key = _get_compact_person_name_lookup_key_from_tokens(tokens)
+	if compact_only:
+		return [compact_key] if compact_key else []
+
+	full_key = " ".join(tokens)
+	candidates = [full_key]
+	if compact_key and compact_key != full_key:
+		candidates.append(compact_key)
+	return candidates
+
+
+def _tokenize_person_name(value) -> list[str]:
+	key = _normalize_lookup_key(value)
+	if not key:
+		return []
+	return [token for token in key.split(" ") if token]
+
+
+def _get_compact_person_name_lookup_key(value) -> str:
+	return _get_compact_person_name_lookup_key_from_tokens(_tokenize_person_name(value))
+
+
+def _get_compact_person_name_lookup_key_from_tokens(tokens: list[str]) -> str:
+	if len(tokens) < 3:
+		return ""
+	if len(tokens) == 3:
+		return " ".join(tokens)
+	return " ".join([tokens[0], tokens[1], tokens[-1]])
+
+
+def _get_duplicate_name_warning_key(value) -> str:
+	return _get_compact_person_name_lookup_key(value) or _normalize_lookup_key(value)
 
 
 def _normalize_lookup_key(value) -> str:
@@ -2543,3 +2594,96 @@ def _get_payable_account(company: str) -> str:
 		"name",
 	)
 	return account or ""
+
+
+def auto_create_employment_contracts(
+	payroll_docname: str = "SAU-PAY-2026-0004",
+	contract_type: str = "غير محدد المدة / Open Ended",
+	start_date: str = "2025-01-01",
+) -> dict:
+	"""
+	Auto-create Saudi Employment Contracts for employees that appear in the
+	payroll workbook but do not yet have an active contract.
+
+	Run via:
+	  bench --site <site> execute \\
+	    saudi_hr.saudi_hr.doctype.saudi_monthly_payroll.saudi_monthly_payroll.auto_create_employment_contracts
+	"""
+	doc = frappe.get_doc("Saudi Monthly Payroll", payroll_docname)
+	company = doc.company
+
+	# Resolve workbook file
+	workbook_url = doc.source_workbook
+	if not workbook_url:
+		return {"error": "No source workbook attached to the payroll document."}
+
+	content = _get_attached_file_content(workbook_url)
+	if not content:
+		return {"error": f"Could not read workbook file: {workbook_url}"}
+
+	raw_rows = _extract_source_workbook_rows(content)
+	if not raw_rows:
+		return {"error": "Workbook has no data rows."}
+
+	lookup = _get_company_employee_lookup(company)
+
+	created = []
+	skipped_no_match = []
+	skipped_existing = []
+	skipped_zero_salary = []
+	errors = []
+
+	for raw in raw_rows:
+		employee, _matched_by = _match_workbook_employee_for_import(raw, lookup)
+		if not employee:
+			skipped_no_match.append(raw.get("employee_name") or raw.get("employee_id") or str(raw))
+			continue
+
+		emp_name = employee["name"]
+
+		# Skip if already has an active contract
+		existing = frappe.db.get_value(
+			"Saudi Employment Contract",
+			{"employee": emp_name, "contract_status": "Active / نشط", "docstatus": 1},
+			"name",
+		)
+		if existing:
+			skipped_existing.append(f"{emp_name} ({existing})")
+			continue
+
+		basic = flt(raw.get("basic_salary"))
+		if not basic:
+			skipped_zero_salary.append(emp_name)
+			continue
+
+		try:
+			contract = frappe.get_doc({
+				"doctype": "Saudi Employment Contract",
+				"naming_series": "SAU-EMP-CONT-.YYYY.-.####",
+				"employee": emp_name,
+				"company": company,
+				"contract_type": contract_type,
+				"start_date": start_date,
+				"basic_salary": basic,
+				"housing_allowance": flt(raw.get("housing_allowance")),
+				"transport_allowance": flt(raw.get("transport_allowance")),
+				"other_allowances": flt(raw.get("other_allowances")),
+			})
+			contract.insert(ignore_permissions=True)
+			contract.submit()
+			created.append(contract.name)
+		except Exception as exc:
+			errors.append(f"{emp_name}: {exc}")
+
+	frappe.db.commit()
+
+	return {
+		"created": len(created),
+		"skipped_no_match": len(skipped_no_match),
+		"skipped_existing_contract": len(skipped_existing),
+		"skipped_zero_salary": len(skipped_zero_salary),
+		"errors": len(errors),
+		"created_names": created[:20],
+		"no_match_names": skipped_no_match[:20],
+		"error_details": errors[:10],
+	}
