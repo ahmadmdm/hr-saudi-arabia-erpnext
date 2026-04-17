@@ -736,3 +736,117 @@ def import_employee_branch_template(file_url=None):
 	from saudi_hr.saudi_hr.doctype.saudi_hr_settings.saudi_hr_settings import import_employee_branch_template as _import
 
 	return _import(file_url=file_url)
+
+
+# ─── Payroll Adjustment Items Helpers ─────────────────────────────────────────
+
+@frappe.whitelist()
+def fetch_approved_overtime_for_payroll(payroll_name):
+	"""
+	Fetches all approved, unlinked Overtime Requests for the payroll period
+	and populates adjustment items on matching employee rows.
+	جلب طلبات العمل الإضافي المعتمدة وغير المرتبطة بمسير رواتب وإضافتها كبنود تعديل.
+	"""
+	doc = frappe.get_doc("Saudi Monthly Payroll", payroll_name)
+	frappe.has_permission("Saudi Monthly Payroll", "write", doc=doc, throw=True)
+
+	month_map = {
+		"January / يناير": 1, "February / فبراير": 2, "March / مارس": 3,
+		"April / أبريل": 4, "May / مايو": 5, "June / يونيو": 6,
+		"July / يوليو": 7, "August / أغسطس": 8, "September / سبتمبر": 9,
+		"October / أكتوبر": 10, "November / نوفمبر": 11, "December / ديسمبر": 12,
+	}
+	month_num = month_map.get(doc.month, 0)
+	if not month_num:
+		frappe.throw(_("Invalid month in payroll"))
+
+	import calendar as cal
+	last_day = cal.monthrange(int(doc.year), month_num)[1]
+	period_start = f"{doc.year}-{month_num:02d}-01"
+	period_end = f"{doc.year}-{month_num:02d}-{last_day:02d}"
+
+	overtime_requests = frappe.get_all(
+		"Overtime Request",
+		filters={
+			"docstatus": 1,
+			"approval_status": "Approved / موافق",
+			"date": ["between", [period_start, period_end]],
+			"payroll_period": ["in", ["", None]],
+			"company": doc.company,
+		},
+		fields=["name", "employee", "employee_name", "overtime_hours", "overtime_amount", "date"],
+	)
+
+	if not overtime_requests:
+		frappe.msgprint(_("No approved overtime requests found for this period. لا يوجد طلبات عمل إضافي معتمدة لهذه الفترة."))
+		return {"added": 0}
+
+	# Build employee lookup for rows included in this payroll
+	payroll_employees = {row.employee for row in doc.employees if row.employee}
+
+	added = 0
+	for ot in overtime_requests:
+		if ot.employee not in payroll_employees:
+			continue
+
+		# Check if already added
+		already_exists = False
+		for item in getattr(doc, "adjustment_items", []) or []:
+			if item.reference_doctype == "Overtime Request" and item.reference_name == ot.name:
+				already_exists = True
+				break
+		if already_exists:
+			continue
+
+		doc.append("adjustment_items", {
+			"employee": ot.employee,
+			"item_type": "Addition / إضافة",
+			"description": _("Overtime {0}h on {1} / عمل إضافي {0} ساعة بتاريخ {1}").format(
+				ot.overtime_hours, ot.date
+			),
+			"amount": flt(ot.overtime_amount),
+			"reference_doctype": "Overtime Request",
+			"reference_name": ot.name,
+		})
+
+		# Mark OT as linked
+		frappe.db.set_value("Overtime Request", ot.name, "payroll_period", doc.name)
+		added += 1
+
+	if added:
+		doc.save()
+		frappe.msgprint(
+			_("Added {0} overtime adjustment items. تمت إضافة {0} بنود عمل إضافي.").format(added),
+			indicator="green",
+		)
+
+	return {"added": added}
+
+
+@frappe.whitelist()
+def add_payroll_adjustment_item(payroll_name, employee, item_type, description, amount):
+	"""
+	Add a single adjustment item to a payroll employee row.
+	إضافة بند تعديل واحد لموظف في مسير الرواتب.
+	"""
+	doc = frappe.get_doc("Saudi Monthly Payroll", payroll_name)
+	frappe.has_permission("Saudi Monthly Payroll", "write", doc=doc, throw=True)
+
+	target_row = None
+	for row in doc.employees:
+		if row.employee == employee:
+			target_row = row
+			break
+
+	if not target_row:
+		frappe.throw(_("Employee {0} not found in payroll. الموظف {0} غير موجود في مسير الرواتب.").format(employee))
+
+	doc.append("adjustment_items", {
+		"employee": employee,
+		"item_type": item_type,
+		"description": description,
+		"amount": flt(amount),
+	})
+	doc.save()
+
+	return {"status": "ok"}

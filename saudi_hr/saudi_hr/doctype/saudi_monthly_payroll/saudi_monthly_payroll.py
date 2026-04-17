@@ -124,6 +124,18 @@ class SaudiMonthlyPayroll(Document):
 				)
 
 	def _recalculate_employee_rows(self):
+		adjustments_by_employee = {}
+		for item in getattr(self, "adjustment_items", []) or []:
+			employee = getattr(item, "employee", None)
+			if not employee:
+				continue
+			bucket = adjustments_by_employee.setdefault(employee, {"additions": 0.0, "deductions": 0.0})
+			amt = flt(item.amount)
+			if "Addition" in (item.item_type or "") or "إضافة" in (item.item_type or ""):
+				bucket["additions"] += amt
+			else:
+				bucket["deductions"] += amt
+
 		for row in self.employees:
 			gross = round(
 				flt(row.basic_salary)
@@ -139,9 +151,16 @@ class SaudiMonthlyPayroll(Document):
 				+ flt(getattr(row, "other_deductions", 0.0)),
 				2,
 			)
+
+			adj = adjustments_by_employee.get(row.employee or "", {"additions": 0.0, "deductions": 0.0})
+			adj_additions = flt(adj.get("additions"))
+			adj_deductions = flt(adj.get("deductions"))
+
+			total_deductions = round(total_deductions + adj_deductions, 2)
+
 			row.gross_salary = gross
 			row.total_deductions = total_deductions
-			row.net_salary = round(gross + flt(row.overtime_addition) - total_deductions, 2)
+			row.net_salary = round(gross + flt(row.overtime_addition) + adj_additions - total_deductions, 2)
 			row.cost_center = _resolve_cost_center_link(getattr(row, "cost_center", None), self.company) or getattr(row, "cost_center", None)
 
 	def _recalculate_totals(self):
@@ -151,7 +170,14 @@ class SaudiMonthlyPayroll(Document):
 		self.total_gosi_deductions = round(sum(flt(r.gosi_employee_deduction) for r in self.employees), 2)
 		self.total_sick_deductions = round(sum(flt(r.sick_leave_deduction) for r in self.employees), 2)
 		self.total_loan_deductions = round(sum(flt(r.loan_deduction) for r in self.employees), 2)
-		self.total_other_deductions = round(sum(flt(getattr(r, "other_deductions", 0.0)) for r in self.employees), 2)
+		adjustment_deductions = 0.0
+		for item in getattr(self, "adjustment_items", []) or []:
+			if "Addition" not in (item.item_type or "") and "إضافة" not in (item.item_type or ""):
+				adjustment_deductions += flt(item.amount)
+		self.total_other_deductions = round(
+			sum(flt(getattr(r, "other_deductions", 0.0)) for r in self.employees) + adjustment_deductions,
+			2,
+		)
 		self.total_overtime = round(sum(flt(r.overtime_addition) for r in self.employees), 2)
 		self.total_net_payable = round(sum(flt(r.net_salary) for r in self.employees), 2)
 

@@ -26,6 +26,8 @@
   "auto_create_default_date_of_joining",
   "employees_section",
   "employees",
+  "adjustments_section",
+  "adjustment_items",
   "totals_section",
   "total_employees",
   "total_gross",
@@ -166,6 +168,18 @@
    "fieldtype": "Table",
    "label": "Employees / الموظفون",
    "options": "Saudi Monthly Payroll Employee"
+  },
+  {
+   "fieldname": "adjustments_section",
+   "fieldtype": "Section Break",
+   "label": "Adjustment Items / بنود التعديل",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "adjustment_items",
+   "fieldtype": "Table",
+   "label": "Adjustments / التعديلات",
+   "options": "Payroll Adjustment Item"
   },
   {
    "fieldname": "totals_section",

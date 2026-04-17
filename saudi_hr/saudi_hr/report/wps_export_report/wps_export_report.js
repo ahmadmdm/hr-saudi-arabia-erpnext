@@ -16,16 +16,6 @@ frappe.query_reports["WPS Export Report"] = {
                 frappe.msgprint(__("Please select a Saudi Monthly Payroll first"));
                 return;
             }
-            frappe.call({
-                method: "saudi_hr.saudi_hr.report.wps_export_report.wps_export_report.download_wps_sif",
-                args: { payroll_document: payroll },
-                callback: function (r) {
-                    if (r.message) {
-                        frappe.msgprint(__("WPS SIF File downloaded successfully."));
-                    }
-                }
-            });
-            // Trigger stream download
             window.location.href = frappe.urllib.get_full_url(
                 `/api/method/saudi_hr.saudi_hr.report.wps_export_report.wps_export_report.download_wps_sif?payroll_document=${encodeURIComponent(payroll)}`
             );

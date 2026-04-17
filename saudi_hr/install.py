@@ -8,6 +8,9 @@ import frappe
 
 def after_install():
 	create_workflow_states()
+	ensure_department_approver_role()
+	sync_department_approver_role_assignments()
+	sync_department_approver_company_permissions()
 	sync_dashboard_chart_configs()
 	sync_notification_configs()
 	create_default_settings()
@@ -17,10 +20,81 @@ def after_install():
 def after_migrate():
 	"""Called after every bench migrate — ensures workflow states always exist."""
 	create_workflow_states()
+	ensure_department_approver_role()
+	sync_department_approver_role_assignments()
+	sync_department_approver_company_permissions()
 	sync_dashboard_chart_configs()
 	sync_notification_configs()
 	migrate_legacy_annual_leave()
 	migrate_legacy_employee_loans()
+
+
+def ensure_department_approver_role():
+	"""Ensure the custom workflow role for line managers exists."""
+	if frappe.db.exists("Role", "Department Approver"):
+		return
+
+	frappe.get_doc(
+		{
+			"doctype": "Role",
+			"role_name": "Department Approver",
+			"desk_access": 1,
+		}
+	).insert(ignore_permissions=True)
+
+
+def sync_department_approver_role_assignments():
+	"""Assign the Department Approver role to users already configured as approvers."""
+	if not frappe.db.exists("Role", "Department Approver"):
+		return
+
+	from frappe.utils.user import add_role
+
+	for user in _get_department_approver_users():
+		add_role(user, "Department Approver")
+
+
+def sync_department_approver_company_permissions():
+	"""Keep approver users aligned with the companies of employees they approve."""
+	from frappe.permissions import add_user_permission
+
+	for user in _get_department_approver_users():
+		companies = frappe.db.sql(
+			"""
+				SELECT DISTINCT company
+				FROM `tabEmployee`
+				WHERE (leave_approver = %(user)s OR expense_approver = %(user)s)
+				  AND IFNULL(company, '') != ''
+			""",
+			{"user": user},
+			as_dict=True,
+		)
+
+		for row in companies:
+			if not frappe.db.exists(
+				"User Permission",
+				{"user": user, "allow": "Company", "for_value": row.company},
+			):
+				add_user_permission("Company", row.company, user, ignore_permissions=True)
+
+
+def _get_department_approver_users():
+	approver_users = set()
+	for fieldname in ("leave_approver", "expense_approver"):
+		approver_users.update(
+			user
+			for user in frappe.get_all("Employee", filters={fieldname: ["!=", ""]}, pluck=fieldname)
+			if user and frappe.db.exists("User", user)
+		)
+
+	if frappe.db.exists("DocType", "Department Approver"):
+		approver_users.update(
+			user
+			for user in frappe.get_all("Department Approver", filters={"approver": ["!=", ""]}, pluck="approver")
+			if user and frappe.db.exists("User", user)
+		)
+
+	return approver_users
 
 
 def sync_dashboard_chart_configs():
@@ -62,22 +136,40 @@ def sync_notification_configs():
 def create_workflow_states():
         """إنشاء حالات سير العمل العربية المطلوبة لجميع workflows في saudi_hr."""
         states = [
+		("Draft",                                      "Warning"),
                 ("مسودة / Draft",                              "Warning"),
+		("Open",                                       "Warning"),
                 ("مفتوح / Open",                               "Warning"),
+		("Under Review",                               "Primary"),
                 ("قيد المراجعة / Under Review",                "Primary"),
+		("In Progress",                                "Primary"),
                 ("قيد التحقيق / In Progress",                  "Primary"),
                 ("قيد التنفيذ / In Progress",                  "Primary"),
+		("Pending HR",                                 "Primary"),
                 ("بانتظار HR / Pending HR",                    "Primary"),
+		("Pending HR Approval",                        "Primary"),
+		("Pending Manager",                            "Primary"),
+		("Pending Manager Approval",                   "Primary"),
                 ("بانتظار موافقة المدير / Pending Manager",   "Primary"),
+		("HR Review",                                  "Primary"),
                 ("مراجعة HR / HR Review",                      "Primary"),
+		("Management Approval",                        "Primary"),
                 ("موافقة الإدارة / Management Approval",       "Primary"),
+		("Notice Sent",                                "Primary"),
                 ("تم الإشعار / Notice Sent",                   "Primary"),
+		("Approved",                                   "Success"),
                 ("معتمد / Approved",                           "Success"),
+		("Decided",                                    "Success"),
                 ("تم البت / Decided",                          "Success"),
+		("Resolved",                                   "Success"),
                 ("محلول / Resolved",                           "Success"),
+		("Completed",                                  "Success"),
                 ("مكتمل / Completed",                          "Success"),
+		("Closed",                                     "Success"),
                 ("مغلق / Closed",                              "Success"),
+		("Rejected",                                   "Danger"),
                 ("مرفوض / Rejected",                           "Danger"),
+		("Cancelled",                                  "Danger"),
                 ("ملغى / Cancelled",                           "Danger"),
         ]
         for state_name, style in states:

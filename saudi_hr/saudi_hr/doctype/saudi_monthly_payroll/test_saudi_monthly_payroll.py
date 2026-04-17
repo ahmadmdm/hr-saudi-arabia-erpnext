@@ -531,6 +531,58 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(employee["name"], "EMP-1090")
 		self.assertEqual(matched_by, "employee_id")
 
+	def test_candidate_person_name_lookup_keys_include_compact_arabic_alias(self):
+		keys = payroll_module._candidate_person_name_lookup_keys("دخيل محمد دخيل المبارك")
+
+		self.assertEqual(keys[0], "دخيل محمد دخيل المبارك")
+		self.assertIn("دخيل محمد المبارك", keys)
+
+	def test_match_workbook_employee_for_import_uses_compact_name_alias_when_employee_id_exists(self):
+		lookup = {}
+		employee = {
+			"name": "HR-EMP-00107",
+			"employee_name": "مطيع نصيب الفتيحي",
+			"department": "Administration",
+			"nationality": "Saudi",
+		}
+		payroll_module._merge_employee_lookup(lookup, employee, employee["employee_name"], "employee_name")
+
+		matched_employee, matched_by = payroll_module._match_workbook_employee_for_import(
+			{"employee_id": "7802", "employee_name": "مطيع نصيب مطيع صالح الفتيحي"},
+			lookup,
+		)
+
+		self.assertEqual(matched_employee["name"], "HR-EMP-00107")
+		self.assertEqual(matched_by, "employee_name")
+
+	def test_get_duplicate_name_without_cost_center_warnings_groups_compact_arabic_aliases(self):
+		raw_rows = [
+			{
+				"source_row": 10,
+				"employee_id": "1081A",
+				"employee_name": "دخيل محمد المبارك",
+				"basic_salary": 1000,
+				"gross_salary": 1000,
+				"total_deductions": 0,
+				"net_salary": 1000,
+			},
+			{
+				"source_row": 11,
+				"employee_id": "1081B",
+				"employee_name": "دخيل محمد دخيل المبارك",
+				"basic_salary": 1000,
+				"gross_salary": 1000,
+				"total_deductions": 0,
+				"net_salary": 1000,
+			},
+		]
+
+		warnings = payroll_module._get_duplicate_name_without_cost_center_warnings(raw_rows)
+
+		self.assertEqual(len(warnings), 1)
+		self.assertIn("10", warnings[0])
+		self.assertIn("11", warnings[0])
+
 	def test_preview_payroll_workbook_summarizes_matching_gap(self):
 		with patch.object(payroll_module, "_extract_source_workbook_rows", return_value=[
 			{"source_row": 6, "employee_id": 2960, "employee_name": "Missing Employee"}
@@ -640,6 +692,45 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(row_one.employee, "EMP-7803A")
 		self.assertEqual(row_two.employee, "EMP-7803A")
 		self.assertEqual(row_one.department, "Finance")
+
+	def test_create_basic_employees_for_payroll_links_existing_employee_by_compact_name_alias(self):
+		row = SimpleNamespace(idx=1, payroll_employee_id="7802", employee="", employee_name="مطيع نصيب مطيع صالح الفتيحي", workbook_department="Finance", department="", nationality="")
+		doc = SimpleNamespace(company="amd", employees=[row])
+		defaults = {
+			"gender": "Prefer not to say",
+			"date_of_birth": getdate("1990-01-01"),
+			"date_of_joining": getdate("2026-03-28"),
+			"status": "Active",
+		}
+		lookup = {}
+		existing_employee = {
+			"name": "HR-EMP-00107",
+			"employee_name": "مطيع نصيب الفتيحي",
+			"department": "Finance",
+			"nationality": "Saudi",
+			"company": "amd",
+		}
+		payroll_module._merge_employee_lookup(lookup, existing_employee, existing_employee["employee_name"], "employee_name")
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value=lookup), patch.object(
+			payroll_module.frappe.db, "savepoint"
+		), patch.object(
+			payroll_module.frappe.db, "release_savepoint"
+		), patch.object(
+			payroll_module, "_resolve_department_link", return_value="Finance"
+		), patch.object(
+			payroll_module, "_resolve_designation_link", return_value=""
+		), patch.object(
+			payroll_module, "_resolve_cost_center_link", return_value=""
+		):
+			created, linked, skipped = payroll_module._create_basic_employees_for_payroll(doc, defaults)
+
+		self.assertEqual(created, [])
+		self.assertEqual(linked, 1)
+		self.assertEqual(skipped, [])
+		self.assertEqual(row.employee, "HR-EMP-00107")
+		self.assertEqual(row.employee_name, "مطيع نصيب الفتيحي")
+		self.assertEqual(row.department, "Finance")
 
 	def test_create_basic_employees_for_payroll_reuses_same_employee_for_suffix_variants(self):
 		inserted = []

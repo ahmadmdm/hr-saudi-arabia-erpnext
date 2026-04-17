@@ -232,6 +232,14 @@
    "submit": 1
   },
   {
+   "role": "Department Approver",
+   "read": 1,
+   "write": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
     "role": "Employee",
     "read": 1,
     "write": 1,

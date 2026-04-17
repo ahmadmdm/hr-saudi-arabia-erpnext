@@ -8,7 +8,59 @@ Required monthly submission for businesses with 10+ employees.
 
 import frappe
 from frappe import _
-from frappe.utils import getdate, formatdate
+from frappe.utils import cint, flt, formatdate, getdate
+
+
+MONTH_NUMBER_MAP = {
+    "1": "01",
+    "01": "01",
+    "january": "01",
+    "يناير": "01",
+    "2": "02",
+    "02": "02",
+    "february": "02",
+    "فبراير": "02",
+    "3": "03",
+    "03": "03",
+    "march": "03",
+    "مارس": "03",
+    "4": "04",
+    "04": "04",
+    "april": "04",
+    "أبريل": "04",
+    "ابريل": "04",
+    "5": "05",
+    "05": "05",
+    "may": "05",
+    "مايو": "05",
+    "6": "06",
+    "06": "06",
+    "june": "06",
+    "يونيو": "06",
+    "7": "07",
+    "07": "07",
+    "july": "07",
+    "يوليو": "07",
+    "8": "08",
+    "08": "08",
+    "august": "08",
+    "أغسطس": "08",
+    "اغسطس": "08",
+    "9": "09",
+    "09": "09",
+    "september": "09",
+    "سبتمبر": "09",
+    "10": "10",
+    "october": "10",
+    "أكتوبر": "10",
+    "اكتوبر": "10",
+    "11": "11",
+    "november": "11",
+    "نوفمبر": "11",
+    "12": "12",
+    "december": "12",
+    "ديسمبر": "12",
+}
 
 
 def execute(filters=None):
@@ -102,53 +154,32 @@ def get_data(filters):
 
     payroll = frappe.get_doc("Saudi Monthly Payroll", payroll_name)
     company = payroll.company
+    pay_period = _get_pay_period_code(payroll)
+    payment_date = _get_payment_date(payroll)
 
     # Get company CR number (used as Employer ID in WPS)
     employer_id = frappe.db.get_value("Company", company, "registration_details") or company
+    employee_details = _get_employee_details_lookup(payroll.employees)
+    identity_lookup = _get_identity_lookup(payroll.employees)
 
     rows = []
     for emp_row in payroll.employees:
         employee = emp_row.employee
+        emp_data = employee_details.get(employee, {})
+        iqama = identity_lookup.get(employee) or employee
 
-        # Fetch employee details
-        emp_data = frappe.db.get_value(
-            "Employee",
-            employee,
-            [
-                "employee_name",
-                "iban",
-                "bank_name",
-                "iqama_number",
-                "passport_number",
-                "nationality",
-                "date_of_joining",
-            ],
-            as_dict=True,
-        ) or {}
-
-        # Iqama for non-Saudi, National ID for Saudi
-        iqama = emp_data.get("iqama_number") or emp_data.get("passport_number") or employee
-
-        # Net salary = gross - deductions; use emp_row computed values
-        basic = emp_row.get("basic_salary") or 0
-        housing = emp_row.get("housing_allowance") or 0
-        transport = emp_row.get("transport_allowance") or 0
-        other = emp_row.get("other_allowances") or 0
-        deductions = emp_row.get("total_deductions") or 0
-        gross = basic + housing + transport + other
-        net = gross - deductions
-
-        pay_period = f"{payroll.month or ''}/{payroll.year or ''}"
-        payment_date = payroll.payment_date or payroll.posting_date
+        basic = flt(emp_row.get("basic_salary"))
+        housing = flt(emp_row.get("housing_allowance"))
+        net = flt(emp_row.get("net_salary"))
 
         # Validate IBAN - basic check
         iban = emp_data.get("iban") or ""
-        wps_status = "Ready" if iban and iqama else "Missing Data"
+        wps_status = _get_wps_status(iban, iqama, net)
 
         rows.append({
             "employer_id": employer_id,
             "employee_iqama": iqama,
-            "employee_name": emp_data.get("employee_name") or employee,
+            "employee_name": emp_row.get("employee_name") or emp_data.get("employee_name") or employee,
             "iban": iban,
             "bank_name": emp_data.get("bank_name") or "",
             "payment_date": payment_date,
@@ -181,12 +212,13 @@ def download_wps_sif(payroll_document):
     payroll = frappe.get_doc("Saudi Monthly Payroll", payroll_document)
     company = payroll.company
     employer_id = frappe.db.get_value("Company", company, "registration_details") or company
+    pay_period = _get_pay_period_code(payroll)
 
     output = io.StringIO()
     writer = csv.writer(output)
 
     # SIF Header (EDR record)
-    writer.writerow(["EDR", employer_id, company, f"{payroll.month or '01'}{payroll.year or ''}", len(data)])
+    writer.writerow(["EDR", employer_id, company, pay_period, len(data)])
 
     # Employee records (EMP)
     for row in data:
@@ -194,18 +226,116 @@ def download_wps_sif(payroll_document):
             "EMP",
             row["employee_iqama"],
             row["iban"],
-            row["net_salary"],
+            f"{flt(row['net_salary']):.2f}",
             row["pay_period"],
-            row["payment_date"] or "",
+            formatdate(row["payment_date"], "yyyy-MM-dd") if row["payment_date"] else "",
             row["employee_name"],
         ])
 
     # End of file (EOS)
-    writer.writerow(["EOS", len(data), sum(r["net_salary"] for r in data)])
+    writer.writerow(["EOS", len(data), f"{sum(flt(r['net_salary']) for r in data):.2f}"])
 
     sif_content = output.getvalue()
-    filename = f"WPS_{payroll_document}_{payroll.month}_{payroll.year}.csv"
+    filename = f"WPS_{payroll_document}_{pay_period}.csv"
 
     frappe.response["filename"] = filename
     frappe.response["filecontent"] = sif_content.encode("utf-8")
     frappe.response["type"] = "download"
+
+
+def _get_payment_date(payroll):
+    for fieldname in ("payment_date", "posting_date"):
+        value = payroll.get(fieldname)
+        if value:
+            return getdate(value)
+    return None
+
+
+def _get_pay_period_code(payroll):
+    month_value = _normalize_month_number(payroll.get("month"))
+    year_value = cint(payroll.get("year"))
+    if month_value and year_value:
+        return f"{month_value}{year_value}"
+
+    posting_date = _get_payment_date(payroll)
+    if posting_date:
+        return posting_date.strftime("%m%Y")
+
+    return ""
+
+
+def _normalize_month_number(month_value):
+    if month_value is None:
+        return ""
+
+    text = str(month_value).strip()
+    if not text:
+        return ""
+
+    parts = [part.strip().lower() for part in text.replace('-', '/').split('/') if part.strip()]
+    for part in parts:
+        if part in MONTH_NUMBER_MAP:
+            return MONTH_NUMBER_MAP[part]
+
+    return MONTH_NUMBER_MAP.get(text.lower(), "")
+
+
+def _get_employee_details_lookup(employee_rows):
+    employees = [row.employee for row in employee_rows if row.employee]
+    if not employees:
+        return {}
+
+    return {
+        row.name: row
+        for row in frappe.get_all(
+            "Employee",
+            filters={"name": ["in", employees]},
+            fields=["name", "employee_name", "iban", "bank_name", "passport_number", "nationality"],
+            limit_page_length=0,
+            as_list=False,
+        )
+    }
+
+
+def _get_identity_lookup(employee_rows):
+    lookup = {}
+    employees = [row.employee for row in employee_rows if row.employee]
+    if not employees:
+        return lookup
+
+    for row in employee_rows:
+        identity = row.get("national_id") or row.get("iqama_number") or row.get("passport_number")
+        if identity:
+            lookup[row.employee] = str(identity).strip()
+
+    for doctype, fields in (
+        ("Saudi Employment Contract", ["employee", "iqama_number", "passport_number"]),
+        ("Work Permit Iqama", ["employee", "iqama_number"]),
+        ("Employee", ["name", "passport_number"]),
+    ):
+        for row in frappe.get_all(
+            doctype,
+            filters={"employee": ["in", employees]} if doctype != "Employee" else {"name": ["in", employees]},
+            fields=fields,
+            order_by="modified desc",
+            limit_page_length=0,
+            as_list=False,
+        ):
+            employee = row.get("employee") or row.get("name")
+            if employee in lookup:
+                continue
+            identity = row.get("iqama_number") or row.get("passport_number")
+            if identity:
+                lookup[employee] = str(identity).strip()
+
+    return lookup
+
+
+def _get_wps_status(iban, identity_value, net_salary):
+    if not identity_value:
+        return "Missing Identity"
+    if not iban:
+        return "Missing IBAN"
+    if flt(net_salary) <= 0:
+        return "Zero Net Pay"
+    return "Ready"

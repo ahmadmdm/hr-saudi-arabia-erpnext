@@ -35,6 +35,7 @@
   {"fieldname": "amended_from", "fieldtype": "Link", "label": "Amended From", "no_copy": 1, "options": "Salary Adjustment", "print_hide": 1, "read_only": 1}
  ],
  "icon": "fa fa-line-chart",
+ "is_submittable": 1,
  "links": [{"group": "References", "link_doctype": "Performance Review", "link_fieldname": "salary_adjustment"}],
  "modified": "2026-04-05 00:00:00.000000",
  "modified_by": "Administrator",
@@ -42,7 +43,7 @@
  "name": "Salary Adjustment",
  "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
- "permissions": [{"role": "HR Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "report": 1, "export": 1, "share": 1}, {"role": "HR User", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1, "report": 1, "export": 1}],
+ "permissions": [{"role": "HR Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "submit": 1, "cancel": 1, "amend": 1, "print": 1, "email": 1, "report": 1, "export": 1, "share": 1}, {"role": "HR User", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1, "report": 1, "export": 1}, {"role": "Department Approver", "read": 1, "write": 1, "print": 1, "email": 1, "report": 1}],
  "search_fields": "employee,employee_name,adjustment_type,status",
  "sort_field": "effective_date",
  "sort_order": "DESC",

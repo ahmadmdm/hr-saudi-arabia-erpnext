@@ -1,0 +1,1 @@
+from saudi_hr.saudi_hr.saudi_hr.permissions import *

@@ -1,15 +1,15 @@
 {
  "doctype": "Workflow",
- "workflow_name": "Overtime Approval Workflow",
- "document_type": "Overtime Request",
+ "workflow_name": "Salary Adjustment Workflow",
+ "name": "Salary Adjustment Workflow",
+ "document_type": "Salary Adjustment",
  "is_active": 1,
- "name": "Overtime Approval Workflow",
  "override_status": 0,
  "send_email_alert": 1,
  "workflow_state_field": "workflow_state",
  "states": [
   {
-   "allow_edit": "Employee Self Service",
+    "allow_edit": "HR User",
    "doc_status": "0",
    "state": "Draft",
    "style": "Warning"
@@ -42,52 +42,45 @@
  "transitions": [
   {
    "action": "Submit Request",
-   "allow_self_approval": 1,
-   "allowed": "Employee Self Service",
-   "next_state": "Pending Manager Approval",
-   "state": "Draft"
-  },
-  {
-   "action": "Submit Request",
-   "allow_self_approval": 1,
    "allowed": "HR User",
+   "state": "Draft",
    "next_state": "Pending Manager Approval",
-   "state": "Draft"
+   "allow_self_approval": 1
   },
   {
    "action": "Manager Approve",
-   "allow_self_approval": 0,
    "allowed": "Department Approver",
+   "state": "Pending Manager Approval",
    "next_state": "Pending HR Approval",
-   "state": "Pending Manager Approval"
+   "allow_self_approval": 0
   },
   {
    "action": "Reject",
-   "allow_self_approval": 1,
    "allowed": "Department Approver",
+   "state": "Pending Manager Approval",
    "next_state": "Rejected",
-   "state": "Pending Manager Approval"
+   "allow_self_approval": 1
   },
   {
    "action": "Final Approve",
-   "allow_self_approval": 1,
    "allowed": "HR Manager",
+   "state": "Pending HR Approval",
    "next_state": "Approved",
-   "state": "Pending HR Approval"
+   "allow_self_approval": 1
   },
   {
    "action": "Reject",
-   "allow_self_approval": 1,
    "allowed": "HR Manager",
+   "state": "Pending HR Approval",
    "next_state": "Rejected",
-   "state": "Pending HR Approval"
+   "allow_self_approval": 1
   },
   {
    "action": "Reset to Draft",
-   "allow_self_approval": 1,
    "allowed": "HR Manager",
+   "state": "Rejected",
    "next_state": "Draft",
-   "state": "Rejected"
+   "allow_self_approval": 1
   }
  ]
 }

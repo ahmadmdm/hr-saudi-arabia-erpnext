@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.12.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.13.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.12.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.13.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -72,10 +72,10 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
 Built for establishments of any size operating in Saudi Arabia. Includes:
 
-- **20 DocTypes** covering the full employee lifecycle
-- **7 Reports** for compliance, payroll, and analytics
+- **Core DocTypes** covering the full employee lifecycle
+- **Operational Reports** for compliance, payroll, and analytics
 - **5 Arabic RTL Print Formats** for official documents
-- **2 Approval Workflows** for key transactions
+- **5 Approval Workflows** for key HR transactions
 - **4 Automated Email Notifications**
 - Integration with **GOSI, MLSD, Nitaqat, WPS**
 
@@ -234,7 +234,10 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 
 | سير العمل | Workflow | الحالات | States |
 |-----------|---------|---------|--------|
-| Overtime Approval | موافقة العمل الإضافي | مسودة ← قيد الموافقة ← معتمد/مرفوض | Draft → Pending → Approved/Rejected |
+| Annual Leave Approval | موافقة الإجازة السنوية | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
+| Sick Leave Approval | موافقة الإجازة المرضية | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
+| Overtime Approval | موافقة العمل الإضافي | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
+| Salary Adjustment Approval | موافقة تعديل الراتب | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
 | Termination Approval | موافقة الإنهاء | مسودة ← مراجعة HR ← مراجعة الإدارة ← معتمد | Draft → HR → Management → Approved |
 
 ---
@@ -346,7 +349,7 @@ saudi_hr/
 │   ├── hooks.py                            # Frappe hooks & scheduler
 │   ├── tasks.py                            # Scheduled tasks (probation alerts)
 │   └── saudi_hr/
-│       ├── doctype/                        # 20 DocTypes
+│       ├── doctype/                        # DocType modules
 │       │   ├── annual_leave_disbursement/  # م.109
 │       │   ├── disciplinary_procedure/     # م.65-80
 │       │   ├── end_of_service_benefit/     # م.84
@@ -368,9 +371,9 @@ saudi_hr/
 │       │   ├── training_record/            # ★ NEW v1.1.0  م.60-64
 │       │   ├── work_injury/               # م.148-156
 │       │   └── work_permit_iqama/         # Iqama/Visa
-│       ├── report/                        # 7 Reports
-│       ├── print_format/                  # 5 Arabic Print Formats
-│       ├── workflow/                      # 2 Workflows
+│       ├── report/                        # Report modules
+│       ├── print_format/                  # Arabic print formats
+│       ├── workflow/                      # Workflow definitions
 │       ├── notification/                  # 4 Notifications
 │       └── workspace/                    # Saudi HR Workspace
 ├── pyproject.toml
@@ -382,7 +385,25 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.12.0 — ١١ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.13.0 — ١٧ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**مرونة الرواتب والموافقات والواجهة الحية | Payroll Flexibility, Workflow Routing, and Live UX:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Saudi Monthly Payroll | مسير الرواتب الشهري | إضافة جدول `Payroll Adjustment Item` لاحتواء الزيادات والخصومات غير الثابتة لكل موظف داخل المسير نفسه مع إعادة احتساب صافي الراتب والإجماليات تلقائياً |
+| Payroll APIs | واجهات الرواتب | إضافة helpers لاستيراد العمل الإضافي المعتمد إلى المسير وإضافة بنود تعديل يدوية برمجياً |
+| Leave / Overtime / Salary Workflows | سير الموافقات | تفعيل مسار موظف ← مدير مباشر ← موارد بشرية لطلبات الإجازة السنوية والمرضية والعمل الإضافي وتعديل الراتب |
+| Runtime Permissions | صلاحيات التشغيل | إضافة صلاحيات `Department Approver` وربطها بالصلاحيات الفعلية والاستعلامات الديناميكية مع مزامنة أدوار وصلاحيات الشركة للموافقين |
+| Salary Adjustment | تعديل الراتب | جعل المستند submittable ومعالجة أخطاء المسار والحالات المفقودة حتى يعمل مع الـ workflow بدون tracebacks |
+| WPS Export Report | تقرير تصدير WPS | إصلاح توليد بيانات WPS وملف SIF وتطبيع الشهر/تاريخ الدفع والهوية البنكية وتحويل فتح التقرير إلى Query Report صحيح |
+| Saudi HR Workspace | مساحة العمل | إظهار قسم `سير الموافقات` داخل Workspace وربط `WPS Export Report` من الواجهة الحية إلى `/app/query-report/WPS Export Report` |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يرفع جاهزية التطبيق التشغيلية في بيئة العمل الحية عبر دعم التعديلات المتغيرة في الرواتب، وتثبيت مسارات الموافقات بين الموظف والمدير والموارد البشرية، وإصلاح نقطة الوصول لتقرير WPS من الواجهة نفسها.
+
+> **بعد الترقية | Post-upgrade:** شغّل `bench --site <your-site-name> migrate` ثم `bench --site <your-site-name> clear-cache`، ويفضل `bench restart` إذا كانت بيئة الإنتاج تستخدم workers طويلة العمر.
+
+### v1.12.0 — ١١ أبريل ٢٠٢٦
 
 **تحصين رفع ملف الرواتب | Payroll Workbook Import Hardening:**
 
