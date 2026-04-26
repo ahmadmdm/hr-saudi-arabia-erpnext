@@ -11,6 +11,11 @@ dependencies = [
     # Managed by bench
     "openpyxl>=3.1.0",
     "openlocationcode>=1.0.1",
+    "numpy<2",
+    "torch>=2.2.0",
+    "torchaudio>=2.2.0",
+    "speechbrain>=1.1.0",
+    "faster-whisper>=1.2.1",
 ]
 
 [build-system]

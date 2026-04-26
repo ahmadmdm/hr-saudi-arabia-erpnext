@@ -680,8 +680,8 @@
 				</div>
 				<h1>الحضور والانصراف وطلبات الإجازة من شاشة واحدة</h1>
 				<p>
-					الصفحة تعتمد على GPS، وتعرض موقع الفرع المعتمد، وتدعم إرفاق صورة الوجه أو تسجيل صوتي
-					كتحقق إضافي، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.
+					الصفحة تعتمد على GPS، وتعرض الوردية المتوقعة وسياسة الموقع، وتنفذ تحققًا صوتيًا بتحدي رقمي
+					عند الحاجة، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.
 				</p>
 			</div>
 			<div class="mobile-user-card">
@@ -720,6 +720,7 @@
 				</div>
 			</div>
 			<div class="mobile-chip-row" id="today-checkin-chip-row"></div>
+			<div id="schedule-overview" class="mobile-helper-grid"></div>
 			<div class="mobile-actions">
 				<button type="button" class="mobile-button" id="attendance-action">جاري التحميل...</button>
 				<button type="button" class="mobile-secondary-button" id="gps-refresh">تحديث موقعي</button>
@@ -738,8 +739,8 @@
 		</section>
 
 		<section class="mobile-panel mobile-panel--verification">
-			<h3>تحقق إضافي</h3>
-			<p>يمكنك إرفاق صورة وجه، أو تسجيل صوتي، أو ملفات داعمة مع حركة الحضور. جاهزية بصمة الجهاز تظهر كمؤشر تقني فقط.</p>
+			<h3>سياسة الدوام والتحقق الصوتي</h3>
+			<p>يعرض الوردية المتوقعة وسياسة التحقق للموقع الحالي، مع تسجيل البصمة الصوتية وتحدي القراءة قبل الحضور أو الانصراف عند الحاجة.</p>
 			<div class="mobile-helper-grid">
 				<div class="mobile-card-lite">
 					<span>جاهزية بصمة/وجه الجهاز</span>
@@ -750,34 +751,29 @@
 					<strong id="verification-note-status">بدون ملاحظة</strong>
 				</div>
 			</div>
+			<div id="verification-policy-grid" class="mobile-location-grid"></div>
+			<div id="voice-enrollment-callout" class="mobile-card-lite mobile-hidden"></div>
 			<div class="mobile-form-grid">
 				<div class="mobile-field mobile-field--full">
 					<label for="attendance-note">ملاحظة الحضور</label>
 					<textarea id="attendance-note" placeholder="مثال: حضور من بوابة المستودع، أو ملاحظة عن التحقق الصوتي"></textarea>
 				</div>
 				<div class="mobile-field">
-					<label for="attendance-face-input">صورة وجه / صورة إثبات</label>
-					<input id="attendance-face-input" type="file" accept="image/*" capture="user">
+					<label for="voice-challenge-text">تحدي التحقق</label>
+					<input id="voice-challenge-text" type="text" readonly>
 				</div>
 				<div class="mobile-field">
-					<label for="attendance-files-input">ملفات داعمة إضافية</label>
-					<input id="attendance-files-input" type="file" multiple>
+					<label for="voice-transcript-preview">آخر نص صوتي</label>
+					<input id="voice-transcript-preview" type="text" readonly>
 				</div>
 			</div>
 			<div class="mobile-actions">
-				<button type="button" class="mobile-secondary-button" id="open-face-camera">فتح كاميرا الوجه</button>
+				<button type="button" class="mobile-secondary-button" id="refresh-voice-challenge">طلب تحدي صوتي</button>
 				<button type="button" class="mobile-secondary-button" id="record-audio">بدء تسجيل صوتي</button>
-				<button type="button" class="mobile-ghost-button" id="clear-attendance-attachments">مسح المرفقات</button>
+				<button type="button" class="mobile-ghost-button" id="clear-voice-sample">مسح العينة الصوتية</button>
+				<button type="button" class="mobile-ghost-button" id="enroll-voice-profile">تسجيل البصمة الصوتية</button>
 			</div>
-			<div id="face-camera-tray" class="mobile-camera-tray mobile-hidden">
-				<video id="face-camera-preview" class="mobile-camera-video" autoplay playsinline muted></video>
-				<div class="mobile-actions">
-					<button type="button" class="mobile-button" id="capture-face-photo">التقاط الصورة</button>
-					<button type="button" class="mobile-ghost-button" id="close-face-camera">إغلاق الكاميرا</button>
-				</div>
-				<div id="face-camera-note" class="mobile-camera-note">سيتم حفظ الصورة مباشرة كمرفق تحقق للوجه.</div>
-			</div>
-			<div id="attendance-attachments" class="mobile-attachment-list"></div>
+			<div id="voice-sample-status" class="mobile-attachment-list"></div>
 		</section>
 
 		<section class="mobile-panel mobile-panel--leave">
@@ -878,6 +874,8 @@
 	(() => {
 		const CURRENT_USER = {{ (frappe.session.user if frappe and frappe.session else "Guest") | tojson }};
 		const LANG_CODE = {{ (lang_code or "ar") | tojson }};
+		const VOICE_POLICY_DISABLED = "Disabled / معطل";
+		const VOICE_POLICY_REQUIRED = "Required / إلزامي";
 		let IS_ENGLISH = LANG_CODE.startsWith("en");
 		let IS_RTL = !IS_ENGLISH;
 		let LOCALE = IS_ENGLISH ? "en-US" : "ar-SA";
@@ -886,7 +884,7 @@
 				pageTitle: "حضور الموظفين | Saudi HR",
 				kickerBody: "حضور ذكي وربط مباشر مع الإجازات",
 				heroTitle: "الحضور والانصراف وطلبات الإجازة من شاشة واحدة",
-				heroBody: "الصفحة تعتمد على GPS، وتعرض موقع الفرع المعتمد، وتدعم إرفاق صورة الوجه أو تسجيل صوتي كتحقق إضافي، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.",
+				heroBody: "الصفحة تعتمد على GPS، وتعرض الوردية المتوقعة وسياسة الموقع، وتنفذ تحققًا صوتيًا بتحدي رقمي عند الحاجة، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.",
 				reloadData: "تحديث البيانات",
 				statusTitle: "سجل اليوم",
 				statusBody: "تبديل الحضور والانصراف يعتمد على آخر حركة مسجلة اليوم وعلى موقعك الحالي.",
@@ -896,21 +894,44 @@
 				locationTitle: "موقع الفرع المعتمد",
 				locationBody: "يعرض موقع الفرع وحدود المسافة المسموحة، مع قائمة المواقع المتاحة للموظف حسب فرعه وصلاحياته.",
 				openMap: "فتح على الخريطة",
-				verificationTitle: "تحقق إضافي",
-				verificationBody: "يمكنك إرفاق صورة وجه، أو تسجيل صوتي، أو ملفات داعمة مع حركة الحضور. جاهزية بصمة الجهاز تظهر كمؤشر تقني فقط.",
+				verificationTitle: "سياسة الدوام والتحقق الصوتي",
+				verificationBody: "يعرض الوردية المتوقعة وسياسة التحقق للموقع الحالي، مع تسجيل البصمة الصوتية وتحدي القراءة قبل الحضور أو الانصراف عند الحاجة.",
 				biometricReady: "جاهزية بصمة/وجه الجهاز",
 				verificationNote: "ملاحظات التحقق",
 				attendanceNote: "ملاحظة الحضور",
 				attendanceNotePlaceholder: "مثال: حضور من بوابة المستودع، أو ملاحظة عن التحقق الصوتي",
-				faceProof: "صورة وجه / صورة إثبات",
-				supportFiles: "ملفات داعمة إضافية",
-				openCamera: "فتح كاميرا الوجه",
+				voiceChallengeLabel: "تحدي التحقق",
+				voiceTranscriptLabel: "آخر نص صوتي",
+				requestChallenge: "طلب تحدي صوتي",
 				recordAudio: "بدء تسجيل صوتي",
 				stopAudio: "إيقاف التسجيل الصوتي",
-				clearAttachments: "مسح المرفقات",
-				capturePhoto: "التقاط الصورة",
-				closeCamera: "إغلاق الكاميرا",
-				cameraNote: "سيتم حفظ الصورة مباشرة كمرفق تحقق للوجه.",
+				clearVoiceSample: "مسح العينة الصوتية",
+				enrollVoice: "تسجيل البصمة الصوتية",
+				shiftTypeLabel: "الوردية المتوقعة",
+				scheduleStatusLabel: "حالة الوردية",
+				expectedStartLabel: "البداية المتوقعة",
+				expectedEndLabel: "النهاية المتوقعة",
+				policySourceLabel: "مصدر السياسة",
+				voicePolicyLabel: "سياسة الصوت",
+				voiceProfileLabel: "حالة البصمة الصوتية",
+				voiceRuntimeLabel: "جاهزية محرك الصوت",
+				scheduleUnavailable: "لا توجد وردية متوقعة بعد.",
+				voiceProfileEnrolled: "البصمة الصوتية مسجلة",
+				voiceProfileNotEnrolled: "لا توجد بصمة صوتية مسجلة",
+				voiceSampleReady: "العينة الصوتية جاهزة للإرسال",
+				voiceChallengeReady: "تم إنشاء التحدي الصوتي: {value}",
+				noVoiceSample: "لا توجد عينة صوتية مرفوعة لهذه الحركة.",
+				voiceEnrollmentSaved: "تم تسجيل البصمة الصوتية بنجاح.",
+				voiceEnrollmentRequiredTitle: "تسجيل البصمة الصوتية لأول مرة",
+				voiceEnrollmentRequiredBody: "يجب تسجيل البصمة الصوتية أول مرة قبل استخدام الحضور والانصراف. بعد الحفظ لن يمكن تغييرها إلا من الموارد البشرية عبر إعادة تهيئة جديدة.",
+				voiceEnrollmentLockedTitle: "البصمة الصوتية مقفلة",
+				voiceEnrollmentLockedBody: "تم حفظ البصمة الصوتية لهذا الموظف. إذا احتجت تغييرها فذلك يتم فقط من خلال الموارد البشرية بإعادة التهيئة.",
+				voiceEnrollmentFirstRequired: "يجب تسجيل البصمة الصوتية لأول مرة قبل تسجيل أي حركة حضور أو انصراف.",
+				voiceRequiredProfile: "هذا الموقع يشترط وجود بصمة صوتية مسجلة قبل تسجيل الحركة.",
+				voiceRuntimeUnavailable: "محرك التحقق الصوتي غير جاهز في البيئة الحالية.",
+				minutesUntilStart: "متبقي {value} دقيقة على البداية",
+				minutesUntilEnd: "متبقي {value} دقيقة على النهاية",
+				voiceChallengeMissing: "اطلب تحديًا صوتيًا جديدًا قبل إرسال العينة الصوتية.",
 				leaveTitle: "طلب إجازة من الجوال",
 				leaveBody: "يدعم الإجازة السنوية والمرضية والخاصة والأمومة/الأبوة مع المرفقات والحقول النظامية ذات الصلة.",
 				requestType: "نوع الطلب",
@@ -939,7 +960,7 @@
 				voicePending: "سيضاف كتسجيل صوتي",
 				readyToSend: "جاهز للإرسال",
 				remove: "إزالة",
-				noAttendanceAttachments: "لا توجد مرفقات لحركة الحضور.",
+				clearAttachments: "مسح المرفقات",
 				noLeaveAttachments: "لا توجد مرفقات لطلب الإجازة.",
 				loginRequired: "يجب تسجيل الدخول للوصول إلى خدمة الحضور عبر الجوال.",
 				genericFailure: "تعذر إتمام العملية. حاول مرة أخرى.",
@@ -983,11 +1004,8 @@
 				maxAttachments: "الحد الأقصى للمرفقات في كل عملية هو ثلاثة ملفات فقط.",
 				audioUnsupported: "المتصفح الحالي لا يدعم تسجيل الصوت المباشر.",
 				audioMax: "لا يمكن إضافة تسجيل صوتي لأن الحد الأعلى للمرفقات وصل إلى ثلاثة.",
-				audioSaved: "تم حفظ التسجيل الصوتي كمرفق تحقق.",
+				audioSaved: "تم حفظ العينة الصوتية لهذه الحركة.",
 				audioStarted: "بدأ التسجيل الصوتي. اضغط مرة أخرى للإيقاف.",
-				cameraStarted: "تم فتح الكاميرا الأمامية. التقط صورة واضحة للوجه.",
-				cameraUnsupported: "تعذر فتح كاميرا الجوال مباشرة. استخدم اختيار الملف من الكاميرا كبديل.",
-				faceSaved: "تم التقاط صورة الوجه وإضافتها للمرفقات.",
 				attendanceSaved: "تم تسجيل الحركة بنجاح.",
 				startDateRequired: "حدد تاريخ بداية الإجازة أولاً.",
 				subtypeRequired: "اختر التصنيف الفرعي المطلوب لهذا النوع من الإجازات.",
@@ -1014,7 +1032,7 @@
 				pageTitle: "Mobile Attendance | Saudi HR",
 				kickerBody: "Smart attendance with direct leave workflows",
 				heroTitle: "Attendance, checkout, and leave requests from one screen",
-				heroBody: "This page uses GPS, shows the approved branch location, supports face image or voice verification attachments, and provides a quick dashboard for attendance insights and deductions.",
+				heroBody: "This page uses GPS, shows the expected shift and location policy, runs challenge-based voice verification when needed, and provides a quick dashboard for attendance insights and deductions.",
 				reloadData: "Refresh data",
 				statusTitle: "Today log",
 				statusBody: "Check-in and check-out are based on your latest movement today and your current location.",
@@ -1024,21 +1042,44 @@
 				locationTitle: "Approved branch location",
 				locationBody: "Shows the approved branch location, allowed radius, and available locations for the employee branch and permissions.",
 				openMap: "Open on map",
-				verificationTitle: "Additional verification",
-				verificationBody: "You can attach a face photo, voice recording, or supporting files to each attendance movement. Device biometric readiness is shown as a technical indicator only.",
+				verificationTitle: "Shift policy and voice verification",
+				verificationBody: "Shows the expected shift and the active location policy, with voice enrollment and challenge reading before attendance movements when required.",
 				biometricReady: "Device biometric readiness",
 				verificationNote: "Verification note",
 				attendanceNote: "Attendance note",
 				attendanceNotePlaceholder: "Example: Checked in from warehouse gate, or a note about voice verification",
-				faceProof: "Face photo / proof photo",
-				supportFiles: "Additional supporting files",
-				openCamera: "Open face camera",
+				voiceChallengeLabel: "Verification challenge",
+				voiceTranscriptLabel: "Latest voice transcript",
+				requestChallenge: "Request voice challenge",
 				recordAudio: "Start voice recording",
 				stopAudio: "Stop voice recording",
-				clearAttachments: "Clear attachments",
-				capturePhoto: "Capture photo",
-				closeCamera: "Close camera",
-				cameraNote: "The captured image will be saved directly as a face verification attachment.",
+				clearVoiceSample: "Clear voice sample",
+				enrollVoice: "Enroll voiceprint",
+				shiftTypeLabel: "Expected shift",
+				scheduleStatusLabel: "Shift status",
+				expectedStartLabel: "Expected start",
+				expectedEndLabel: "Expected end",
+				policySourceLabel: "Policy source",
+				voicePolicyLabel: "Voice policy",
+				voiceProfileLabel: "Voice profile",
+				voiceRuntimeLabel: "Voice runtime",
+				scheduleUnavailable: "No expected shift is available yet.",
+				voiceProfileEnrolled: "Voice profile is enrolled",
+				voiceProfileNotEnrolled: "No voice profile is enrolled",
+				voiceSampleReady: "The voice sample is ready to send",
+				voiceChallengeReady: "Voice challenge created: {value}",
+				noVoiceSample: "No voice sample is attached to this movement.",
+				voiceEnrollmentSaved: "Voice profile enrolled successfully.",
+				voiceEnrollmentRequiredTitle: "Initial voice enrollment is required",
+				voiceEnrollmentRequiredBody: "The employee must enroll a voiceprint before using mobile attendance for the first time. After saving it, only HR can reset and reinitialize it.",
+				voiceEnrollmentLockedTitle: "Voiceprint is locked",
+				voiceEnrollmentLockedBody: "This employee already has a saved voiceprint. Changing it is only possible after HR performs a reset.",
+				voiceEnrollmentFirstRequired: "You must enroll the voiceprint before posting the first attendance movement.",
+				voiceRequiredProfile: "This location requires an enrolled voice profile before attendance can be posted.",
+				voiceRuntimeUnavailable: "The voice verification runtime is not ready in this environment.",
+				minutesUntilStart: "{value} min until start",
+				minutesUntilEnd: "{value} min until end",
+				voiceChallengeMissing: "Request a fresh voice challenge before sending the voice sample.",
 				leaveTitle: "Mobile leave request",
 				leaveBody: "Supports annual, sick, special, and maternity/paternity leave with attachments and the related statutory fields.",
 				requestType: "Request type",
@@ -1067,7 +1108,7 @@
 				voicePending: "Will be attached as a voice recording",
 				readyToSend: "Ready to send",
 				remove: "Remove",
-				noAttendanceAttachments: "No attendance attachments yet.",
+				clearAttachments: "Clear attachments",
 				noLeaveAttachments: "No leave request attachments yet.",
 				loginRequired: "You must log in to use mobile attendance.",
 				genericFailure: "The action could not be completed. Please try again.",
@@ -1111,11 +1152,8 @@
 				maxAttachments: "You can attach up to three files per action.",
 				audioUnsupported: "This browser does not support direct voice recording.",
 				audioMax: "You cannot add a voice recording because the maximum attachment count was reached.",
-				audioSaved: "The voice recording was saved as a verification attachment.",
+				audioSaved: "The voice sample was saved for this attendance movement.",
 				audioStarted: "Voice recording started. Press again to stop.",
-				cameraStarted: "Front camera is open. Capture a clear face photo.",
-				cameraUnsupported: "Unable to open the device camera directly. Use the file picker camera fallback instead.",
-				faceSaved: "The face image was captured and added to attachments.",
 				attendanceSaved: "Attendance movement saved successfully.",
 				startDateRequired: "Select a leave start date first.",
 				subtypeRequired: "Choose the required subtype for this leave request.",
@@ -1149,17 +1187,19 @@
 		const state = {
 			status: null,
 			availableLocations: [],
-			attendanceAttachments: [],
 			leaveAttachments: [],
+			voiceSample: null,
+			voiceChallenge: null,
 			lastPosition: null,
 			isSubmittingAttendance: false,
 			isSubmittingLeave: false,
+			isSubmittingVoiceEnrollment: false,
 			recorder: null,
 			recordingStream: null,
 			audioChunks: [],
 			deviceBiometricAvailable: false,
 			hasEmployeeAccess: true,
-			cameraStream: null,
+			hasPromptedVoiceEnrollment: false,
 			deferredInstallPrompt: null,
 			csrfToken: null,
 		};
@@ -1247,14 +1287,12 @@
 			$(".mobile-helper-grid .mobile-card-lite:last-child span").textContent = t("verificationNote");
 			$("label[for='attendance-note']").textContent = t("attendanceNote");
 			$("#attendance-note").placeholder = t("attendanceNotePlaceholder");
-			$("label[for='attendance-face-input']").textContent = t("faceProof");
-			$("label[for='attendance-files-input']").textContent = t("supportFiles");
-			$("#open-face-camera").textContent = t("openCamera");
+			$("label[for='voice-challenge-text']").textContent = t("voiceChallengeLabel");
+			$("label[for='voice-transcript-preview']").textContent = t("voiceTranscriptLabel");
+			$("#refresh-voice-challenge").textContent = t("requestChallenge");
 			$("#record-audio").textContent = t("recordAudio");
-			$("#clear-attendance-attachments").textContent = t("clearAttachments");
-			$("#capture-face-photo").textContent = t("capturePhoto");
-			$("#close-face-camera").textContent = t("closeCamera");
-			$("#face-camera-note").textContent = t("cameraNote");
+			$("#clear-voice-sample").textContent = t("clearVoiceSample");
+			$("#enroll-voice-profile").textContent = t("enrollVoice");
 			$(".mobile-panel--leave h3").textContent = t("leaveTitle");
 			$(".mobile-panel--leave > p").textContent = t("leaveBody");
 			$("label[for='leave-request-type']").textContent = t("requestType");
@@ -1385,6 +1423,19 @@
 				.replace(/'/g, "&#39;");
 		}
 
+		function formatScheduleStatusNote(statusInfo) {
+			if (!statusInfo) {
+				return "";
+			}
+			if (statusInfo.minutes_until_start > 0) {
+				return t("minutesUntilStart", { value: formatNumber(statusInfo.minutes_until_start) });
+			}
+			if (statusInfo.minutes_until_end > 0) {
+				return t("minutesUntilEnd", { value: formatNumber(statusInfo.minutes_until_end) });
+			}
+			return "";
+		}
+
 		function attachmentKindLabel(type) {
 			if (type === "face") return t("cameraAttachment");
 			if (type === "voice") return t("voiceAttachment");
@@ -1427,6 +1478,7 @@
 			renderEmployeeCard();
 			renderStatusPanel();
 			renderLocationPanel();
+			renderVerificationPanel();
 			renderInsightsPanel();
 			renderRecentLeaves();
 			populateLeaveSubtypeOptions();
@@ -1447,21 +1499,10 @@
 		}
 
 		function renderAttachmentLists() {
-			const attendanceEl = $("#attendance-attachments");
 			const leaveEl = $("#leave-attachments");
-			attendanceEl.innerHTML = state.attendanceAttachments.length
-				? state.attendanceAttachments.map((item, index) => buildAttachmentMarkup(item, index)).join("")
-				: `<div class="mobile-empty">${t("noAttendanceAttachments")}</div>`;
 			leaveEl.innerHTML = state.leaveAttachments.length
 				? state.leaveAttachments.map((item, index) => buildAttachmentMarkup(item, index)).join("")
 				: `<div class="mobile-empty">${t("noLeaveAttachments")}</div>`;
-
-			$$('[data-group="attendance"]').forEach((button) => {
-				button.addEventListener("click", () => {
-					state.attendanceAttachments.splice(Number(button.dataset.index), 1);
-					renderAttachmentLists();
-				});
-			});
 
 			$$('[data-group="leave"]').forEach((button) => {
 				button.addEventListener("click", () => {
@@ -1516,6 +1557,11 @@
 			}
 
 			const isCheckedIn = status.last_log_type === "IN";
+			const schedule = status.schedule || {};
+			const requiresVoice = schedule.voice_policy === VOICE_POLICY_REQUIRED;
+			const requiresInitialEnrollment = requiresInitialVoiceEnrollment(status);
+			const voiceRuntimeReady = status.verification_features?.voice_runtime_ready;
+			const hasVoiceProfile = status.voice_profile?.has_voice_profile;
 			$("#attendance-mode").textContent = isCheckedIn ? t("insideWork") : t("outsideWork");
 			$("#attendance-last-event").textContent = status.last_checkin_time
 				? t("lastMovement", { value: formatDateTime(status.last_checkin_time) })
@@ -1534,7 +1580,32 @@
 			const actionButton = $("#attendance-action");
 			actionButton.textContent = isCheckedIn ? t("checkOutNow") : t("checkInNow");
 			actionButton.disabled = state.isSubmittingAttendance;
+			if (requiresInitialEnrollment) {
+				actionButton.disabled = true;
+				$("#attendance-summary").textContent = voiceRuntimeReady
+					? t("voiceEnrollmentFirstRequired")
+					: t("voiceRuntimeUnavailable");
+			}
+			if (requiresVoice && !voiceRuntimeReady) {
+				actionButton.disabled = true;
+				$("#attendance-summary").textContent = t("voiceRuntimeUnavailable");
+			}
+			if (requiresVoice && !hasVoiceProfile) {
+				actionButton.disabled = true;
+				$("#attendance-summary").textContent = t("voiceRequiredProfile");
+			}
 			$("#gps-refresh").disabled = false;
+
+			renderCardLiteItems(
+				"#schedule-overview",
+				[
+					{ label: t("scheduleStatusLabel"), value: schedule.status?.label || "--", note: formatScheduleStatusNote(schedule.status) },
+					{ label: t("shiftTypeLabel"), value: schedule.shift_type || "--", note: schedule.policy_source || "" },
+					{ label: t("expectedStartLabel"), value: schedule.expected_start ? formatDateTime(schedule.expected_start) : "--", note: schedule.checkin_window_start ? formatDateTime(schedule.checkin_window_start) : "" },
+					{ label: t("expectedEndLabel"), value: schedule.expected_end ? formatDateTime(schedule.expected_end) : "--", note: schedule.checkout_window_end ? formatDateTime(schedule.checkout_window_end) : "" },
+				],
+				t("scheduleUnavailable")
+			);
 		}
 
 		function renderLocationPanel() {
@@ -1566,6 +1637,92 @@
 					</div>
 				`).join("")
 				: `<div class="mobile-empty">${t("noExtraLocations")}</div>`;
+		}
+
+		function voicePolicyEnabled(policyValue) {
+			return Boolean(policyValue && policyValue !== VOICE_POLICY_DISABLED);
+		}
+
+		function requiresInitialVoiceEnrollment(status = state.status) {
+			return Boolean(status?.verification_features?.voice_enrollment_required);
+		}
+
+		function canUseSelfVoiceEnrollment(status = state.status) {
+			return Boolean(status?.voice_profile?.can_self_enroll);
+		}
+
+		function canUseVoiceChallenge(status = state.status) {
+			return Boolean(status?.verification_features?.voice_runtime_enabled) && (
+				voicePolicyEnabled(status?.schedule?.voice_policy) || requiresInitialVoiceEnrollment(status)
+			);
+		}
+
+		function renderVoiceSampleState() {
+			const sampleEl = $("#voice-sample-status");
+			if (!state.voiceSample) {
+				sampleEl.innerHTML = `<div class="mobile-empty">${t("noVoiceSample")}</div>`;
+				return;
+			}
+
+			sampleEl.innerHTML = `
+				<div class="mobile-attachment">
+					<strong>${escapeHtml(state.voiceSample.filename)}</strong>
+					<span>${t("voiceSampleReady")} · ${formatNumber((state.voiceSample.size || 0) / 1024, 1)} KB</span>
+				</div>
+			`;
+		}
+
+		function renderVerificationPanel() {
+			const status = state.status;
+			if (!status) {
+				renderEmptyState("#verification-policy-grid", t("scheduleUnavailable"));
+				renderVoiceSampleState();
+				return;
+			}
+
+			const schedule = status.schedule || {};
+			const voiceProfile = status.voice_profile || {};
+			const verificationFeatures = status.verification_features || {};
+			const enrollmentRequired = requiresInitialVoiceEnrollment(status);
+			const challengeEnabled = canUseVoiceChallenge(status) && verificationFeatures.voice_runtime_ready;
+			const calloutEl = $("#voice-enrollment-callout");
+			renderCardLiteItems(
+				"#verification-policy-grid",
+				[
+					{ label: t("policySourceLabel"), value: schedule.policy_source || "--", note: schedule.shift_assignment || "" },
+					{ label: t("voicePolicyLabel"), value: schedule.voice_policy || "--", note: schedule.voice_max_duration_seconds ? `${schedule.voice_max_duration_seconds}s` : "" },
+					{ label: t("voiceProfileLabel"), value: voiceProfile.has_voice_profile ? t("voiceProfileEnrolled") : t("voiceProfileNotEnrolled"), note: voiceProfile.last_enrolled_on ? formatDateTime(voiceProfile.last_enrolled_on) : "" },
+					{ label: t("voiceRuntimeLabel"), value: verificationFeatures.voice_runtime_ready ? t("granted") : t("blocked"), note: (verificationFeatures.voice_runtime_missing_dependencies || []).join(", ") },
+				],
+				t("scheduleUnavailable")
+			);
+
+			if (enrollmentRequired) {
+				calloutEl.innerHTML = `
+					<strong>${escapeHtml(t("voiceEnrollmentRequiredTitle"))}</strong>
+					<span>${escapeHtml(
+						verificationFeatures.voice_runtime_ready ? t("voiceEnrollmentRequiredBody") : t("voiceRuntimeUnavailable")
+					)}</span>
+				`;
+				calloutEl.classList.remove("mobile-hidden");
+			} else if (voiceProfile.has_voice_profile || (voiceProfile.profile_exists && !voiceProfile.can_self_enroll)) {
+				calloutEl.innerHTML = `
+					<strong>${escapeHtml(t("voiceEnrollmentLockedTitle"))}</strong>
+					<span>${escapeHtml(t("voiceEnrollmentLockedBody"))}</span>
+				`;
+				calloutEl.classList.remove("mobile-hidden");
+			} else {
+				calloutEl.innerHTML = "";
+				calloutEl.classList.add("mobile-hidden");
+			}
+
+			$("#voice-challenge-text").value = state.voiceChallenge?.challenge_text || "";
+			$("#voice-transcript-preview").value = state.voiceSample?.transcriptPreview || voiceProfile.transcript_preview || "";
+			$("#refresh-voice-challenge").disabled = !challengeEnabled || state.isSubmittingAttendance || state.isSubmittingVoiceEnrollment;
+			$("#record-audio").disabled = !challengeEnabled || state.isSubmittingVoiceEnrollment;
+			$("#clear-voice-sample").disabled = !state.voiceSample;
+			$("#enroll-voice-profile").disabled = !canUseSelfVoiceEnrollment(status) || !state.voiceSample || !state.voiceChallenge || state.isSubmittingVoiceEnrollment;
+			renderVoiceSampleState();
 		}
 
 		function renderInsightsPanel(insights) {
@@ -1702,7 +1859,7 @@
 		}
 
 		function getAttachmentsForGroup(group) {
-			return group === "attendance" ? state.attendanceAttachments : state.leaveAttachments;
+			return state.leaveAttachments;
 		}
 
 		function buildAttachmentPayload(group) {
@@ -1746,11 +1903,6 @@
 				return;
 			}
 
-			if (state.attendanceAttachments.length >= 3) {
-				showBanner(t("audioMax"), "error");
-				return;
-			}
-
 			try {
 				state.audioChunks = [];
 				state.recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1766,7 +1918,9 @@
 					state.recordingStream = null;
 					const extension = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "m4a" : "webm";
 					const file = new File([blob], `voice-note-${Date.now()}.${extension}`, { type: blob.type });
-					await addFilesToGroup([file], "attendance", () => "voice");
+					state.voiceSample = await fileToAttachment(file, "voice", "voice");
+					state.voiceSample.transcriptPreview = state.voiceChallenge?.challenge_text || "";
+					renderVerificationPanel();
 					showBanner(t("audioSaved"));
 				};
 				state.recorder.start();
@@ -1777,62 +1931,67 @@
 			}
 		}
 
-		async function openFaceCamera() {
-			if (!navigator.mediaDevices?.getUserMedia) {
-				showBanner(t("cameraUnsupported"), "error");
+		function buildVoicePayload() {
+			if (!state.voiceSample) {
+				return null;
+			}
+			const { filename, content, size } = state.voiceSample;
+			return JSON.stringify({ filename, content, size });
+		}
+
+		function clearVoiceSample() {
+			state.voiceSample = null;
+			$("#voice-transcript-preview").value = "";
+			renderVerificationPanel();
+		}
+
+		async function requestVoiceChallenge(silent = false, force = false) {
+			if (!state.status || (!force && state.voiceChallenge)) {
+				return;
+			}
+			if (!canUseVoiceChallenge(state.status)) {
+				state.voiceChallenge = null;
+				renderVerificationPanel();
+				return;
+			}
+			const response = await apiCall("issue_mobile_voice_challenge");
+			state.voiceChallenge = response;
+			renderVerificationPanel();
+			if (!silent) {
+				showBanner(t("voiceChallengeReady", { value: response.challenge_text }));
+			}
+		}
+
+		async function submitVoiceEnrollment() {
+			if (state.isSubmittingVoiceEnrollment) {
+				return;
+			}
+			if (!state.voiceSample) {
+				showBanner(t("noVoiceSample"), "error");
+				return;
+			}
+			if (!state.voiceChallenge?.challenge_token) {
+				showBanner(t("voiceChallengeMissing"), "error");
 				return;
 			}
 
+			state.isSubmittingVoiceEnrollment = true;
+			renderVerificationPanel();
 			try {
-				await closeFaceCamera();
-				state.cameraStream = await navigator.mediaDevices.getUserMedia({
-					video: {
-						facingMode: { ideal: "user" },
-						width: { ideal: 1280 },
-						height: { ideal: 960 },
-					},
-					audio: false,
+				const response = await apiCall("enroll_mobile_voice_profile", {
+					challenge_token: state.voiceChallenge.challenge_token,
+					voice_payload_json: buildVoicePayload(),
 				});
-				const preview = $("#face-camera-preview");
-				preview.srcObject = state.cameraStream;
-				$("#face-camera-tray").classList.remove("mobile-hidden");
-				showBanner(t("cameraStarted"));
+				showBanner(response.message || t("voiceEnrollmentSaved"));
+				clearVoiceSample();
+				state.voiceChallenge = null;
+				await loadDashboard();
 			} catch (error) {
-				showBanner(t("cameraUnsupported"), "error");
+				showBanner(parseError(error), "error");
+			} finally {
+				state.isSubmittingVoiceEnrollment = false;
+				renderVerificationPanel();
 			}
-		}
-
-		async function captureFacePhoto() {
-			const preview = $("#face-camera-preview");
-			if (!preview.srcObject) {
-				return;
-			}
-
-			const canvas = document.createElement("canvas");
-			canvas.width = preview.videoWidth || 1280;
-			canvas.height = preview.videoHeight || 960;
-			canvas.getContext("2d").drawImage(preview, 0, 0, canvas.width, canvas.height);
-			const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
-			if (!blob) {
-				showBanner(t("fileReadFailed"), "error");
-				return;
-			}
-			const file = new File([blob], `face-verification-${Date.now()}.jpg`, { type: "image/jpeg" });
-			await addFilesToGroup([file], "attendance", () => "face");
-			await closeFaceCamera();
-			showBanner(t("faceSaved"));
-		}
-
-		async function closeFaceCamera() {
-			if (state.cameraStream) {
-				state.cameraStream.getTracks().forEach((track) => track.stop());
-				state.cameraStream = null;
-			}
-			const preview = $("#face-camera-preview");
-			if (preview) {
-				preview.srcObject = null;
-			}
-			$("#face-camera-tray").classList.add("mobile-hidden");
 		}
 
 		async function submitAttendance() {
@@ -1846,15 +2005,21 @@
 				if (!state.lastPosition && state.status?.location) {
 					await refreshGpsStatus();
 				}
+				const requiresVoice = state.status?.schedule?.voice_policy === VOICE_POLICY_REQUIRED;
+				if ((requiresVoice || state.voiceSample) && !state.voiceChallenge?.challenge_token) {
+					throw new Error(t("voiceChallengeMissing"));
+				}
 				const payload = await apiCall("do_mobile_checkin", {
 					latitude: state.lastPosition?.latitude,
 					longitude: state.lastPosition?.longitude,
 					verification_mode: state.deviceBiometricAvailable ? "gps+device-ready" : "gps",
 					verification_note: $("#attendance-note").value.trim(),
-					attachments_json: buildAttachmentPayload("attendance"),
+					challenge_token: state.voiceChallenge?.challenge_token,
+					voice_payload_json: buildVoicePayload(),
 				});
 				showBanner(payload.message || t("attendanceSaved"));
-				clearAttachments("attendance");
+				clearVoiceSample();
+				state.voiceChallenge = null;
 				$("#attendance-note").value = "";
 				updateVerificationNotePreview();
 				await loadDashboard();
@@ -1979,7 +2144,7 @@
 		async function registerPWA() {
 			if ("serviceWorker" in navigator) {
 				try {
-					await navigator.serviceWorker.register("/mobile-attendance-sw.js", { scope: "/" });
+					await navigator.serviceWorker.register("/mobile-attendance-sw.js?v=20260426b", { scope: "/" });
 				} catch (error) {
 					// Ignore registration failures and keep app usable.
 				}
@@ -2034,6 +2199,21 @@
 			state.status = status;
 			state.availableLocations = availableLocations || [];
 			refreshDashboardView();
+			if (canUseVoiceChallenge(status) && status.verification_features?.voice_runtime_ready) {
+				await requestVoiceChallenge(true, true);
+			} else {
+				state.voiceChallenge = null;
+				renderVerificationPanel();
+			}
+			if (requiresInitialVoiceEnrollment(status) && !state.hasPromptedVoiceEnrollment) {
+				showBanner(
+					status.verification_features?.voice_runtime_ready ? t("voiceEnrollmentRequiredBody") : t("voiceRuntimeUnavailable"),
+					"error"
+				);
+				state.hasPromptedVoiceEnrollment = true;
+			} else if (!requiresInitialVoiceEnrollment(status)) {
+				state.hasPromptedVoiceEnrollment = false;
+			}
 		}
 
 		async function handleDashboardReload() {
@@ -2059,9 +2239,6 @@
 		function bindEvents() {
 			$("#reload-dashboard").addEventListener("click", handleDashboardReload);
 
-			$("#open-face-camera").addEventListener("click", openFaceCamera);
-			$("#capture-face-photo").addEventListener("click", captureFacePhoto);
-			$("#close-face-camera").addEventListener("click", closeFaceCamera);
 			$("#gps-refresh").addEventListener("click", refreshGpsStatus);
 			$("#attendance-action").addEventListener("click", submitAttendance);
 			$("#leave-request-form").addEventListener("submit", submitLeaveRequest);
@@ -2069,11 +2246,17 @@
 			$("#attendance-note").addEventListener("input", updateVerificationNotePreview);
 			$("#insights-month").addEventListener("change", loadInsightsFromMonth);
 			$("#record-audio").addEventListener("click", toggleAudioRecording);
+			$("#refresh-voice-challenge").addEventListener("click", async () => {
+				try {
+					await requestVoiceChallenge(false, true);
+				} catch (error) {
+					showBanner(parseError(error), "error");
+				}
+			});
+			$("#clear-voice-sample").addEventListener("click", clearVoiceSample);
+			$("#enroll-voice-profile").addEventListener("click", submitVoiceEnrollment);
 
-			bindFileInput("#attendance-face-input", "attendance", () => "face");
-			bindFileInput("#attendance-files-input", "attendance", (file) => file.type.startsWith("image/") ? "face" : "file");
 			bindFileInput("#leave-files-input", "leave", () => "file");
-			bindAttachmentReset("#clear-attendance-attachments", "attendance");
 			bindAttachmentReset("#clear-leave-attachments", "leave");
 
 			$("#pwa-install-action").addEventListener("click", installPWA);

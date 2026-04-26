@@ -12,9 +12,25 @@ from frappe import _
 from frappe.utils import flt, get_datetime, get_first_day, get_last_day, getdate, now_datetime, nowdate, time_diff_in_hours
 from frappe.utils.file_manager import save_file
 
+from saudi_hr.saudi_hr.attendance_policy import (
+	VOICE_POLICY_DISABLED,
+	VOICE_POLICY_REQUIRED,
+	calculate_attendance_variance,
+	resolve_mobile_attendance_policy,
+	summarize_schedule_status,
+)
 from saudi_hr.saudi_hr.doctype.maternity_paternity_leave.maternity_paternity_leave import LEAVE_DAYS
 from saudi_hr.saudi_hr.location_utils import resolve_location_reference
 from saudi_hr.saudi_hr.utils import assert_doctype_permissions, get_annual_leave_balance
+from saudi_hr.saudi_hr.voice_verification import (
+	VOICE_VERIFICATION_STATUS_NOT_REQUIRED,
+	VOICE_VERIFICATION_STATUS_PASSED,
+	enroll_employee_voice_profile,
+	get_employee_voice_profile_status,
+	get_voice_runtime_status,
+	issue_voice_challenge,
+	verify_checkin_voice,
+)
 
 
 SPECIAL_LEAVE_OPTIONS = [
@@ -75,12 +91,18 @@ def _get_location_for_branch(branch):
 		[
 			"name",
 			"location_name",
+			"branch",
 			"latitude",
 			"longitude",
 			"allowed_radius_meters",
 			"plus_code",
 			"location_source",
 			"address_reference",
+			"default_shift_type",
+			"enforce_schedule",
+			"voice_verification_policy",
+			"voice_challenge_ttl_seconds",
+			"voice_max_duration_seconds",
 		],
 		as_dict=True,
 	)
@@ -407,12 +429,9 @@ def _get_recent_leave_requests(employee, limit=8):
 	return rows[:limit]
 
 
-def _build_verification_mode(raw_mode, attachments):
+def _build_verification_mode(raw_mode, has_voice=False):
 	modes = [segment for segment in (raw_mode or "gps").split("+") if segment]
-	filenames = [((item or {}).get("filename") or "").lower() for item in (attachments or [])]
-	if any(name.endswith((".jpg", ".jpeg", ".png", ".webp")) for name in filenames) and "face" not in modes:
-		modes.append("face")
-	if any(name.endswith((".webm", ".ogg", ".wav", ".mp3", ".m4a")) for name in filenames) and "voice" not in modes:
+	if has_voice and "voice" not in modes:
 		modes.append("voice")
 	return "+".join(dict.fromkeys(modes)) or "gps"
 
@@ -482,6 +501,9 @@ def get_employee_paid_payroll_history(employee, limit=10):
 def get_attendance_status():
 	employee, profile = _require_employee_context()
 	today_checkins = _get_todays_checkins(employee)
+	location = _get_location_for_branch(profile.branch)
+	voice_runtime = get_voice_runtime_status()
+	voice_profile = get_employee_voice_profile_status(employee)
 
 	last_log_type = None
 	last_checkin_time = None
@@ -489,6 +511,9 @@ def get_attendance_status():
 		last = today_checkins[-1]
 		last_log_type = last.log_type
 		last_checkin_time = str(last.time)
+
+	schedule = resolve_mobile_attendance_policy(employee, nowdate(), location)
+	schedule["status"] = summarize_schedule_status(schedule, now_datetime(), last_log_type)
 
 	today_attendance = frappe.db.get_value(
 		"Saudi Daily Attendance",
@@ -508,13 +533,22 @@ def get_attendance_status():
 		"last_checkin_time": last_checkin_time,
 		"today_checkins": today_checkins,
 		"today_attendance": today_attendance,
-		"location": _get_location_for_branch(profile.branch),
+		"location": location,
+		"schedule": schedule,
+		"voice_profile": voice_profile,
 		"insights": _get_attendance_insights(employee),
 		"leave_options": _get_leave_options(employee),
 		"recent_leave_requests": _get_recent_leave_requests(employee),
 		"verification_features": {
 			"max_attachment_count": MAX_MOBILE_ATTACHMENTS,
 			"max_attachment_size_mb": int(MAX_MOBILE_ATTACHMENT_SIZE / (1024 * 1024)),
+			"voice_policy": schedule.get("voice_policy"),
+			"voice_challenge_ttl_seconds": schedule.get("voice_challenge_ttl_seconds"),
+			"voice_max_duration_seconds": schedule.get("voice_max_duration_seconds"),
+			"voice_runtime_enabled": voice_runtime.get("enabled"),
+			"voice_runtime_ready": voice_runtime.get("runtime_ready"),
+			"voice_runtime_missing_dependencies": voice_runtime.get("missing_dependencies"),
+			"voice_enrollment_required": bool(voice_runtime.get("enabled") and voice_profile.get("can_self_enroll")),
 		},
 	}
 
@@ -526,14 +560,56 @@ def get_attendance_insights(month=None, year=None):
 
 
 @frappe.whitelist()
-def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, verification_note=None, attachments_json=None):
+def issue_mobile_voice_challenge():
+	employee, profile = _require_employee_context()
+	location = _get_location_for_branch(profile.branch)
+	policy = resolve_mobile_attendance_policy(employee, nowdate(), location)
+	result = issue_voice_challenge(employee, policy.get("voice_challenge_ttl_seconds") or 300)
+	result["voice_policy"] = policy.get("voice_policy")
+	result["voice_max_duration_seconds"] = policy.get("voice_max_duration_seconds")
+	result["has_voice_profile"] = get_employee_voice_profile_status(employee).get("has_voice_profile")
+	return result
+
+
+@frappe.whitelist()
+def enroll_mobile_voice_profile(challenge_token=None, voice_payload_json=None):
+	employee, _profile = _require_employee_context()
+	voice_payload = _load_json_param(voice_payload_json, default=None)
+	result = enroll_employee_voice_profile(employee, voice_payload, challenge_token)
+	frappe.db.commit()
+	return {
+		**result,
+		"message": _("تم تسجيل البصمة الصوتية بنجاح ويمكن استخدامها الآن في الحضور والانصراف."),
+	}
+
+
+@frappe.whitelist()
+def do_mobile_checkin(
+	latitude=None,
+	longitude=None,
+	verification_mode=None,
+	verification_note=None,
+	attachments_json=None,
+	challenge_token=None,
+	voice_payload_json=None,
+):
 	latitude = _coerce_float(latitude)
 	longitude = _coerce_float(longitude)
 	attachments = _load_json_param(attachments_json, default=[])
+	voice_payload = _load_json_param(voice_payload_json, default=None)
 
 	employee, profile = _require_employee_context()
 	branch = profile.branch
 	location = _get_location_for_branch(branch)
+	voice_runtime = get_voice_runtime_status()
+	voice_profile = get_employee_voice_profile_status(employee)
+	if attachments:
+		frappe.throw(_("مرفقات الحضور والانصراف أزيلت. استخدم الملاحظة أو التحقق الصوتي المخصص بدلاً منها."))
+	if voice_runtime.get("enabled") and voice_profile.get("can_self_enroll"):
+		message = _("يجب تسجيل البصمة الصوتية لأول مرة من صفحة الحضور قبل تسجيل أي حركة.")
+		if not voice_runtime.get("runtime_ready"):
+			message = _("تسجيل البصمة الصوتية الأولى مطلوب، لكن محرك التحقق الصوتي غير جاهز في البيئة الحالية.")
+		frappe.throw(message, frappe.PermissionError)
 
 	if location:
 		if latitude is None or longitude is None:
@@ -553,6 +629,17 @@ def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, ver
 	last_log = today_checkins[-1] if today_checkins else None
 	log_type = "OUT" if (last_log and last_log.log_type == "IN") else "IN"
 	now = now_datetime()
+	policy = resolve_mobile_attendance_policy(employee, nowdate(), location)
+	variance = calculate_attendance_variance(log_type, now, policy)
+	voice_status = VOICE_VERIFICATION_STATUS_NOT_REQUIRED
+	voice_result = None
+	voice_required = policy.get("voice_policy") == VOICE_POLICY_REQUIRED
+	voice_enabled = policy.get("voice_policy") and policy.get("voice_policy") != VOICE_POLICY_DISABLED
+	if voice_required and not voice_payload:
+		frappe.throw(_("هذا الموقع يتطلب التحقق الصوتي قبل تسجيل الحركة."), frappe.PermissionError)
+	if voice_payload:
+		voice_result = verify_checkin_voice(employee, voice_payload, challenge_token)
+		voice_status = VOICE_VERIFICATION_STATUS_PASSED
 
 	checkin = frappe.new_doc("Saudi Employee Checkin")
 	checkin.update(
@@ -563,13 +650,24 @@ def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, ver
 			"latitude": latitude,
 			"longitude": longitude,
 			"device_id": "mobile-gps",
-			"verification_mode": _build_verification_mode(verification_mode, attachments),
+			"verification_mode": _build_verification_mode(verification_mode, bool(voice_result)),
 			"verification_note": verification_note,
+			"attendance_location": location.name if location else None,
+			"shift_type": policy.get("shift_type"),
+			"expected_start_time": policy.get("expected_start"),
+			"expected_end_time": policy.get("expected_end"),
+			"late_minutes": variance.get("late_minutes"),
+			"early_exit_minutes": variance.get("early_exit_minutes"),
+			"voice_verification_status": voice_status,
+			"voice_challenge_text": (voice_result or {}).get("challenge_text"),
+			"voice_transcript": (voice_result or {}).get("transcript"),
+			"anti_spoof_score": (voice_result or {}).get("anti_spoof_score"),
+			"speech_match_score": (voice_result or {}).get("speech_match_score"),
+			"speaker_match_score": (voice_result or {}).get("speaker_match_score"),
 		}
 	)
 	assert_doctype_permissions("Saudi Employee Checkin", "create", doc=checkin)
 	checkin.insert()
-	attached_files = _attach_files(checkin, attachments)
 	frappe.db.commit()
 
 	result = {
@@ -578,7 +676,8 @@ def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, ver
 		"checkin_name": checkin.name,
 		"checkin_time": str(now),
 		"attendance_name": None,
-		"attached_files": attached_files,
+		"attached_files": [],
+		"voice_verification": voice_result,
 		"message": _("تم تسجيل الحضور بنجاح في {0}").format(now.strftime("%H:%M"))
 		if log_type == "IN"
 		else _("تم تسجيل الانصراف بنجاح في {0}").format(now.strftime("%H:%M")),
@@ -590,6 +689,7 @@ def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, ver
 			in_time = get_datetime(in_checkin.time)
 			out_time = now
 			working_hours = time_diff_in_hours(out_time, in_time)
+			out_variance = calculate_attendance_variance("OUT", out_time, policy)
 
 			existing = frappe.db.get_value(
 				"Saudi Daily Attendance",
@@ -606,7 +706,14 @@ def do_mobile_checkin(latitude=None, longitude=None, verification_mode=None, ver
 						"working_hours": round(working_hours, 2),
 						"in_time": in_time,
 						"out_time": out_time,
-						"early_exit": 1 if working_hours < _get_contract_hours_per_day(employee) else 0,
+						"attendance_location": location.name if location else None,
+						"shift_type": policy.get("shift_type"),
+						"expected_start_time": policy.get("expected_start"),
+						"expected_end_time": policy.get("expected_end"),
+						"late_entry": variance.get("late_entry"),
+						"late_minutes": variance.get("late_minutes"),
+						"early_exit": out_variance.get("early_exit") or (1 if working_hours < _get_contract_hours_per_day(employee) else 0),
+						"early_exit_minutes": out_variance.get("early_exit_minutes"),
 					}
 				)
 				assert_doctype_permissions("Saudi Daily Attendance", ("create", "submit"), doc=attendance)

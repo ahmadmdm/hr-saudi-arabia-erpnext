@@ -25,6 +25,18 @@
   "column_break_contract",
   "notice_period_monthly_days",
   "notice_period_non_monthly_days",
+   "voice_section",
+   "enable_voice_verification",
+   "voice_language",
+   "voice_whisper_model_size",
+   "voice_compute_type",
+   "column_break_voice",
+   "speaker_model_source",
+   "anti_spoof_model_source",
+   "voice_speaker_threshold",
+   "voice_speech_match_threshold",
+   "voice_anti_spoof_threshold",
+   "voice_bonafide_labels",
   "alerts_section",
   "iqama_expiry_alert_days",
   "contract_expiry_alert_days",
@@ -158,6 +170,78 @@
    "fieldname": "notice_period_non_monthly_days",
    "fieldtype": "Int",
    "label": "Notice Period — Non-Monthly (Days) / إشعار غير الشهري"
+   },
+   {
+    "fieldname": "voice_section",
+    "fieldtype": "Section Break",
+    "label": "Voice Verification / التحقق الصوتي"
+   },
+   {
+    "default": "0",
+    "fieldname": "enable_voice_verification",
+    "fieldtype": "Check",
+    "label": "Enable Voice Verification / تفعيل التحقق الصوتي"
+   },
+   {
+    "default": "ar",
+    "fieldname": "voice_language",
+    "fieldtype": "Data",
+    "label": "Voice Language / لغة الصوت"
+   },
+   {
+    "default": "small",
+    "fieldname": "voice_whisper_model_size",
+    "fieldtype": "Data",
+    "label": "Whisper Model Size / حجم نموذج Whisper"
+   },
+   {
+    "default": "int8",
+    "fieldname": "voice_compute_type",
+    "fieldtype": "Select",
+    "label": "Whisper Compute Type / نوع المعالجة",
+    "options": "int8\nfloat32\nfloat16"
+   },
+   {
+    "fieldname": "column_break_voice",
+    "fieldtype": "Column Break"
+   },
+   {
+    "default": "speechbrain/spkrec-ecapa-voxceleb",
+    "fieldname": "speaker_model_source",
+    "fieldtype": "Data",
+    "label": "Speaker Model Source / مصدر نموذج المتحدث"
+   },
+   {
+    "fieldname": "anti_spoof_model_source",
+    "fieldtype": "Data",
+    "label": "Anti-Spoof Model Source / مصدر نموذج كشف الانتحال"
+   },
+   {
+    "default": "0.25",
+    "fieldname": "voice_speaker_threshold",
+    "fieldtype": "Float",
+    "label": "Speaker Threshold / عتبة مطابقة المتحدث",
+    "precision": "4"
+   },
+   {
+    "default": "0.75",
+    "fieldname": "voice_speech_match_threshold",
+    "fieldtype": "Float",
+    "label": "Speech Match Threshold / عتبة مطابقة التحدي",
+    "precision": "4"
+   },
+   {
+    "default": "0.50",
+    "fieldname": "voice_anti_spoof_threshold",
+    "fieldtype": "Float",
+    "label": "Anti-Spoof Threshold / عتبة كشف الانتحال",
+    "precision": "4"
+   },
+   {
+    "default": "bonafide,genuine,human,real",
+    "fieldname": "voice_bonafide_labels",
+    "fieldtype": "Data",
+    "label": "Bonafide Labels / تسميات الصوت الحقيقي"
   },
   {
    "fieldname": "alerts_section",

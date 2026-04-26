@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.13.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.14.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.13.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.14.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -120,21 +120,21 @@ bench build --app saudi_hr
 bench --site <your-site-name> clear-cache
 ```
 
-> **ملاحظة:** يجب تثبيت `frappe` و`erpnext` قبل هذا التطبيق. كما يعتمد التطبيق الآن على `openpyxl` لقالب فروع الموظفين و`openlocationcode` لدعم Plus Code، وسيتم تثبيتهما تلقائياً عبر بيانات الحزمة عند استخدام `bench get-app` أو `pip install -e apps/saudi_hr`.  
-> **Note:** `frappe` and `erpnext` must be installed first. The app now also depends on `openpyxl` for the employee-branch template flow and `openlocationcode` for Plus Code support; both are installed automatically from the package metadata when using `bench get-app` or `pip install -e apps/saudi_hr`.
+> **ملاحظة:** يجب تثبيت `frappe` و`erpnext` قبل هذا التطبيق. تبعيات التطبيق الخلفية موصوفة داخل `pyproject.toml` و`setup.py` و`requirements.txt`، وتشمل الآن `openpyxl`, `openlocationcode`, `numpy`, `torch`, `torchaudio`, `speechbrain`, و`faster-whisper`. عند استخدام `bench get-app` أو `pip install -e apps/saudi_hr` سيتم سحب هذه التبعيات تلقائيًا من بيانات الحزمة.  
+> **Note:** `frappe` and `erpnext` must be installed first. The backend runtime dependencies are declared in `pyproject.toml`, `setup.py`, and `requirements.txt`, and now include `openpyxl`, `openlocationcode`, `numpy`, `torch`, `torchaudio`, `speechbrain`, and `faster-whisper`. When you use `bench get-app` or `pip install -e apps/saudi_hr`, these dependencies are installed automatically from the package metadata.
 
 ### التحقق من الاعتماديات | Dependency Verification
 
 ```bash
 # Verify Python package dependencies
-./env/bin/python -c "import openpyxl, openlocationcode; print('runtime dependencies ok')"
+./env/bin/python -c "import openpyxl, openlocationcode, torch, torchaudio, speechbrain, faster_whisper; print('runtime dependencies ok')"
 
 # Verify bench app test suite
 bench --site <your-site-name> run-tests --app saudi_hr --skip-test-records
 ```
 
-> **معلومة مهمة:** ملفات الاعتماديات موحدة في `pyproject.toml` و`setup.py` و`requirements.txt`، ولا توجد تبعيات frontend منفصلة داخل التطبيق.  
-> **Important:** Dependency declarations are aligned in `pyproject.toml`, `setup.py`, and `requirements.txt`, and the app currently has no separate frontend package manifest.
+> **معلومة مهمة:** ملفات الاعتماديات موحدة في `pyproject.toml` و`setup.py` و`requirements.txt`. أضفنا أيضًا ملف `requirements-voice-cpu.txt` كخيار تشغيلي احتياطي للخوادم التي تحتاج فهرس PyTorch CPU صريح، لكن المسار الافتراضي للتثبيت يعتمد على بيانات الحزمة نفسها.  
+> **Important:** Dependency declarations are aligned in `pyproject.toml`, `setup.py`, and `requirements.txt`. We also ship `requirements-voice-cpu.txt` as an operational fallback for servers that need the explicit PyTorch CPU index, but the default installation path still relies on the package metadata itself.
 
 ### نقل التطبيق إلى نظام آخر | Moving the App to Another System
 
@@ -149,7 +149,10 @@ bench --site <your-site-name> install-app saudi_hr
 bench --site <your-site-name> migrate
 
 # 4. تحقق من التبعيات الأساسية | Verify runtime dependencies
-./env/bin/python -c "import openpyxl, openlocationcode; print('dependencies ok')"
+./env/bin/python -c "import openpyxl, openlocationcode, torch, torchaudio, speechbrain, faster_whisper; print('dependencies ok')"
+
+# Optional fallback for CPU-only environments with restricted package indexes
+./env/bin/pip install -r apps/saudi_hr/requirements-voice-cpu.txt
 
 # 5. تحقّق من أهم المسارات بعد التثبيت | Validate the key app flows after install
 bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_hr.doctype.special_leave.test_special_leave --module saudi_hr.saudi_hr.doctype.annual_leave_disbursement.test_annual_leave_disbursement --module saudi_hr.saudi_hr.report.saudi_labor_coverage_matrix.test_saudi_labor_coverage_matrix
@@ -385,7 +388,24 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.13.0 — ١٧ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.14.0 — ٢٧ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**الحضور الذكي والتحقق الصوتي والامتثال التشغيلي | Smart Attendance, Voice Verification, and Operational Compliance:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Mobile Attendance | حضور الجوال | إضافة سياسة حضور مبنية على الورديات الفعلية، مع عرض وقت البداية والنهاية المتوقعين وحالة الوردية داخل صفحة الجوال |
+| Voice Verification | التحقق الصوتي | إضافة تسجيل بصمة صوتية أولية إلزامية، تحدي رقمي لكل حركة، منع إعادة التسجيل الذاتي، وإتاحة إعادة التهيئة عبر الموارد البشرية فقط |
+| Attendance Review | متابعة الحضور | إضافة تقرير `Team Attendance Review` وصفحة `Attendance Action Hub` للإشراف المباشر على التأخير، الغياب، الحركات المفتوحة، ومشكلات التحقق الصوتي |
+| WPS Lifecycle | دورة حماية الأجور | إضافة `WPS Submission` وتقرير `WPS Submission Tracker` لتتبع الإرسال والرفض والتصحيح والقبول بدل الاكتفاء بملف التصدير فقط |
+| Workspace | مساحة العمل | توسيع `Saudi HR Workspace` لإظهار إجراءات الحضور، البصمة الصوتية، إعدادات الورديات، ومسارات WPS من نفس الواجهة |
+| Packaging | التغليف والتبعيات | توحيد إعلان تبعيات محرك الصوت في `pyproject.toml` و`setup.py` و`requirements.txt` لضمان تثبيتها تلقائيًا عند نقل التطبيق أو تثبيته على بيئة أخرى |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يحول التطبيق من طبقة HR تشغيلية أساسية إلى منصة أكثر جاهزية للاستخدام الميداني، مع حضور جوال مضبوط بالورديات، تحقق صوتي قابل للتدقيق، ولوحات متابعة للمشرفين، ودورة متابعة كاملة لحماية الأجور.
+
+> **بعد الترقية | Post-upgrade:** شغّل `bench --site <your-site-name> migrate` ثم `bench build --app saudi_hr` و`bench --site <your-site-name> clear-cache`. وإذا كانت البيئة CPU-only أو تستخدم mirror خاص للحزم، احتفظ بملف `requirements-voice-cpu.txt` كخيار دعم تشغيلي.
+
+### v1.13.0 — ١٧ أبريل ٢٠٢٦
 
 **مرونة الرواتب والموافقات والواجهة الحية | Payroll Flexibility, Workflow Routing, and Live UX:**
 

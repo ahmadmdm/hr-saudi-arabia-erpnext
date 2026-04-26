@@ -135,6 +135,36 @@ function _add_buttons(frm) {
             frappe.set_route('Form', 'Journal Entry', frm.doc.payroll_journal_entry);
         });
     }
+
+    if (!frm.is_new() && frm.doc.docstatus === 1) {
+        frm.add_custom_button(__('WPS Submission / متابعة حماية الأجور'), function() {
+            _open_wps_submission(frm);
+        }, __('Compliance / الامتثال'));
+
+        frm.add_custom_button(__('WPS Export Report / تقرير حماية الأجور'), function() {
+            frappe.set_route('query-report', 'WPS Export Report', {
+                payroll_document: frm.doc.name,
+            });
+        }, __('Compliance / الامتثال'));
+    }
+}
+
+
+function _open_wps_submission(frm) {
+    frappe.call({
+        method: 'saudi_hr.saudi_hr.doctype.wps_submission.wps_submission.create_wps_submission_from_payroll',
+        args: {
+            payroll_document: frm.doc.name,
+        },
+        freeze: true,
+        freeze_message: __('Preparing WPS submission record...<br>جاري تجهيز سجل متابعة حماية الأجور...'),
+        callback(r) {
+            if (!r.message || !r.message.name) {
+                return;
+            }
+            frappe.set_route('Form', 'WPS Submission', r.message.name);
+        },
+    });
 }
 
 

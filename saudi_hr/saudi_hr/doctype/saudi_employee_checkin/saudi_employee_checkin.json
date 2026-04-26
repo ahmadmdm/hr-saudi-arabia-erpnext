@@ -13,12 +13,24 @@
   "log_type",
   "time",
   "device_id",
-    "verification_mode",
+  "verification_mode",
   "attendance",
+  "attendance_location",
+  "shift_type",
+  "expected_start_time",
+  "expected_end_time",
+  "late_minutes",
+  "early_exit_minutes",
+  "voice_verification_status",
+  "voice_challenge_text",
+  "voice_transcript",
+  "anti_spoof_score",
+  "speech_match_score",
+  "speaker_match_score",
   "location_section",
   "latitude",
-    "longitude",
-    "verification_note"
+  "longitude",
+  "verification_note"
  ],
  "fields": [
   {
@@ -80,6 +92,85 @@
    "options": "Saudi Daily Attendance",
    "read_only": 1
   },
+    {
+     "fieldname": "attendance_location",
+     "fieldtype": "Link",
+     "label": "Attendance Location / موقع الحضور",
+     "options": "Attendance Location",
+     "read_only": 1
+    },
+    {
+     "fieldname": "shift_type",
+     "fieldtype": "Link",
+     "label": "Shift Type / الوردية",
+     "options": "Shift Type",
+     "read_only": 1
+    },
+    {
+     "fieldname": "expected_start_time",
+     "fieldtype": "Datetime",
+     "label": "Expected Start / وقت البداية المتوقع",
+     "read_only": 1
+    },
+    {
+     "fieldname": "expected_end_time",
+     "fieldtype": "Datetime",
+     "label": "Expected End / وقت النهاية المتوقع",
+     "read_only": 1
+    },
+    {
+     "fieldname": "late_minutes",
+     "fieldtype": "Int",
+     "label": "Late Minutes / دقائق التأخير",
+     "read_only": 1
+    },
+    {
+     "fieldname": "early_exit_minutes",
+     "fieldtype": "Int",
+     "label": "Early Exit Minutes / دقائق الخروج المبكر",
+     "read_only": 1
+    },
+    {
+     "default": "Not Required / غير مطلوب",
+     "fieldname": "voice_verification_status",
+     "fieldtype": "Select",
+     "label": "Voice Verification Status / حالة التحقق الصوتي",
+     "options": "Not Required / غير مطلوب\nPending / بانتظار\nPassed / ناجح\nFailed / فشل",
+     "read_only": 1
+    },
+    {
+     "fieldname": "voice_challenge_text",
+     "fieldtype": "Data",
+     "label": "Voice Challenge / التحدي الصوتي",
+     "read_only": 1
+    },
+    {
+     "fieldname": "voice_transcript",
+     "fieldtype": "Small Text",
+     "label": "Voice Transcript / النص المستخرج",
+     "read_only": 1
+    },
+    {
+     "fieldname": "anti_spoof_score",
+     "fieldtype": "Float",
+     "label": "Anti-Spoof Score",
+     "precision": "4",
+     "read_only": 1
+    },
+    {
+     "fieldname": "speech_match_score",
+     "fieldtype": "Float",
+     "label": "Speech Match Score",
+     "precision": "4",
+     "read_only": 1
+    },
+    {
+     "fieldname": "speaker_match_score",
+     "fieldtype": "Float",
+     "label": "Speaker Match Score",
+     "precision": "4",
+     "read_only": 1
+    },
   {
    "fieldname": "location_section",
    "fieldtype": "Section Break",
@@ -96,12 +187,12 @@
    "fieldtype": "Float",
    "label": "Longitude / خط الطول",
    "precision": "6"
-    },
-    {
-     "fieldname": "verification_note",
-     "fieldtype": "Small Text",
-     "label": "Verification Note / ملاحظة التحقق",
-     "read_only": 1
+  },
+  {
+   "fieldname": "verification_note",
+   "fieldtype": "Small Text",
+   "label": "Verification Note / ملاحظة التحقق",
+   "read_only": 1
   }
  ],
  "is_submittable": 0,

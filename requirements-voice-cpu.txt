@@ -1,0 +1,8 @@
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+numpy<2
+torch==2.2.2
+torchaudio==2.2.2
+speechbrain>=1.1.0
+faster-whisper>=1.2.1

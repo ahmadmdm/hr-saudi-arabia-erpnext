@@ -150,6 +150,16 @@ def validate_gosi_coverage(item):
 	return IMPLEMENTED
 
 
+def validate_wps_coverage(item):
+	if not run_check({"kind": "report", "name": "WPS Export Report"}):
+		return GAP
+
+	if frappe.db.exists("DocType", "WPS Submission"):
+		return IMPLEMENTED
+
+	return PARTIAL
+
+
 def status_rank(status):
 	return {
 		GAP: 0,
@@ -411,12 +421,12 @@ def get_coverage_items():
 			"coverage_area": _("Compliance / الامتثال"),
 			"legal_reference": _("WPS / حماية الأجور"),
 			"requirement": _("Wage protection file generation / إنشاء ملف حماية الأجور"),
-			"component_type": "Report",
-			"component_name": "WPS Export Report",
+			"component_type": "Report + DocType",
+			"component_name": "WPS Export Report + WPS Submission",
 			"checks": [{"kind": "report", "name": "WPS Export Report"}],
-			"implemented_status": PARTIAL,
-			"evidence": _("SIF export exists for WPS file generation."),
-			"notes": _("Export is implemented, but rejection handling and full compliance lifecycle are not yet modeled."),
+			"validator": "validate_wps_coverage",
+			"evidence": _("SIF export exists together with a WPS submission lifecycle record for submission, rejection, correction, and acceptance tracking."),
+			"notes": _("WPS export and submission follow-up are now modeled inside Saudi HR."),
 		},
 		{
 			"coverage_area": _("Compliance / الامتثال"),

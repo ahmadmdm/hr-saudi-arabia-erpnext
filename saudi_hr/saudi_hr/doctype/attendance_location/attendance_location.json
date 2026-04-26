@@ -25,7 +25,14 @@
   "section_settings",
   "allowed_radius_meters",
   "column_break_settings",
-  "geolocation"
+  "geolocation",
+  "mobile_policy_section",
+  "default_shift_type",
+  "column_break_policy",
+  "enforce_schedule",
+  "voice_verification_policy",
+  "voice_challenge_ttl_seconds",
+  "voice_max_duration_seconds"
  ],
  "fields": [
   {
@@ -131,6 +138,48 @@
    "fieldname": "geolocation",
    "fieldtype": "Geolocation",
     "label": "Map Preview / معاينة الموقع على الخريطة"
+  },
+  {
+   "fieldname": "mobile_policy_section",
+   "fieldtype": "Section Break",
+   "label": "Mobile Attendance Policy / سياسة حضور الجوال"
+  },
+  {
+   "fieldname": "default_shift_type",
+   "fieldtype": "Link",
+   "label": "Default Shift Type / الوردية الافتراضية",
+   "options": "Shift Type"
+  },
+  {
+   "fieldname": "column_break_policy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "enforce_schedule",
+   "fieldtype": "Check",
+   "label": "Use Shift Policy in Mobile Attendance / تفعيل سياسة الوردية"
+  },
+  {
+   "default": "Disabled / معطل",
+   "fieldname": "voice_verification_policy",
+   "fieldtype": "Select",
+   "label": "Voice Verification Policy / سياسة التحقق الصوتي",
+   "options": "Disabled / معطل\nOptional / اختياري\nRequired / إلزامي"
+  },
+  {
+   "default": "300",
+   "fieldname": "voice_challenge_ttl_seconds",
+   "fieldtype": "Int",
+   "label": "Voice Challenge TTL (seconds) / مدة التحدي الصوتي (ثوان)",
+   "depends_on": "eval:doc.voice_verification_policy!='Disabled / معطل'"
+  },
+  {
+   "default": "15",
+   "fieldname": "voice_max_duration_seconds",
+   "fieldtype": "Int",
+   "label": "Voice Max Duration (seconds) / الحد الأقصى للتسجيل الصوتي (ثوان)",
+   "depends_on": "eval:doc.voice_verification_policy!='Disabled / معطل'"
   }
  ],
  "in_create": 0,

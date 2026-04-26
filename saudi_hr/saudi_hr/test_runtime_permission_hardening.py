@@ -6,6 +6,7 @@ from frappe.tests.utils import FrappeTestCase
 from frappe.utils import get_datetime
 
 from saudi_hr.saudi_hr import api as api_module
+from saudi_hr.saudi_hr import voice_verification as voice_module
 from saudi_hr.saudi_hr.doctype.disciplinary_procedure import disciplinary_procedure as disciplinary_module
 from saudi_hr.saudi_hr.doctype.hr_policy_document import hr_policy_document as policy_module
 from saudi_hr.saudi_hr.doctype.investigation_record import investigation_record as investigation_module
@@ -45,6 +46,28 @@ class _SettingsDoc:
 
 	def append(self, fieldname, value):
 		getattr(self, fieldname).append(value)
+
+	def save(self):
+		self.saved = True
+		return self
+
+
+class _VoiceProfileDoc:
+	def __init__(self, employee="EMP-0001"):
+		self.name = employee
+		self.employee = employee
+		self.employee_name = "Ali"
+		self.voiceprint_embedding = "[0.1, 0.2]"
+		self.is_active = 1
+		self.enrollment_status = voice_module.VOICE_PROFILE_STATUS_ENROLLED
+		self.last_enrolled_on = "2026-04-01 08:00:00"
+		self.transcript_preview = "1234"
+		self.last_challenge_text = "1234"
+		self.last_anti_spoof_score = 0.95
+		self.last_speech_match_score = 0.95
+		self.last_speaker_match_score = 0.95
+		self.flags = SimpleNamespace(ignore_permissions=False)
+		self.saved = False
 
 	def save(self):
 		self.saved = True
@@ -94,6 +117,61 @@ class TestRuntimePermissionHardening(FrappeTestCase):
 		self.assertTrue(attendance_doc.inserted)
 		self.assertTrue(attendance_doc.submitted)
 		self.assertEqual(result["attendance_name"], "ATT-0001")
+
+	def test_do_mobile_checkin_rejects_attendance_attachments(self):
+		profile = SimpleNamespace(branch="HQ")
+
+		with patch.object(api_module, "_require_employee_context", return_value=("EMP-0001", profile)), patch.object(
+			api_module, "_load_json_param", side_effect=[[{"filename": "legacy-note.txt", "content": "ZmFrZQ=="}], None]
+		):
+			with self.assertRaises(frappe.ValidationError):
+				api_module.do_mobile_checkin(latitude="24.7", longitude="46.6", attachments_json="[]")
+
+	def test_do_mobile_checkin_requires_voice_when_policy_requires_it(self):
+		profile = SimpleNamespace(branch="HQ")
+
+		with patch.object(api_module, "_require_employee_context", return_value=("EMP-0001", profile)), patch.object(
+			api_module, "_load_json_param", side_effect=[[], None]
+		), patch.object(api_module, "_get_location_for_branch", return_value=None), patch.object(
+			api_module, "_get_todays_checkins", return_value=[]
+		), patch.object(api_module, "resolve_mobile_attendance_policy", return_value={"voice_policy": "Required / إلزامي"}):
+			with self.assertRaises(frappe.PermissionError):
+				api_module.do_mobile_checkin(latitude="24.7", longitude="46.6")
+
+	def test_do_mobile_checkin_requires_initial_voice_enrollment_when_enabled(self):
+		profile = SimpleNamespace(branch="HQ")
+
+		with patch.object(api_module, "_require_employee_context", return_value=("EMP-0001", profile)), patch.object(
+			api_module, "_load_json_param", side_effect=[[], None]
+		), patch.object(api_module, "get_voice_runtime_status", return_value={"enabled": True, "runtime_ready": True}), patch.object(
+			api_module, "get_employee_voice_profile_status", return_value={"can_self_enroll": True}
+		):
+			with self.assertRaises(frappe.PermissionError):
+				api_module.do_mobile_checkin(latitude="24.7", longitude="46.6")
+
+	def test_enroll_employee_voice_profile_blocks_self_reenrollment(self):
+		with patch.object(voice_module, "get_voice_runtime_settings", return_value={"enabled": True}), patch.object(
+			voice_module, "get_employee_voice_profile_status", return_value={"profile_exists": True, "can_self_enroll": False}
+		):
+			with self.assertRaises(frappe.PermissionError):
+				voice_module.enroll_employee_voice_profile("EMP-0001", {"content": "ZmFrZQ=="}, "token")
+
+	def test_reset_employee_voice_profile_clears_profile(self):
+		profile_doc = _VoiceProfileDoc()
+
+		with patch.object(voice_module.frappe, "only_for") as only_for, patch.object(
+			voice_module.frappe.db, "exists", return_value=profile_doc.name
+		), patch.object(voice_module.frappe, "get_doc", return_value=profile_doc), patch.object(
+			voice_module.frappe.db, "commit"
+		):
+			result = voice_module.reset_employee_voice_profile(employee="EMP-0001")
+
+		only_for.assert_called_once_with(voice_module.VOICE_PROFILE_RESET_ROLES)
+		self.assertEqual(profile_doc.enrollment_status, voice_module.VOICE_PROFILE_STATUS_NOT_ENROLLED)
+		self.assertEqual(profile_doc.is_active, 0)
+		self.assertIsNone(profile_doc.voiceprint_embedding)
+		self.assertTrue(profile_doc.saved)
+		self.assertEqual(result["employee"], "EMP-0001")
 
 	def test_sync_directory_table_saves_with_explicit_permission_check(self):
 		settings_doc = _SettingsDoc()

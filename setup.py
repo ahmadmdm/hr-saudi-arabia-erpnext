@@ -11,5 +11,13 @@ setup(
 	packages=find_packages(),
 	zip_safe=False,
 	include_package_data=True,
-	install_requires=["openpyxl>=3.1.0", "openlocationcode>=1.0.1"],
+	install_requires=[
+		"openpyxl>=3.1.0",
+		"openlocationcode>=1.0.1",
+		"numpy<2",
+		"torch>=2.2.0",
+		"torchaudio>=2.2.0",
+		"speechbrain>=1.1.0",
+		"faster-whisper>=1.2.1",
+	],
 )
