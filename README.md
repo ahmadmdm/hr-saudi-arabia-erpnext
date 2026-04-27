@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.14.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.15.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.14.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.15.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -388,7 +388,23 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.14.0 — ٢٧ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.15.0 — ٢٧ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**الواجهة العربية الموحّدة وتجربة العمل اليومية | Unified Arabic UX and Daily Operations Experience:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Saudi HR Workspace | مساحة عمل Saudi HR | إعادة تنظيم مساحة العمل إلى مسار تشغيلي أوضح يبدأ بمتابعة اليوم ثم إجراءات الموظف ثم السياسات والامتثال والمؤشرات |
+| Attendance Action Hub | مركز متابعة الحضور | تحويل النصوص المختلطة داخل الصفحة إلى مفاتيح ترجمة قياسية وربطها بطبقة الترجمة العربية الاحترافية |
+| Mobile Attendance | الحضور عبر الجوال | تعريب الواجهة والنصوص الديناميكية والقيم التشغيلية مثل الموقع والوردية والحالات والإجازات مع تحسين العبارات العربية الوظيفية |
+| Apps Screen | شاشة التطبيقات | توحيد عناوين التطبيق واختصاراته إلى مفاتيح إنجليزية قياسية حتى تتولى طبقة الترجمة العربية إظهارها بشكل صحيح في النظام العربي |
+| Publishing | النشر والكاش | رفع نسخة service worker ونسخ الأصول لضمان وصول النصوص الجديدة مباشرة في البيئة الحية دون بقايا cache قديمة |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يركز على صقل تجربة المستخدم العربية داخل Saudi HR في بيئة التشغيل الحية، بحيث تظهر المساحات والصفحات اليومية والاختصارات والقيم الديناميكية بلغة عربية مهنية ومتسقة بدل الصيغ المختلطة أو الحرفية.
+
+> **بعد الترقية | Post-upgrade:** شغّل `bench --site <your-site-name> migrate` ثم `bench build --app saudi_hr` و`bench --site <your-site-name> clear-cache`، وأعد تحميل صفحة الحضور عبر الجوال لتحديث نسخة الـ service worker.
+
+### v1.14.0 — ٢٧ أبريل ٢٠٢٦
 
 **الحضور الذكي والتحقق الصوتي والامتثال التشغيلي | Smart Attendance, Voice Verification, and Operational Compliance:**
 

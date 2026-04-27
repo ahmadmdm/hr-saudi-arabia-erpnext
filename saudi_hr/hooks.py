@@ -2,7 +2,7 @@ from . import __version__ as app_version
 
 
 app_name = "saudi_hr"
-app_title = "Saudi HR / نظام الموارد البشرية السعودي"
+app_title = "Saudi HR"
 app_publisher = "IdeaOrbit"
 app_description = "Saudi HR Management System per Saudi Labor Law (Royal Decree M/51)"
 app_email = "info@ideaorbit.net"
@@ -14,13 +14,13 @@ add_to_apps_screen = [
 	{
 		"name": "saudi_hr",
 		"logo": "/assets/saudi_hr/images/logo.svg",
-		"title": "Saudi HR / الموارد البشرية",
+		"title": "Saudi HR",
 		"route": "/app/saudi-hr",
 	},
 	{
 		"name": "saudi_hr_mobile",
 		"logo": "/assets/saudi_hr/images/logo.svg",
-		"title": "حضور الموظفين / Attendance",
+		"title": "Mobile Attendance",
 		"route": "/mobile-attendance",
 	},
 ]

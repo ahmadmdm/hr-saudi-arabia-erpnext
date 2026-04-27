@@ -2,6 +2,14 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.15.0 - 2026-04-27
+
+- Reorganized the Saudi HR workspace into a clearer Arabic-first operational flow covering daily follow-up, employee actions, policies, WPS, governance, and insights.
+- Normalized Saudi HR app titles and workspace shortcut labels to canonical English source keys so Arabic rendering is owned consistently by the translation layer.
+- Refined the mobile attendance experience with Arabic-only leave types, stronger functional phrasing, dynamic value localization, updated GPS wording, and a refreshed service-worker cache version.
+- Converted Attendance Action Hub UI strings from mixed bilingual literals to translatable source keys for proper Arabic publication in the live app.
+- Republished workspace and frontend assets so the updated Arabic UX is delivered reliably in production after cache clear.
+
 ## v1.12.0 - 2026-04-11
 
 - Hardened Saudi Monthly Payroll workbook imports with blocking validation for missing required columns and critical duplicate-name warnings when rows omit an explicit cost center.

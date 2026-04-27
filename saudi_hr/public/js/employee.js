@@ -51,7 +51,7 @@ function get_paid_payroll_section($fieldWrapper) {
 		`<div class="employee-paid-payroll-history" style="margin-top: 24px;">
 			<div class="form-dashboard-section">
 				<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
-					<h5 style="margin:0;">${__("Paid Payroll History / سجل الرواتب المصروفة")}</h5>
+					<h5 style="margin:0;">${__("Paid Payroll History")}</h5>
 				</div>
 				<div class="employee-paid-payroll-history-body"></div>
 			</div>

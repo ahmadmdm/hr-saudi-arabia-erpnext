@@ -12,15 +12,15 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 		this.ensureStyles();
 		this.page = frappe.ui.make_app_page({
 			parent: wrapper,
-			title: __("Attendance Action Hub / لوحة متابعة الحضور"),
+			title: __("Attendance Action Hub"),
 			single_column: true,
 		});
 		this.makeFilters();
 		this.makeLayout();
 		this.bindEvents();
-		this.page.set_primary_action(__("Refresh / تحديث"), () => this.refresh());
+		this.page.set_primary_action(__("Refresh"), () => this.refresh());
 		this.page.add_menu_item(
-			__("Open Team Attendance Review / فتح تقرير مراجعة الحضور"),
+			__("Open Team Attendance Review"),
 			() => this.openReport(),
 		);
 		this.refresh();
@@ -311,42 +311,42 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 	makeFilters() {
 		this.filters = {
 			attendance_date: this.page.add_field({
-				label: __("Attendance Date / تاريخ الحضور"),
+				label: __("Attendance Date"),
 				fieldname: "attendance_date",
 				fieldtype: "Date",
 				default: frappe.datetime.get_today(),
 				change: () => this.refresh(),
 			}),
 			company: this.page.add_field({
-				label: __("Company / الشركة"),
+				label: __("Company"),
 				fieldname: "company",
 				fieldtype: "Link",
 				options: "Company",
 				change: () => this.refresh(),
 			}),
 			branch: this.page.add_field({
-				label: __("Branch / الفرع"),
+				label: __("Branch"),
 				fieldname: "branch",
 				fieldtype: "Link",
 				options: "Branch",
 				change: () => this.refresh(),
 			}),
 			department: this.page.add_field({
-				label: __("Department / القسم"),
+				label: __("Department"),
 				fieldname: "department",
 				fieldtype: "Link",
 				options: "Department",
 				change: () => this.refresh(),
 			}),
 			employee: this.page.add_field({
-				label: __("Employee / الموظف"),
+				label: __("Employee"),
 				fieldname: "employee",
 				fieldtype: "Link",
 				options: "Employee",
 				change: () => this.refresh(),
 			}),
 			only_exceptions: this.page.add_field({
-				label: __("Only Exceptions / الاستثناءات فقط"),
+				label: __("Only Exceptions"),
 				fieldname: "only_exceptions",
 				fieldtype: "Check",
 				default: 1,
@@ -424,12 +424,12 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 				.fill("")
 				.map(
 					() =>
-						"<div class='attendance-action-hub__card attendance-action-hub__summary-card'><div class='attendance-action-hub__loading'>Loading attendance cases...</div></div>",
+						`<div class='attendance-action-hub__card attendance-action-hub__summary-card'><div class='attendance-action-hub__loading'>${__("Loading attendance cases...")}</div></div>`,
 				)
 				.join(""),
 		);
 		this.$results.html(
-			"<div class='attendance-action-hub__panel attendance-action-hub__loading'>Loading attendance actions...</div>",
+			`<div class='attendance-action-hub__panel attendance-action-hub__loading'>${__("Loading attendance actions...")}</div>`,
 		);
 	}
 
@@ -446,7 +446,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 		this.$results.html(
 			`<div class="attendance-action-hub__panel attendance-action-hub__empty">
 				<h3 class="attendance-action-hub__results-title">${this.escapeHtml(
-					__("Unable to load attendance actions / تعذر تحميل حالات المتابعة"),
+					__("Unable to load attendance actions"),
 				)}</h3>
 				<p class="attendance-action-hub__results-subtitle">${this.escapeHtml(
 					__("Use the report menu above or refresh the page after checking permissions and filters."),
@@ -488,22 +488,22 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 			.join("");
 		const heroMetrics = [
 			{
-				label: __("In Scope / في النطاق"),
+				label: __("In Scope"),
 				value: metrics.total,
 				alert: false,
 			},
 			{
-				label: __("Needs Action / تحتاج متابعة"),
+				label: __("Needs Action"),
 				value: metrics.flagged,
 				alert: metrics.flagged > 0,
 			},
 			{
-				label: __("Voice Follow-up / متابعة صوتية"),
+				label: __("Voice Follow-up"),
 				value: metrics.voiceFollowUp,
 				alert: metrics.voiceFollowUp > 0,
 			},
 			{
-				label: __("Time Exceptions / مخالفات الوقت"),
+				label: __("Time Exceptions"),
 				value: metrics.timeExceptions,
 				alert: metrics.timeExceptions > 0,
 			},
@@ -521,10 +521,10 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 			<div class="attendance-action-hub__hero">
 				<section class="attendance-action-hub__panel">
 					<div class="attendance-action-hub__eyebrow">${this.escapeHtml(
-						__("Supervisor Controls / أدوات الإشراف"),
+						__("Supervisor Controls"),
 					)}</div>
 					<h2 class="attendance-action-hub__title">${this.escapeHtml(
-						__("Attendance Action Hub / لوحة متابعة الحضور"),
+						__("Attendance Action Hub"),
 					)}</h2>
 					<p class="attendance-action-hub__subtitle">${this.escapeHtml(
 						isLoading
@@ -543,14 +543,14 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 
 	getScopeChips(filters) {
 		const chips = [
-			`${__("Date / التاريخ")}: ${filters.attendance_date || frappe.datetime.get_today()}`,
+			`${__("Date")}: ${filters.attendance_date || frappe.datetime.get_today()}`,
 		];
 
 		[
-			["company", __("Company / الشركة")],
-			["branch", __("Branch / الفرع")],
-			["department", __("Department / القسم")],
-			["employee", __("Employee / الموظف")],
+			["company", __("Company")],
+			["branch", __("Branch")],
+			["department", __("Department")],
+			["employee", __("Employee")],
 		].forEach(([key, label]) => {
 			if (filters[key]) {
 				chips.push(`${label}: ${filters[key]}`);
@@ -559,8 +559,8 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 
 		chips.push(
 			filters.only_exceptions
-				? __("Only exceptions / الاستثناءات فقط")
-				: __("All rows / كل الصفوف"),
+				? __("Only exceptions")
+				: __("All rows"),
 		);
 
 		return chips;
@@ -569,32 +569,32 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 	renderSummary(metrics) {
 		const cards = [
 			{
-				label: __("Exceptions / الاستثناءات"),
+				label: __("Exceptions"),
 				value: metrics.flagged,
 				state: metrics.flagged > 0 ? "alert" : "ok",
 			},
 			{
-				label: __("No Movement / بلا حركة"),
+				label: __("No Movement"),
 				value: metrics.noMovement,
 				state: metrics.noMovement > 0 ? "alert" : "ok",
 			},
 			{
-				label: __("Open Shifts / دخول بلا انصراف"),
+				label: __("Open Shifts"),
 				value: metrics.openShift,
 				state: metrics.openShift > 0 ? "alert" : "ok",
 			},
 			{
-				label: __("Time Exceptions / مخالفات الوقت"),
+				label: __("Time Exceptions"),
 				value: metrics.timeExceptions,
 				state: metrics.timeExceptions > 0 ? "alert" : "ok",
 			},
 			{
-				label: __("Voice Follow-up / متابعة صوتية"),
+				label: __("Voice Follow-up"),
 				value: metrics.voiceFollowUp,
 				state: metrics.voiceFollowUp > 0 ? "alert" : "ok",
 			},
 			{
-				label: __("Employees in Scope / الموظفون"),
+				label: __("Employees in Scope"),
 				value: metrics.total,
 				state: "ok",
 			},
@@ -616,7 +616,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 			return `
 				<div class="attendance-action-hub__panel attendance-action-hub__empty">
 					<h3 class="attendance-action-hub__results-title">${this.escapeHtml(
-						__("No attendance rows found / لا توجد حالات مطابقة"),
+						__("No attendance rows found"),
 					)}</h3>
 					<p class="attendance-action-hub__results-subtitle">${this.escapeHtml(
 						__(
@@ -632,7 +632,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 			<div class="attendance-action-hub__results-header">
 				<div>
 					<h3 class="attendance-action-hub__results-title">${this.escapeHtml(
-						__("Follow-up Queue / قائمة المتابعة"),
+						__("Follow-up Queue"),
 					)}</h3>
 					<p class="attendance-action-hub__results-subtitle">${this.escapeHtml(
 						__(
@@ -643,7 +643,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 				<div class="attendance-action-hub__state ${
 					this.getMetrics(this.rows).flagged > 0 ? "attendance-action-hub__state--alert" : ""
 				}">${this.escapeHtml(
-					`${__("Rows / الصفوف")}: ${this.rows.length}`,
+					`${__("Rows")}: ${this.rows.length}`,
 				)}</div>
 			</div>
 			<div class="attendance-action-hub__cards">${cards}</div>`;
@@ -652,8 +652,8 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 	renderCard(row, rowIndex) {
 		const flagLabels = this.getFlagLabels(row);
 		const actions = [
-			this.renderActionButton(rowIndex, "open-employee", __("Open Employee / فتح الموظف"), "btn-default"),
-			this.renderActionButton(rowIndex, "open-report", __("Review in Report / مراجعة في التقرير"), "btn-default"),
+			this.renderActionButton(rowIndex, "open-employee", __("Open Employee"), "btn-default"),
+			this.renderActionButton(rowIndex, "open-report", __("Review in Report"), "btn-default"),
 		];
 
 		if (row._daily_attendance_name) {
@@ -661,7 +661,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 				this.renderActionButton(
 					rowIndex,
 					"open-attendance",
-					__("Open Daily Attendance / فتح سجل الحضور اليومي"),
+						__("Open Daily Attendance"),
 					"btn-default",
 				),
 			);
@@ -672,7 +672,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 				this.renderActionButton(
 					rowIndex,
 					"open-checkin",
-					__("Open Last Checkin / فتح آخر حركة"),
+						__("Open Last Checkin"),
 					"btn-default",
 				),
 			);
@@ -683,7 +683,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 				this.renderActionButton(
 					rowIndex,
 					"open-voice-profile",
-					__("Open Voice Profile / فتح البصمة الصوتية"),
+						__("Open Voice Profile"),
 					"btn-default",
 				),
 			);
@@ -694,7 +694,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 				this.renderActionButton(
 					rowIndex,
 					"create-absence-case",
-					__("Create Absence Case / إنشاء حالة غياب"),
+					__("Create Absence Case"),
 					"btn-primary",
 				),
 			);
@@ -715,8 +715,8 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 						this.hasFlags(row) ? "attendance-action-hub__state--alert" : ""
 					}">${this.escapeHtml(
 						this.hasFlags(row)
-							? __("Needs Action / تحتاج متابعة")
-							: __("On Track / سليم"),
+							? __("Needs Action")
+							: __("On Track"),
 					)}</div>
 				</div>
 				<div class="attendance-action-hub__flags">${flagLabels
@@ -728,18 +728,18 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 					)
 					.join("")}</div>
 				<div class="attendance-action-hub__details">
-					${this.renderDetail(__("Attendance / الحركة"), row.attendance_status)}
-					${this.renderDetail(__("Shift / الوردية"), row.shift_type || __("Not set / غير محدد"))}
-					${this.renderDetail(__("Shift Status / حالة الوردية"), row.schedule_status)}
-					${this.renderDetail(__("Location / الموقع"), row.attendance_location)}
-					${this.renderDetail(__("Expected Start / البداية المتوقعة"), this.formatDateTime(row.expected_start))}
-					${this.renderDetail(__("Expected End / النهاية المتوقعة"), this.formatDateTime(row.expected_end))}
-					${this.renderDetail(__("First In / أول حضور"), this.formatDateTime(row.first_in))}
-					${this.renderDetail(__("Last Out / آخر انصراف"), this.formatDateTime(row.last_out))}
-					${this.renderDetail(__("Late Minutes / دقائق التأخير"), String(row.late_minutes || 0))}
-					${this.renderDetail(__("Early Exit / الخروج المبكر"), String(row.early_exit_minutes || 0))}
-					${this.renderDetail(__("Voice Policy / سياسة الصوت"), row.voice_policy || __("Disabled / معطل"))}
-					${this.renderDetail(__("Voice Status / حالة التحقق الصوتي"), row.voice_verification_status)}
+					${this.renderDetail(__("Attendance"), row.attendance_status)}
+					${this.renderDetail(__("Shift"), row.shift_type || __("Not set"))}
+					${this.renderDetail(__("Shift Status"), row.schedule_status)}
+					${this.renderDetail(__("Location"), row.attendance_location)}
+					${this.renderDetail(__("Expected Start"), this.formatDateTime(row.expected_start))}
+					${this.renderDetail(__("Expected End"), this.formatDateTime(row.expected_end))}
+					${this.renderDetail(__("First In"), this.formatDateTime(row.first_in))}
+					${this.renderDetail(__("Last Out"), this.formatDateTime(row.last_out))}
+					${this.renderDetail(__("Late Minutes"), String(row.late_minutes || 0))}
+					${this.renderDetail(__("Early Exit"), String(row.early_exit_minutes || 0))}
+					${this.renderDetail(__("Voice Policy"), row.voice_policy || __("Disabled"))}
+					${this.renderDetail(__("Voice Status"), row.voice_verification_status)}
 				</div>
 				<div class="attendance-action-hub__actions">${actions.join("")}</div>
 			</section>`;
@@ -756,7 +756,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 			<div class="attendance-action-hub__detail">
 				<div class="attendance-action-hub__detail-label">${this.escapeHtml(label)}</div>
 				<div class="attendance-action-hub__detail-value">${this.escapeHtml(
-					value || __("Not recorded / غير مسجل"),
+					value || __("Not recorded"),
 				)}</div>
 			</div>`;
 	}
@@ -764,26 +764,26 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 	getFlagLabels(row) {
 		const flags = [];
 		if (row._flag_no_movement) {
-			flags.push(__("No Movement / بلا حركة"));
+			flags.push(__("No Movement"));
 		}
 		if (row._flag_open_shift) {
-			flags.push(__("Open Shift / دخول بلا انصراف"));
+			flags.push(__("Open Shift"));
 		}
 		if (row._flag_late) {
-			flags.push(__("Late / تأخير"));
+			flags.push(__("Late"));
 		}
 		if (row._flag_early_exit) {
-			flags.push(__("Early Exit / خروج مبكر"));
+			flags.push(__("Early Exit"));
 		}
 		if (row._flag_voice_profile_missing) {
-			flags.push(__("Voice Profile Missing / البصمة الصوتية غير مسجلة"));
+			flags.push(__("Voice Profile Missing"));
 		}
 		if (row._flag_voice_verification_pending) {
-			flags.push(__("Voice Verification Pending / التحقق الصوتي غير مكتمل"));
+			flags.push(__("Voice Verification Pending"));
 		}
 
 		if (!flags.length) {
-			flags.push(__("On Track / سليم"));
+			flags.push(__("On Track"));
 		}
 
 		return flags;
@@ -899,7 +899,7 @@ saudi_hr.AttendanceActionHub = class AttendanceActionHub {
 
 	formatDateTime(value) {
 		if (!value) {
-			return __("Not recorded / غير مسجل");
+			return __("Not recorded");
 		}
 
 		return frappe.datetime.str_to_user(value);

@@ -675,12 +675,12 @@
 			<div>
 				<div class="mobile-kicker">
 					<span class="mobile-dot"></span>
-					<strong>Saudi HR Mobile</strong>
+					<strong>منصة الحضور الذكي</strong>
 					<span>حضور ذكي وربط مباشر مع الإجازات</span>
 				</div>
 				<h1>الحضور والانصراف وطلبات الإجازة من شاشة واحدة</h1>
 				<p>
-					الصفحة تعتمد على GPS، وتعرض الوردية المتوقعة وسياسة الموقع، وتنفذ تحققًا صوتيًا بتحدي رقمي
+					الصفحة تعتمد على تحديد الموقع، وتعرض الوردية المتوقعة وسياسة الموقع، وتنفذ تحققًا صوتيًا بتحدي رقمي
 					عند الحاجة، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.
 				</p>
 			</div>
@@ -732,7 +732,7 @@
 			<p>يعرض موقع الفرع وحدود المسافة المسموحة، مع قائمة المواقع المتاحة للموظف حسب فرعه وصلاحياته.</p>
 			<div class="mobile-location-grid" id="branch-location-grid"></div>
 			<div class="mobile-inline-row">
-				<span class="panel-hint" id="gps-status">GPS غير محدد بعد</span>
+				<span class="panel-hint" id="gps-status">لم يُحدَّد الموقع بعد</span>
 				<a id="location-map-link" class="mobile-link mobile-hidden" href="#" target="_blank" rel="noopener">فتح على الخريطة</a>
 			</div>
 			<div id="available-locations" class="mobile-location-list"></div>
@@ -784,10 +784,10 @@
 					<div class="mobile-field">
 						<label for="leave-request-type">نوع الطلب</label>
 						<select id="leave-request-type" required>
-							<option value="annual">Annual Leave / إجازة سنوية</option>
-							<option value="sick">Sick Leave / إجازة مرضية</option>
-							<option value="special">Special Leave / إجازة خاصة</option>
-							<option value="maternity_paternity">Maternity / Paternity / أمومة وأبوة</option>
+							<option value="annual">إجازة سنوية</option>
+							<option value="sick">إجازة مرضية</option>
+							<option value="special">إجازة خاصة</option>
+							<option value="maternity_paternity">إجازة أمومة وأبوة</option>
 						</select>
 					</div>
 					<div class="mobile-field">
@@ -803,7 +803,7 @@
 						<input id="leave-end-date" type="date">
 					</div>
 					<div class="mobile-field mobile-field--full">
-						<label for="leave-reason">المبرر / الوصف</label>
+						<label for="leave-reason">مبرر الطلب</label>
 						<textarea id="leave-reason" placeholder="أضف وصفًا مختصرًا للطلب أو المرفق"></textarea>
 					</div>
 					<div class="mobile-field mobile-field--full mobile-hidden" id="leave-balance-wrapper">
@@ -881,10 +881,10 @@
 		let LOCALE = IS_ENGLISH ? "en-US" : "ar-SA";
 		const TEXT = {
 			ar: {
-				pageTitle: "حضور الموظفين | Saudi HR",
+				pageTitle: "الحضور عبر الجوال",
 				kickerBody: "حضور ذكي وربط مباشر مع الإجازات",
 				heroTitle: "الحضور والانصراف وطلبات الإجازة من شاشة واحدة",
-				heroBody: "الصفحة تعتمد على GPS، وتعرض الوردية المتوقعة وسياسة الموقع، وتنفذ تحققًا صوتيًا بتحدي رقمي عند الحاجة، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.",
+				heroBody: "الصفحة تعتمد على تحديد الموقع، وتعرض الوردية المتوقعة وسياسة الموقع، وتنفذ تحققًا صوتيًا بتحدي رقمي عند الحاجة، مع لوحة سريعة لإحصائيات الحضور والخصومات الحديثة.",
 				reloadData: "تحديث البيانات",
 				statusTitle: "سجل اليوم",
 				statusBody: "تبديل الحضور والانصراف يعتمد على آخر حركة مسجلة اليوم وعلى موقعك الحالي.",
@@ -938,7 +938,7 @@
 				subtype: "التصنيف الفرعي",
 				fromDate: "من تاريخ",
 				toDate: "إلى تاريخ",
-				reason: "المبرر / الوصف",
+				reason: "مبرر الطلب",
 				reasonPlaceholder: "أضف وصفًا مختصرًا للطلب أو المرفق",
 				annualBalance: "رصيد الإجازة السنوية",
 				medicalCertificate: "رقم التقرير الطبي",
@@ -954,7 +954,7 @@
 				month: "الشهر",
 				historyTitle: "آخر طلبات الإجازة",
 				historyBody: "يتم تحديث القائمة مباشرة بعد إنشاء الطلب لإعطاء الموظف صورة واضحة عن حالة المتابعة.",
-				cameraAttachment: "صورة وجه / صورة تحقق",
+				cameraAttachment: "صورة التحقق",
 				voiceAttachment: "تسجيل صوتي",
 				fileAttachment: "مرفق داعم",
 				voicePending: "سيضاف كتسجيل صوتي",
@@ -996,7 +996,7 @@
 				balanceUnavailable: "غير متاح",
 				dayUnit: "يوم",
 				noNote: "بدون ملاحظة",
-				gpsNotSet: "GPS غير محدد بعد",
+				gpsNotSet: "لم يُحدَّد الموقع بعد",
 				gpsUpdated: "تم تحديث موقع الجهاز بنجاح.",
 				geolocationUnsupported: "المتصفح لا يدعم تحديد الموقع الجغرافي.",
 				geolocationFailed: "تعذر قراءة موقع الجهاز الحالي. فعّل إذن الموقع ثم أعد المحاولة.",
@@ -1086,7 +1086,7 @@
 				subtype: "Subtype",
 				fromDate: "From date",
 				toDate: "To date",
-				reason: "Reason / description",
+				reason: "Request reason",
 				reasonPlaceholder: "Add a short description for the request or attachment",
 				annualBalance: "Annual leave balance",
 				medicalCertificate: "Medical certificate no.",
@@ -1102,7 +1102,7 @@
 				month: "Month",
 				historyTitle: "Recent leave requests",
 				historyBody: "The list updates immediately after creation so the employee can follow request status clearly.",
-				cameraAttachment: "Face photo / face verification",
+				cameraAttachment: "Verification photo",
 				voiceAttachment: "Voice recording",
 				fileAttachment: "Supporting attachment",
 				voicePending: "Will be attached as a voice recording",
@@ -1183,6 +1183,24 @@
 				message = message.replaceAll(`{${name}}`, value);
 			});
 			return message;
+		};
+		const ARABIC_DYNAMIC_VALUE_MAP = {
+			HeadOffice: "المكتب الرئيسي",
+			ContractHours: "ساعات العقد",
+			Coordinates: "إحداثيات",
+			PlusCode: "بلص كود",
+			ShiftAssignment: "تعيين الوردية",
+			AttendanceLocation: "موقع الحضور المعتمد",
+			ShiftType: "نوع الوردية",
+			Present: "حاضر",
+			Absent: "غائب",
+			HalfDay: "نصف يوم",
+			OnLeave: "في إجازة",
+			Paid: "مدفوع",
+			Draft: "مسودة",
+			Submitted: "معتمد",
+			IN: "دخول",
+			OUT: "خروج",
 		};
 		const state = {
 			status: null,
@@ -1326,10 +1344,10 @@
 			$("#pwa-hint").textContent = t("installHint");
 
 			const leaveTypeSelect = $("#leave-request-type");
-			leaveTypeSelect.querySelector('option[value="annual"]').textContent = IS_ENGLISH ? "Annual Leave" : "Annual Leave / إجازة سنوية";
-			leaveTypeSelect.querySelector('option[value="sick"]').textContent = IS_ENGLISH ? "Sick Leave" : "Sick Leave / إجازة مرضية";
-			leaveTypeSelect.querySelector('option[value="special"]').textContent = IS_ENGLISH ? "Special Leave" : "Special Leave / إجازة خاصة";
-			leaveTypeSelect.querySelector('option[value="maternity_paternity"]').textContent = IS_ENGLISH ? "Maternity / Paternity" : "Maternity / Paternity / أمومة وأبوة";
+			leaveTypeSelect.querySelector('option[value="annual"]').textContent = IS_ENGLISH ? "Annual Leave" : "إجازة سنوية";
+			leaveTypeSelect.querySelector('option[value="sick"]').textContent = IS_ENGLISH ? "Sick Leave" : "إجازة مرضية";
+			leaveTypeSelect.querySelector('option[value="special"]').textContent = IS_ENGLISH ? "Special Leave" : "إجازة خاصة";
+			leaveTypeSelect.querySelector('option[value="maternity_paternity"]').textContent = IS_ENGLISH ? "Maternity / Paternity" : "إجازة أمومة وأبوة";
 		}
 
 		async function resolveRuntimeLanguage() {
@@ -1414,6 +1432,42 @@
 			}).format(numeric);
 		}
 
+		function localizeDynamicUiValue(value) {
+			if (IS_ENGLISH || value == null) {
+				return value;
+			}
+
+			const text = String(value).trim();
+			if (!text || text === "--") {
+				return text;
+			}
+
+			const normalizedText = text.replace(/\s+/g, " ");
+			const compactKey = normalizedText.replace(/[^A-Za-z]/g, "");
+			if (ARABIC_DYNAMIC_VALUE_MAP[compactKey]) {
+				return ARABIC_DYNAMIC_VALUE_MAP[compactKey];
+			}
+
+			if (normalizedText.startsWith("Plus Code:")) {
+				return normalizedText.replace("Plus Code:", "بلص كود:");
+			}
+
+			const secondsMatch = normalizedText.match(/^(\d+(?:\.\d+)?)s$/i);
+			if (secondsMatch) {
+				return `${formatNumber(secondsMatch[1])} ثانية`;
+			}
+
+			const monthYearMatch = normalizedText.match(/^([A-Za-z]+)\s+(\d{4})$/);
+			if (monthYearMatch) {
+				const monthDate = new Date(`${monthYearMatch[1]} 1, ${monthYearMatch[2]}`);
+				if (!Number.isNaN(monthDate.getTime())) {
+					return new Intl.DateTimeFormat("ar-SA", { month: "long", year: "numeric" }).format(monthDate);
+				}
+			}
+
+			return normalizedText;
+		}
+
 		function escapeHtml(value) {
 			return String(value || "")
 				.replace(/&/g, "&amp;")
@@ -1465,13 +1519,17 @@
 				return;
 			}
 
-			$(selector).innerHTML = items.map((item) => `
+			$(selector).innerHTML = items.map((item) => {
+				const label = typeof item.label === "string" ? localizeDynamicUiValue(item.label) : item.label;
+				const value = typeof item.value === "string" ? localizeDynamicUiValue(item.value) : item.value;
+				const note = typeof item.note === "string" ? localizeDynamicUiValue(item.note) : item.note;
+				return `
 				<div class="mobile-card-lite">
-					<span>${escapeHtml(item.label)}</span>
-					<strong>${escapeHtml(item.value)}</strong>
-					${item.note ? `<span>${escapeHtml(item.note)}</span>` : ""}
+					<span>${escapeHtml(label)}</span>
+					<strong>${escapeHtml(value)}</strong>
+					${note ? `<span>${escapeHtml(note)}</span>` : ""}
 				</div>
-			`).join("");
+			`;}).join("");
 		}
 
 		function refreshDashboardView() {
@@ -1524,7 +1582,10 @@
 			}
 
 			$("#employee-name").textContent = status.employee_name || t("employeeDefault");
-			$("#employee-role").textContent = [status.designation, status.department].filter(Boolean).join(" · ") || t("noJobTitle");
+			$("#employee-role").textContent = [status.designation, status.department]
+				.filter(Boolean)
+				.map((value) => localizeDynamicUiValue(value))
+				.join(" · ") || t("noJobTitle");
 
 			const avatarEl = $("#employee-avatar");
 			if (status.image) {
@@ -1534,9 +1595,9 @@
 			}
 
 			$("#employee-pills").innerHTML = [
-				status.branch ? `<span class="mobile-pill is-accent">${IS_ENGLISH ? "Branch" : "الفرع"}: ${escapeHtml(status.branch)}</span>` : "",
-				status.department ? `<span class="mobile-pill">${IS_ENGLISH ? "Department" : "الإدارة"}: ${escapeHtml(status.department)}</span>` : "",
-				status.designation ? `<span class="mobile-pill">${IS_ENGLISH ? "Designation" : "الوظيفة"}: ${escapeHtml(status.designation)}</span>` : "",
+				status.branch ? `<span class="mobile-pill is-accent">${IS_ENGLISH ? "Branch" : "الفرع"}: ${escapeHtml(localizeDynamicUiValue(status.branch))}</span>` : "",
+				status.department ? `<span class="mobile-pill">${IS_ENGLISH ? "Department" : "الإدارة"}: ${escapeHtml(localizeDynamicUiValue(status.department))}</span>` : "",
+				status.designation ? `<span class="mobile-pill">${IS_ENGLISH ? "Designation" : "الوظيفة"}: ${escapeHtml(localizeDynamicUiValue(status.designation))}</span>` : "",
 			].filter(Boolean).join("") || `<span class="mobile-pill is-warning">${t("profileIncomplete")}</span>`;
 		}
 
@@ -1568,12 +1629,12 @@
 				: t("noMovementToday");
 			$("#attendance-hours").textContent = formatNumber(status.today_attendance?.working_hours || 0, 2);
 			$("#attendance-summary").textContent = status.today_attendance
-				? t("attendanceStatusLine", { value: status.today_attendance.status || "Present" })
+				? t("attendanceStatusLine", { value: localizeDynamicUiValue(status.today_attendance.status || "Present") })
 				: t("attendancePending");
 
 			const chips = [];
 			(status.today_checkins || []).forEach((entry) => {
-				chips.push(`<span class="mobile-chip">${escapeHtml(entry.log_type)} · ${escapeHtml(formatDateTime(entry.time))}</span>`);
+				chips.push(`<span class="mobile-chip">${escapeHtml(localizeDynamicUiValue(entry.log_type))} · ${escapeHtml(formatDateTime(entry.time))}</span>`);
 			});
 			$("#today-checkin-chip-row").innerHTML = chips.length ? chips.join("") : `<span class="mobile-empty">${t("noTodayMovements")}</span>`;
 
@@ -1632,8 +1693,8 @@
 				? state.availableLocations.map((location) => `
 					<div class="mobile-location-item">
 						<strong>${escapeHtml(location.location_name || location.name)}</strong>
-						<span>${escapeHtml(location.branch || "")}</span>
-						<span>Plus Code: ${escapeHtml(location.plus_code || "--")} · ${formatNumber(location.allowed_radius_meters || 100)} متر</span>
+						<span>${escapeHtml(localizeDynamicUiValue(location.branch || ""))}</span>
+						<span>${escapeHtml(localizeDynamicUiValue("Plus Code:"))} ${escapeHtml(location.plus_code || "--")} · ${formatNumber(location.allowed_radius_meters || 100)} متر</span>
 					</div>
 				`).join("")
 				: `<div class="mobile-empty">${t("noExtraLocations")}</div>`;
@@ -1768,9 +1829,9 @@
 			listEl.innerHTML = rows.map((row) => `
 					<div class="mobile-history-item">
 						<div>
-							<strong>${escapeHtml(row.category)}</strong>
-							<span>${escapeHtml(row.name)}${row.subtype ? ` · ${escapeHtml(row.subtype)}` : ""}</span>
-							<span>${escapeHtml(row.status || "")}</span>
+							<strong>${escapeHtml(localizeDynamicUiValue(row.category))}</strong>
+							<span>${escapeHtml(row.name)}${row.subtype ? ` · ${escapeHtml(localizeDynamicUiValue(row.subtype))}` : ""}</span>
+							<span>${escapeHtml(localizeDynamicUiValue(row.status || ""))}</span>
 						</div>
 						<div>
 							<strong>${formatNumber(row.days || 0, 1)} يوم</strong>
@@ -1836,7 +1897,7 @@
 			try {
 				const coords = await getCurrentPosition();
 				state.lastPosition = coords;
-				$("#gps-status").textContent = `GPS: ${formatNumber(coords.latitude, 5)}, ${formatNumber(coords.longitude, 5)}`;
+				$("#gps-status").textContent = `الموقع الحالي: ${formatNumber(coords.latitude, 5)}, ${formatNumber(coords.longitude, 5)}`;
 				showBanner(t("gpsUpdated"));
 			} catch (error) {
 				showBanner(parseError(error), "error");
@@ -2144,7 +2205,7 @@
 		async function registerPWA() {
 			if ("serviceWorker" in navigator) {
 				try {
-					await navigator.serviceWorker.register("/mobile-attendance-sw.js?v=20260426b", { scope: "/" });
+					await navigator.serviceWorker.register("/mobile-attendance-sw.js?v=20260427c", { scope: "/" });
 				} catch (error) {
 					// Ignore registration failures and keep app usable.
 				}

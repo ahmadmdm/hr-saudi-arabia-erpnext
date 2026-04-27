@@ -1,4 +1,4 @@
-const CACHE_NAME = "saudi-hr-mobile-v3";
+const CACHE_NAME = "saudi-hr-mobile-v6";
 
 self.addEventListener("install", (event) => {
 	event.waitUntil(
