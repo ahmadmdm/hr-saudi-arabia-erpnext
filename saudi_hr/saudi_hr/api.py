@@ -6,10 +6,11 @@ Mobile attendance, employee insights, and self-service leave APIs.
 import base64
 import calendar
 import json
+from pathlib import Path
 
 import frappe
 from frappe import _
-from frappe.utils import flt, get_datetime, get_first_day, get_last_day, getdate, now_datetime, nowdate, time_diff_in_hours
+from frappe.utils import cint, flt, get_datetime, get_first_day, get_last_day, get_url, getdate, now_datetime, nowdate, time_diff_in_hours
 from frappe.utils.file_manager import save_file
 
 from saudi_hr.saudi_hr.attendance_policy import (
@@ -40,8 +41,91 @@ SPECIAL_LEAVE_OPTIONS = [
 ]
 
 ELEVATED_ROLES = {"HR Manager", "HR User", "System Manager"}
+ORG_TREE_GLOBAL_ROLES = {"HR Manager", "HR User", "System Manager"}
+ORG_TREE_MANAGER_ROLES = {"Department Approver", "Leave Approver"}
+ORG_TREE_ROOT_VALUE = "__org_root__"
+ORG_TREE_UNASSIGNED_DEPARTMENT = "__unassigned_department__"
 MAX_MOBILE_ATTACHMENTS = 3
 MAX_MOBILE_ATTACHMENT_SIZE = 5 * 1024 * 1024
+
+MOBILE_ATTENDANCE_API_ENDPOINTS = (
+	{
+		"key": "status",
+		"http_method": "GET",
+		"method": "saudi_hr.saudi_hr.api.mobile_attendance_api_status",
+		"description": "Current employee attendance, leave, schedule, and voice verification snapshot.",
+		"payload_fields": [],
+	},
+	{
+		"key": "checkin",
+		"http_method": "POST",
+		"method": "saudi_hr.saudi_hr.api.mobile_attendance_api_checkin",
+		"description": "Create mobile check-in or check-out with GPS and optional voice verification.",
+		"payload_fields": [
+			"latitude",
+			"longitude",
+			"verification_mode",
+			"verification_note",
+			"challenge_token",
+			"voice_payload_json",
+		],
+	},
+	{
+		"key": "leave_request",
+		"http_method": "POST",
+		"method": "saudi_hr.saudi_hr.api.mobile_attendance_api_leave_request",
+		"description": "Submit mobile leave requests with the same workflow and permission checks used inside Saudi HR.",
+		"payload_fields": [
+			"request_type",
+			"start_date",
+			"end_date",
+			"reason",
+			"leave_subtype",
+			"relationship_to_deceased",
+			"medical_certificate_no",
+			"hospital_name",
+			"expected_delivery_date",
+			"actual_delivery_date",
+			"half_day",
+			"attachments_json",
+		],
+	},
+	{
+		"key": "locations",
+		"http_method": "GET",
+		"method": "saudi_hr.saudi_hr.api.mobile_attendance_api_locations",
+		"description": "List attendance locations visible to the authenticated user.",
+		"payload_fields": [],
+	},
+)
+
+WORKFLOW_AUDIT_TARGETS = (
+	{
+		"key": "annual_leave",
+		"workflow_name": "Annual Leave Approval Workflow",
+		"fixture": "workflow/annual_leave_approval_workflow/annual_leave_approval_workflow.json",
+	},
+	{
+		"key": "sick_leave",
+		"workflow_name": "Sick Leave Approval Workflow",
+		"fixture": "workflow/sick_leave_approval_workflow/sick_leave_approval_workflow.json",
+	},
+	{
+		"key": "overtime",
+		"workflow_name": "Overtime Approval Workflow",
+		"fixture": "workflow/overtime_approval_workflow/overtime_approval_workflow.json",
+	},
+	{
+		"key": "salary_adjustment",
+		"workflow_name": "Salary Adjustment Workflow",
+		"fixture": "workflow/salary_adjustment_workflow/salary_adjustment_workflow.json",
+	},
+	{
+		"key": "termination",
+		"workflow_name": "Termination Approval Workflow",
+		"fixture": "workflow/termination_approval_workflow/termination_approval_workflow.json",
+	},
+)
 
 
 def _distance_meters(lat1, lon1, lat2, lon2):
@@ -121,12 +205,432 @@ def _coerce_float(value):
 	return flt(value) if value not in (None, "", "null", "undefined") else None
 
 
+def _value_or_payload(explicit_value, payload, key, default=None):
+	if explicit_value is not None:
+		return explicit_value
+	if isinstance(payload, dict):
+		return payload.get(key, default)
+	return default
+
+
 def _load_json_param(value, default=None):
 	if value in (None, "", "null", "undefined"):
 		return default
 	if isinstance(value, (dict, list)):
 		return value
 	return json.loads(value)
+
+
+def _load_json_object_param(value, default=None):
+	payload = _load_json_param(value, default=default or {})
+	if payload in (None, ""):
+		return default or {}
+	if not isinstance(payload, dict):
+		frappe.throw(_("يجب أن يكون الطلب بصيغة JSON object صحيحة."), frappe.ValidationError)
+	return payload
+
+
+def _get_active_employee_for_user(user=None):
+	user = user or frappe.session.user
+	return frappe.db.get_value("Employee", {"user_id": user, "status": "Active"}, "name") or frappe.db.get_value(
+		"Employee", {"user_id": user}, "name"
+	)
+
+
+def _resolve_mobile_api_target_user(user=None):
+	current_user = frappe.session.user
+	target_user = (user or current_user or "").strip()
+	if not target_user or target_user == "Guest":
+		frappe.throw(_("يجب تسجيل الدخول أولاً قبل إصدار بيانات الربط."), frappe.PermissionError)
+
+	if target_user == current_user:
+		return target_user
+
+	if "System Manager" not in set(frappe.get_roles(current_user)):
+		frappe.throw(_("يمكن فقط لمسؤول النظام إصدار بيانات ربط لمستخدم آخر."), frappe.PermissionError)
+
+	return target_user
+
+
+def _rotate_user_api_credentials(user):
+	user_doc = frappe.get_doc("User", user)
+	if getattr(user_doc, "enabled", 1) == 0:
+		frappe.throw(_("لا يمكن إصدار بيانات ربط لمستخدم غير مفعّل."), frappe.ValidationError)
+
+	if not getattr(user_doc, "api_key", None):
+		user_doc.api_key = frappe.generate_hash(length=15)
+
+	api_secret = frappe.generate_hash(length=15)
+	user_doc.api_secret = api_secret
+	if not getattr(user_doc, "flags", None):
+		user_doc.flags = frappe._dict()
+	user_doc.flags.ignore_permissions = True
+	user_doc.save()
+	frappe.db.commit()
+	return user_doc, api_secret
+
+
+def _build_mobile_api_response(data, message=None):
+	response = {
+		"ok": True,
+		"data": data,
+		"meta": {
+			"user": frappe.session.user,
+			"generated_at": str(now_datetime()),
+		},
+	}
+	if message:
+		response["message"] = message
+	return response
+
+
+def _build_mobile_attendance_api_reference(base_url=None):
+	base_url = (base_url or get_url()).rstrip("/")
+	reference = []
+	for endpoint in MOBILE_ATTENDANCE_API_ENDPOINTS:
+		reference.append(
+			{
+				**endpoint,
+				"path": f"{base_url}/api/method/{endpoint['method']}",
+			}
+		)
+	return reference
+
+
+def _workflow_fixture_path(relative_path):
+	return Path(__file__).resolve().parent / relative_path
+
+
+def _load_workflow_snapshot(config):
+	workflow_name = config["workflow_name"]
+	if frappe.db.exists("Workflow", workflow_name):
+		doc = frappe.get_doc("Workflow", workflow_name)
+		return {
+			"workflow_name": doc.workflow_name,
+			"document_type": doc.document_type,
+			"states": [dict(row) for row in doc.states],
+			"transitions": [dict(row) for row in doc.transitions],
+			"source": "database",
+		}
+
+	with _workflow_fixture_path(config["fixture"]).open(encoding="utf-8") as handle:
+		payload = json.load(handle)
+	payload["source"] = "fixture"
+	return payload
+
+
+def _is_negative_workflow_transition(transition):
+	text = " ".join(
+		str(transition.get(field) or "").lower()
+		for field in ("action", "next_state")
+	)
+	return any(keyword in text for keyword in ("reject", "rejected", "cancel", "cancelled", "reset", "return", "مرفوض", "ملغى"))
+
+
+def _get_workflow_start_state(snapshot):
+	states = [state.get("state") for state in snapshot.get("states") or [] if state.get("state")]
+	if "Draft" in states:
+		return "Draft"
+	for state_name in states:
+		if "draft" in state_name.lower() or "مسودة" in state_name:
+			return state_name
+	incoming_states = {transition.get("next_state") for transition in snapshot.get("transitions") or []}
+	for state_name in states:
+		if state_name not in incoming_states:
+			return state_name
+	return states[0] if states else None
+
+
+def _build_workflow_route(snapshot):
+	states = {state.get("state"): state for state in snapshot.get("states") or [] if state.get("state")}
+	transitions = snapshot.get("transitions") or []
+	current_state = _get_workflow_start_state(snapshot)
+	route = []
+	visited = set()
+
+	while current_state and current_state not in visited:
+		visited.add(current_state)
+		state_meta = states.get(current_state) or {}
+		candidate_transitions = [transition for transition in transitions if transition.get("state") == current_state]
+		approval_candidates = [transition for transition in candidate_transitions if not _is_negative_workflow_transition(transition)]
+		selected_transition = approval_candidates[0] if approval_candidates else None
+		route.append(
+			{
+				"state": current_state,
+				"doc_status": state_meta.get("doc_status"),
+				"editable_by": state_meta.get("allow_edit"),
+				"action": selected_transition.get("action") if selected_transition else None,
+				"allowed_role": selected_transition.get("allowed") if selected_transition else None,
+				"next_state": selected_transition.get("next_state") if selected_transition else None,
+			}
+		)
+		if not selected_transition:
+			break
+		current_state = selected_transition.get("next_state")
+
+	return route
+
+
+def _build_workflow_route_audit_entry(config):
+	snapshot = _load_workflow_snapshot(config)
+	negative_transitions = [
+		{
+			"state": transition.get("state"),
+			"action": transition.get("action"),
+			"allowed_role": transition.get("allowed"),
+			"next_state": transition.get("next_state"),
+		}
+		for transition in snapshot.get("transitions") or []
+		if _is_negative_workflow_transition(transition)
+	]
+	return {
+		"key": config["key"],
+		"workflow_name": snapshot.get("workflow_name"),
+		"document_type": snapshot.get("document_type"),
+		"source": snapshot.get("source"),
+		"approval_route": _build_workflow_route(snapshot),
+		"alternate_transitions": negative_transitions,
+	}
+
+
+def _has_org_tree_global_access(user=None):
+	user = user or frappe.session.user
+	if user == "Administrator":
+		return True
+	return bool(ORG_TREE_GLOBAL_ROLES.intersection(set(frappe.get_roles(user))))
+
+
+def _has_org_tree_manager_scope(user=None):
+	user = user or frappe.session.user
+	roles = set(frappe.get_roles(user))
+	if ORG_TREE_MANAGER_ROLES.intersection(roles):
+		return True
+
+	return bool(
+		frappe.db.sql(
+			"""
+			SELECT name
+			FROM `tabEmployee`
+			WHERE leave_approver = %(user)s OR expense_approver = %(user)s
+			LIMIT 1
+			""",
+			{"user": user},
+		)
+	)
+
+
+def _ensure_org_tree_access(user=None):
+	if _has_org_tree_global_access(user) or _has_org_tree_manager_scope(user):
+		return
+	frappe.throw(_("Only HR or direct approvers can open the organization tree."), frappe.PermissionError)
+
+
+def _get_org_tree_scope_rows(company=None, branch=None, department=None, user=None):
+	user = user or frappe.session.user
+	_ensure_org_tree_access(user)
+
+	conditions = ["status = 'Active'"]
+	values = {}
+
+	if company:
+		conditions.append("company = %(company)s")
+		values["company"] = company
+	if branch:
+		conditions.append("branch = %(branch)s")
+		values["branch"] = branch
+	if department:
+		conditions.append("department = %(department)s")
+		values["department"] = department
+
+	if not _has_org_tree_global_access(user):
+		scope_conditions = ["leave_approver = %(review_user)s", "expense_approver = %(review_user)s"]
+		values["review_user"] = user
+		scope_employee = _get_active_employee_for_user(user)
+		if scope_employee:
+			scope_conditions.extend(["name = %(scope_employee)s", "reports_to = %(scope_employee)s"])
+			values["scope_employee"] = scope_employee
+		conditions.append("(" + " OR ".join(scope_conditions) + ")")
+
+	where = " AND ".join(conditions)
+	return frappe.db.sql(
+		f"""
+		SELECT
+			name,
+			employee_name,
+			designation,
+			department,
+			branch,
+			company,
+			reports_to,
+			user_id,
+			leave_approver,
+			expense_approver
+		FROM `tabEmployee`
+		WHERE {where}
+		ORDER BY department ASC, employee_name ASC, name ASC
+		""",
+		values,
+		as_dict=True,
+	)
+
+
+def _department_key(department_name):
+	return f"department::{department_name or ORG_TREE_UNASSIGNED_DEPARTMENT}"
+
+
+def _employee_key(employee_name):
+	return f"employee::{employee_name}"
+
+
+def _normalize_department_name(department_name):
+	return department_name or ORG_TREE_UNASSIGNED_DEPARTMENT
+
+
+def _department_label(department_name):
+	return department_name or _("Unassigned Department / بدون قسم")
+
+
+def _get_direct_reports(rows, employee_name, department_name=None):
+	department_name = _normalize_department_name(department_name) if department_name is not None else None
+	return [
+		row
+		for row in rows
+		if row.reports_to == employee_name
+		and (
+			department_name is None
+			or _normalize_department_name(row.department) == department_name
+		)
+	]
+
+
+def _get_department_manager_count(rows, department_name):
+	department_name = _normalize_department_name(department_name)
+	count = 0
+	for row in rows:
+		if _normalize_department_name(row.department) != department_name:
+			continue
+		if _get_direct_reports(rows, row.name, department_name=department_name):
+			count += 1
+	return count
+
+
+def _build_department_tree_node(department_name, rows):
+	department_rows = [row for row in rows if _normalize_department_name(row.department) == department_name]
+	approver_users = {
+		user
+		for row in department_rows
+		for user in (row.leave_approver, row.expense_approver)
+		if user
+	}
+	return {
+		"value": _department_key(None if department_name == ORG_TREE_UNASSIGNED_DEPARTMENT else department_name),
+		"title": _department_label(None if department_name == ORG_TREE_UNASSIGNED_DEPARTMENT else department_name),
+		"expandable": bool(department_rows),
+		"node_type": "department",
+		"department": None if department_name == ORG_TREE_UNASSIGNED_DEPARTMENT else department_name,
+		"department_label": _department_label(None if department_name == ORG_TREE_UNASSIGNED_DEPARTMENT else department_name),
+		"employee_count": len(department_rows),
+		"manager_count": _get_department_manager_count(rows, department_name),
+		"approver_count": len(approver_users),
+	}
+
+
+def _build_employee_tree_node(row, rows):
+	row_map = {employee.name: employee for employee in rows}
+	department_name = _normalize_department_name(row.department)
+	direct_reports = _get_direct_reports(rows, row.name, department_name=department_name)
+	reference_manager = row_map.get(row.reports_to)
+	return {
+		"value": _employee_key(row.name),
+		"title": row.employee_name or row.name,
+		"expandable": bool(direct_reports),
+		"node_type": "employee",
+		"employee": row.name,
+		"employee_name": row.employee_name,
+		"designation": row.designation,
+		"department": row.department,
+		"department_label": _department_label(row.department),
+		"branch": row.branch,
+		"company": row.company,
+		"reports_to": row.reports_to,
+		"reports_to_name": reference_manager.employee_name if reference_manager else None,
+		"user_id": row.user_id,
+		"leave_approver": row.leave_approver,
+		"expense_approver": row.expense_approver,
+		"direct_report_count": len(direct_reports),
+	}
+
+
+def _get_department_root_employees(rows, department_name):
+	department_name = _normalize_department_name(department_name)
+	row_map = {employee.name: employee for employee in rows}
+	department_rows = [row for row in rows if _normalize_department_name(row.department) == department_name]
+	root_rows = []
+	for row in department_rows:
+		manager = row_map.get(row.reports_to)
+		if not manager or _normalize_department_name(manager.department) != department_name:
+			root_rows.append(row)
+	return root_rows
+
+
+@frappe.whitelist(methods=["GET", "POST"])
+def get_employee_org_hierarchy_summary(company=None, branch=None, department=None):
+	rows = _get_org_tree_scope_rows(company=company, branch=branch, department=department)
+	approver_users = {
+		user
+		for row in rows
+		for user in (row.leave_approver, row.expense_approver)
+		if user
+	}
+	manager_count = sum(1 for row in rows if _get_direct_reports(rows, row.name))
+	return {
+		"root_label": company or _("Saudi HR Organization / الهيكل الإداري"),
+		"scope_label": _("Organization-wide / كامل المؤسسة") if _has_org_tree_global_access() else _("Team scope / نطاق الفريق"),
+		"employee_count": len(rows),
+		"department_count": len({_normalize_department_name(row.department) for row in rows}),
+		"manager_count": manager_count,
+		"approver_count": len(approver_users),
+	}
+
+
+@frappe.whitelist(methods=["GET", "POST"])
+def get_employee_org_tree_nodes(parent=None, is_root=False, company=None, branch=None, department=None):
+	rows = _get_org_tree_scope_rows(company=company, branch=branch, department=department)
+	if cint(is_root) or parent in (None, "", ORG_TREE_ROOT_VALUE):
+		departments = sorted({_normalize_department_name(row.department) for row in rows}, key=lambda value: _department_label(None if value == ORG_TREE_UNASSIGNED_DEPARTMENT else value))
+		return [_build_department_tree_node(department_name, rows) for department_name in departments]
+
+	if parent and str(parent).startswith("department::"):
+		department_name = str(parent).split("::", 1)[1] or ORG_TREE_UNASSIGNED_DEPARTMENT
+		root_rows = sorted(
+			_get_department_root_employees(rows, department_name),
+			key=lambda row: ((row.employee_name or row.name or "").lower(), row.name),
+		)
+		return [_build_employee_tree_node(row, rows) for row in root_rows]
+
+	if parent and str(parent).startswith("employee::"):
+		employee_name = str(parent).split("::", 1)[1]
+		parent_row = next((row for row in rows if row.name == employee_name), None)
+		if not parent_row:
+			return []
+		direct_reports = sorted(
+			_get_direct_reports(rows, employee_name, department_name=_normalize_department_name(parent_row.department)),
+			key=lambda row: ((row.employee_name or row.name or "").lower(), row.name),
+		)
+		return [_build_employee_tree_node(row, rows) for row in direct_reports]
+
+	return []
+
+
+@frappe.whitelist(methods=["GET"])
+def get_workflow_route_audit(workflow_key=None):
+	if frappe.session.user == "Guest":
+		frappe.throw(_("يجب تسجيل الدخول أولاً."), frappe.PermissionError)
+
+	targets = WORKFLOW_AUDIT_TARGETS
+	if workflow_key:
+		targets = [config for config in WORKFLOW_AUDIT_TARGETS if config["key"] == workflow_key]
+	return [_build_workflow_route_audit_entry(config) for config in targets]
 
 
 def _decode_base64_content(content):
@@ -434,6 +938,115 @@ def _build_verification_mode(raw_mode, has_voice=False):
 	if has_voice and "voice" not in modes:
 		modes.append("voice")
 	return "+".join(dict.fromkeys(modes)) or "gps"
+
+
+@frappe.whitelist(methods=["GET"])
+def get_mobile_attendance_api_contract():
+	if frappe.session.user == "Guest":
+		frappe.throw(_("يجب تسجيل الدخول أولاً."), frappe.PermissionError)
+
+	current_user = frappe.session.user
+	employee = _get_active_employee_for_user(current_user)
+	return {
+		"base_url": get_url(),
+		"auth": {
+			"scheme": "token",
+			"header": "Authorization: token <api_key>:<api_secret>",
+			"credential_method": "saudi_hr.saudi_hr.api.issue_mobile_attendance_api_credentials",
+		},
+		"actor": {
+			"user": current_user,
+			"employee": employee,
+			"roles": frappe.get_roles(current_user),
+		},
+		"endpoints": _build_mobile_attendance_api_reference(),
+	}
+
+
+@frappe.whitelist(methods=["POST"])
+def issue_mobile_attendance_api_credentials(user=None):
+	target_user = _resolve_mobile_api_target_user(user)
+	user_doc, api_secret = _rotate_user_api_credentials(target_user)
+	employee = _get_active_employee_for_user(target_user)
+	api_key = user_doc.api_key
+	return {
+		"user": target_user,
+		"employee": employee,
+		"api_key": api_key,
+		"api_secret": api_secret,
+		"authorization_header": f"token {api_key}:{api_secret}",
+		"base_url": get_url(),
+		"documentation_method": "saudi_hr.saudi_hr.api.get_mobile_attendance_api_contract",
+		"message": _("تم إصدار بيانات الربط بنجاح. استخدمها في التطبيق الخارجي بصلاحيات نفس المستخدم."),
+	}
+
+
+@frappe.whitelist(methods=["GET"])
+def mobile_attendance_api_status():
+	return _build_mobile_api_response(get_attendance_status())
+
+
+@frappe.whitelist(methods=["GET"])
+def mobile_attendance_api_locations():
+	return _build_mobile_api_response(get_available_locations())
+
+
+@frappe.whitelist(methods=["POST"])
+def mobile_attendance_api_checkin(
+	payload_json=None,
+	latitude=None,
+	longitude=None,
+	verification_mode=None,
+	verification_note=None,
+	attachments_json=None,
+	challenge_token=None,
+	voice_payload_json=None,
+):
+	payload = _load_json_object_param(payload_json, default={})
+	result = do_mobile_checkin(
+		latitude=_value_or_payload(latitude, payload, "latitude"),
+		longitude=_value_or_payload(longitude, payload, "longitude"),
+		verification_mode=_value_or_payload(verification_mode, payload, "verification_mode"),
+		verification_note=_value_or_payload(verification_note, payload, "verification_note"),
+		attachments_json=_value_or_payload(attachments_json, payload, "attachments_json"),
+		challenge_token=_value_or_payload(challenge_token, payload, "challenge_token"),
+		voice_payload_json=_value_or_payload(voice_payload_json, payload, "voice_payload_json"),
+	)
+	return _build_mobile_api_response(result)
+
+
+@frappe.whitelist(methods=["POST"])
+def mobile_attendance_api_leave_request(
+	payload_json=None,
+	request_type=None,
+	start_date=None,
+	end_date=None,
+	reason=None,
+	leave_subtype=None,
+	relationship_to_deceased=None,
+	medical_certificate_no=None,
+	hospital_name=None,
+	expected_delivery_date=None,
+	actual_delivery_date=None,
+	half_day=0,
+	attachments_json=None,
+):
+	payload = _load_json_object_param(payload_json, default={})
+	result = submit_mobile_leave_request(
+		request_type=_value_or_payload(request_type, payload, "request_type"),
+		start_date=_value_or_payload(start_date, payload, "start_date"),
+		end_date=_value_or_payload(end_date, payload, "end_date"),
+		reason=_value_or_payload(reason, payload, "reason"),
+		leave_subtype=_value_or_payload(leave_subtype, payload, "leave_subtype"),
+		relationship_to_deceased=_value_or_payload(relationship_to_deceased, payload, "relationship_to_deceased"),
+		medical_certificate_no=_value_or_payload(medical_certificate_no, payload, "medical_certificate_no"),
+		hospital_name=_value_or_payload(hospital_name, payload, "hospital_name"),
+		expected_delivery_date=_value_or_payload(expected_delivery_date, payload, "expected_delivery_date"),
+		actual_delivery_date=_value_or_payload(actual_delivery_date, payload, "actual_delivery_date"),
+		half_day=cint(_value_or_payload(half_day, payload, "half_day", default=0) or 0),
+		attachments_json=_value_or_payload(attachments_json, payload, "attachments_json"),
+	)
+	return _build_mobile_api_response(result)
 
 
 @frappe.whitelist()

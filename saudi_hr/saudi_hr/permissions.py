@@ -4,6 +4,8 @@ import frappe
 ELEVATED_ROLES = {"HR Manager", "HR User", "System Manager", "Leave Approver"}
 DEPARTMENT_APPROVER_ROLE = "Department Approver"
 DIRECT_MANAGER_FIELDS = ("leave_approver", "expense_approver")
+ANNUAL_LEAVE_FINANCE_ROLE = "Accounts Manager"
+ANNUAL_LEAVE_FINANCE_VISIBLE_STATES = {"Pending Finance Approval", "Approved"}
 
 
 def _has_elevated_access(user=None):
@@ -98,6 +100,20 @@ def _employee_or_approver_permission(doc, approver_fields=None, user=None):
 	return any(approver_values.get(fieldname) == user for fieldname in approver_fields)
 
 
+def _workflow_role_query(doctype, role, allowed_states, user=None):
+	user = user or frappe.session.user
+	if role not in frappe.get_roles(user):
+		return ""
+
+	escaped_states = ", ".join(frappe.db.escape(state) for state in sorted(allowed_states))
+	return f"`tab{doctype}`.`workflow_state` in ({escaped_states})"
+
+
+def _workflow_role_permission(doc, role, allowed_states, user=None):
+	user = user or frappe.session.user
+	return role in frappe.get_roles(user) and getattr(doc, "workflow_state", None) in allowed_states
+
+
 def _branch_permission(doc, user=None):
 	if _has_elevated_access(user):
 		return True
@@ -131,11 +147,36 @@ def has_monthly_attendance_record_permission(doc, user=None, permission_type=Non
 
 
 def get_saudi_annual_leave_query(user=None):
-	return _employee_or_approver_query("Saudi Annual Leave", DIRECT_MANAGER_FIELDS, user)
+	if _has_elevated_access(user):
+		return ""
+
+	conditions = []
+	employee_scope = _employee_or_approver_query("Saudi Annual Leave", DIRECT_MANAGER_FIELDS, user)
+	if employee_scope and employee_scope != "1=0":
+		conditions.append(employee_scope)
+
+	finance_scope = _workflow_role_query(
+		"Saudi Annual Leave",
+		ANNUAL_LEAVE_FINANCE_ROLE,
+		ANNUAL_LEAVE_FINANCE_VISIBLE_STATES,
+		user,
+	)
+	if finance_scope:
+		conditions.append(finance_scope)
+
+	return "(" + " OR ".join(conditions) + ")" if conditions else "1=0"
 
 
 def has_saudi_annual_leave_permission(doc, user=None, permission_type=None):
-	return _employee_or_approver_permission(doc, DIRECT_MANAGER_FIELDS, user)
+	if _employee_or_approver_permission(doc, DIRECT_MANAGER_FIELDS, user):
+		return True
+
+	return _workflow_role_permission(
+		doc,
+		ANNUAL_LEAVE_FINANCE_ROLE,
+		ANNUAL_LEAVE_FINANCE_VISIBLE_STATES,
+		user,
+	)
 
 
 def get_saudi_sick_leave_query(user=None):

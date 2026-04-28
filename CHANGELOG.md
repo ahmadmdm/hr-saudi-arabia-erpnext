@@ -2,6 +2,14 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.16.0 - 2026-04-28
+
+- Added a documented token-based mobile attendance API contract for external apps, including credential issuance, status, location, check-in, and leave request endpoints that preserve the calling user's permissions.
+- Added the Employee Org Tree desk page with scoped hierarchy APIs and wired it into the Saudi HR workspace for direct operational access.
+- Extended the annual leave workflow with a finance approval stage, Accounts Manager visibility rules, and a reload patch so existing sites receive the updated workflow definition.
+- Hardened the mobile attendance web UI by using GET for read-only calls and `Promise.allSettled` so location loading failures no longer collapse the full dashboard.
+- Fixed voice verification runtime compatibility with current Torch builds by shimming missing `torch.amp.custom_fwd` and `custom_bwd` hooks before loading SpeechBrain.
+
 ## v1.15.0 - 2026-04-27
 
 - Reorganized the Saudi HR workspace into a clearer Arabic-first operational flow covering daily follow-up, employee actions, policies, WPS, governance, and insights.

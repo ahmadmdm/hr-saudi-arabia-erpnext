@@ -148,6 +148,7 @@ def create_workflow_states():
 		("Pending HR",                                 "Primary"),
                 ("بانتظار HR / Pending HR",                    "Primary"),
 		("Pending HR Approval",                        "Primary"),
+		("Pending Finance Approval",                   "Primary"),
 		("Pending Manager",                            "Primary"),
 		("Pending Manager Approval",                   "Primary"),
                 ("بانتظار موافقة المدير / Pending Manager",   "Primary"),

@@ -1891,7 +1891,13 @@ def _create_basic_employees_for_payroll(doc, defaults: dict) -> tuple[list[str],
 				"employee_id": getattr(row, "payroll_employee_id", None),
 				"employee_name": getattr(row, "employee_name", None),
 			}
-			employee, _matched_by = _match_workbook_employee_for_import(raw, lookup)
+			employee, matched_by = _match_workbook_employee_for_import(raw, lookup)
+			if employee and group_key and matched_by == "employee_name":
+				grouped_employee = group_lookup.get(group_key)
+				if grouped_employee:
+					employee = grouped_employee
+				elif group_lookup:
+					employee = None
 			if not employee and group_key:
 				employee = group_lookup.get(group_key)
 			if employee:
@@ -2053,7 +2059,11 @@ def _apply_blank_overrides_for_invalid_default_links(doctype: str, payload: dict
 
 
 def _clear_invalid_default_link_values(doc, payload: dict):
-	meta = getattr(doc, "meta", None) or frappe.get_meta(doc.doctype)
+	doctype = getattr(doc, "doctype", None) or (payload or {}).get("doctype")
+	if not doctype and not getattr(doc, "meta", None):
+		return
+
+	meta = getattr(doc, "meta", None) or frappe.get_meta(doctype)
 	payload_fields = set((payload or {}).keys())
 
 	for field in getattr(meta, "fields", []) or []:

@@ -75,6 +75,20 @@ class _VoiceProfileDoc:
 
 
 class TestRuntimePermissionHardening(FrappeTestCase):
+	def test_voice_runtime_compatibility_shims_missing_torch_amp_decorators(self):
+		dummy_torch = SimpleNamespace(amp=SimpleNamespace())
+
+		voice_module._ensure_torch_amp_compatibility(dummy_torch)
+
+		self.assertTrue(callable(dummy_torch.amp.custom_fwd))
+		self.assertTrue(callable(dummy_torch.amp.custom_bwd))
+
+		def sample_forward(*args, **kwargs):
+			return args, kwargs
+
+		self.assertIs(dummy_torch.amp.custom_fwd(sample_forward), sample_forward)
+		self.assertIs(dummy_torch.amp.custom_bwd(sample_forward), sample_forward)
+
 	def test_submit_mobile_leave_request_enforces_create_permission(self):
 		leave_doc = _InsertableDoc(doctype="Saudi Annual Leave", name="SAL-0001")
 		profile = SimpleNamespace(employee_name="Ali", company="amd", department="HR")
@@ -102,6 +116,8 @@ class TestRuntimePermissionHardening(FrappeTestCase):
 			api_module, "_load_json_param", return_value=[]
 		), patch.object(api_module, "_get_location_for_branch", return_value=None), patch.object(
 			api_module, "_get_todays_checkins", return_value=today_checkins
+		), patch.object(api_module, "get_voice_runtime_status", return_value={"enabled": False, "runtime_ready": False}), patch.object(
+			api_module, "get_employee_voice_profile_status", return_value={"can_self_enroll": False}
 		), patch.object(api_module, "now_datetime", return_value=get_datetime("2026-04-02 17:00:00")), patch.object(
 			api_module.frappe, "new_doc", side_effect=[checkin_doc, attendance_doc]
 		), patch.object(api_module, "_attach_files", return_value=[]), patch.object(

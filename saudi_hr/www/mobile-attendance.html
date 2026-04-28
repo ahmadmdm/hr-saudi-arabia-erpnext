@@ -1223,6 +1223,11 @@
 		};
 
 		const METHOD_ROOT = "saudi_hr.saudi_hr.api.";
+		const READ_ONLY_METHODS = new Set([
+			"get_attendance_status",
+			"get_available_locations",
+			"get_attendance_insights",
+		]);
 		const $ = (selector) => document.querySelector(selector);
 		const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
@@ -1392,16 +1397,32 @@
 		}
 
 		async function apiCall(method, args = {}) {
-			const csrfToken = await getCsrfToken();
-			const response = await fetch(`/api/method/${METHOD_ROOT}${method}`, {
-				method: "POST",
-				headers: {
+			const useGet = READ_ONLY_METHODS.has(method);
+			const query = useGet && Object.keys(args || {}).length
+				? `?${new URLSearchParams(
+					Object.entries(args).reduce((accumulator, [key, value]) => {
+						if (value != null && value !== "") {
+							accumulator[key] = value;
+						}
+						return accumulator;
+					}, {})
+				).toString()}`
+				: "";
+			const requestOptions = {
+				method: useGet ? "GET" : "POST",
+				credentials: "same-origin",
+			};
+
+			if (!useGet) {
+				const csrfToken = await getCsrfToken();
+				requestOptions.headers = {
 					"Content-Type": "application/json",
 					"X-Frappe-CSRF-Token": csrfToken,
-				},
-				credentials: "same-origin",
-				body: JSON.stringify(args),
-			});
+				};
+				requestOptions.body = JSON.stringify(args);
+			}
+
+			const response = await fetch(`/api/method/${METHOD_ROOT}${method}${query}`, requestOptions);
 
 			const payload = await response.json();
 			if (!response.ok) {
@@ -2252,10 +2273,17 @@
 		}
 
 		async function loadDashboard() {
-			const [status, availableLocations] = await Promise.all([
+			const [statusResult, locationsResult] = await Promise.allSettled([
 				apiCall("get_attendance_status"),
 				apiCall("get_available_locations"),
 			]);
+
+			if (statusResult.status !== "fulfilled") {
+				throw statusResult.reason;
+			}
+
+			const status = statusResult.value;
+			const availableLocations = locationsResult.status === "fulfilled" ? locationsResult.value : [];
 			state.hasEmployeeAccess = true;
 			state.status = status;
 			state.availableLocations = availableLocations || [];

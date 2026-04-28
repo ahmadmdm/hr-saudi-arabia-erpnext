@@ -299,10 +299,31 @@ def _consume_voice_challenge(employee, challenge_token):
 	return payload
 
 
+def _ensure_torch_amp_compatibility(torch):
+	amp_module = getattr(torch, "amp", None)
+	if not amp_module:
+		return
+
+	def _noop_amp_wrapper(function=None, *_args, **_kwargs):
+		if callable(function):
+			return function
+
+		def _decorator(inner_function):
+			return inner_function
+
+		return _decorator
+
+	if not hasattr(amp_module, "custom_fwd"):
+		amp_module.custom_fwd = _noop_amp_wrapper
+	if not hasattr(amp_module, "custom_bwd"):
+		amp_module.custom_bwd = _noop_amp_wrapper
+
+
 def _load_runtime_libraries():
 	try:
 		import torch
 		import torchaudio
+		_ensure_torch_amp_compatibility(torch)
 		from faster_whisper import WhisperModel
 		from speechbrain.inference.classifiers import AudioClassifier
 		from speechbrain.inference.speaker import SpeakerRecognition

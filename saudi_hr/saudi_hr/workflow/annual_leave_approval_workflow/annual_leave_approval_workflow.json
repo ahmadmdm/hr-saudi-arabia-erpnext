@@ -26,8 +26,14 @@
    "state": "Pending HR Approval",
    "style": "Primary"
   },
+    {
+     "allow_edit": "Accounts Manager",
+     "doc_status": "0",
+     "state": "Pending Finance Approval",
+     "style": "Primary"
+    },
   {
-   "allow_edit": "HR Manager",
+     "allow_edit": "Accounts Manager",
    "doc_status": "1",
    "state": "Approved",
    "style": "Success"
@@ -69,16 +75,30 @@
    "allow_self_approval": 1
   },
   {
-   "action": "Final Approve",
+    "action": "HR Approve",
    "allowed": "HR Manager",
    "state": "Pending HR Approval",
+    "next_state": "Pending Finance Approval",
+    "allow_self_approval": 1
+  },
+  {
+    "action": "Reject",
+    "allowed": "HR Manager",
+    "state": "Pending HR Approval",
+    "next_state": "Rejected",
+    "allow_self_approval": 1
+  },
+  {
+    "action": "Final Approve",
+    "allowed": "Accounts Manager",
+    "state": "Pending Finance Approval",
    "next_state": "Approved",
    "allow_self_approval": 1
   },
   {
    "action": "Reject",
-   "allowed": "HR Manager",
-   "state": "Pending HR Approval",
+    "allowed": "Accounts Manager",
+    "state": "Pending Finance Approval",
    "next_state": "Rejected",
    "allow_self_approval": 1
   },

@@ -10,6 +10,9 @@ from openpyxl import Workbook, load_workbook
 from saudi_hr.saudi_hr.doctype.saudi_monthly_payroll import saudi_monthly_payroll as payroll_module
 
 
+test_ignore = ["Journal Entry"]
+
+
 class TestSaudiMonthlyPayroll(FrappeTestCase):
 	def test_build_employee_row_includes_loan_in_total_deductions(self):
 		emp = {"name": "EMP-0001", "employee_name": "Demo Employee", "department": "HR", "nationality": "Saudi"}

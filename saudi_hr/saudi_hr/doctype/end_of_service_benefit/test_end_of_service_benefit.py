@@ -4,6 +4,9 @@ from frappe.tests.utils import FrappeTestCase
 from saudi_hr.saudi_hr.doctype.end_of_service_benefit import end_of_service_benefit as eosb_module
 
 
+test_ignore = ["Journal Entry"]
+
+
 class TestEndOfServiceBenefit(FrappeTestCase):
 	def test_calculate_eosb_preview_rejects_invalid_dates(self):
 		with self.assertRaises(frappe.ValidationError):

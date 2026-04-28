@@ -6,6 +6,9 @@ from frappe.tests.utils import FrappeTestCase
 from saudi_hr.saudi_hr.doctype.employee_loan import employee_loan as loan_module
 
 
+test_ignore = ["Journal Entry"]
+
+
 class TestEmployeeLoanApproval(FrappeTestCase):
 	def test_legacy_submitted_loans_resolve_to_approved(self):
 		self.assertEqual(

@@ -6,6 +6,9 @@ from frappe.tests.utils import FrappeTestCase
 from saudi_hr.saudi_hr import utils
 
 
+test_ignore = ["Journal Entry"]
+
+
 class TestAnnualLeaveDisbursement(FrappeTestCase):
 	def test_get_annual_leave_days_taken_reads_saudi_annual_leave(self):
 		with patch.object(

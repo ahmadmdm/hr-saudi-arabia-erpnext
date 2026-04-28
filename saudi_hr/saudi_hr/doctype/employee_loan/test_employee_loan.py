@@ -8,6 +8,9 @@ from frappe.tests.utils import FrappeTestCase
 from saudi_hr.saudi_hr.doctype.employee_loan import employee_loan as loan_module
 
 
+test_ignore = ["Journal Entry"]
+
+
 class TestEmployeeLoan(FrappeTestCase):
 	def test_build_installment_plan_equal_installments_balances_last_row(self):
 		rows = loan_module._build_installment_plan(

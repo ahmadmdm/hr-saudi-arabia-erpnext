@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.15.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.16.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.15.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.16.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -59,7 +59,7 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 - **20 نوع بيانات** تغطي دورة حياة الموظف كاملاً
 - **7 تقارير** للامتثال والرواتب والتحليل
 - **5 صيغ طباعة** عربية RTL رسمية
-- **2 سير عمل** معتمد للموافقات
+- **5 مسارات موافقات** معتمدة
 - **4 إشعارات بريدية** تلقائية
 - تكامل مع **GOSI, MLSD, Nitaqat, WPS**
 
@@ -97,8 +97,8 @@ Built for establishments of any size operating in Saudi Arabia. Includes:
 
 **بيئة التحقق الحالية | Verified Stack**
 
-- Frappe `15.103.2`
-- ERPNext `15.102.0`
+- Frappe `15.103.3`
+- ERPNext `15.103.1`
 - Python `3.11`
 - MariaDB `10.6+`
 - Node.js `24.x`
@@ -237,7 +237,7 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 
 | سير العمل | Workflow | الحالات | States |
 |-----------|---------|---------|--------|
-| Annual Leave Approval | موافقة الإجازة السنوية | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
+| Annual Leave Approval | موافقة الإجازة السنوية | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← موافقة المالية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Finance Approval → Approved/Rejected |
 | Sick Leave Approval | موافقة الإجازة المرضية | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
 | Overtime Approval | موافقة العمل الإضافي | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
 | Salary Adjustment Approval | موافقة تعديل الراتب | مسودة ← موافقة المدير ← موافقة الموارد البشرية ← معتمد/مرفوض | Draft → Manager Approval → HR Approval → Approved/Rejected |
@@ -388,7 +388,23 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.15.0 — ٢٧ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.16.0 — ٢٨ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**التشغيل الحي للحضور الجوال ومسار اعتماد المالية | Live Mobile Attendance, Finance Routing, and Runtime Compatibility:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| Mobile Attendance API | واجهات حضور الجوال الخارجية | إضافة contract موثّق وواجهات token-based لإصدار بيانات الربط، جلب الحالة، المواقع، تسجيل الحركة، وطلب الإجازة مع الحفاظ على صلاحيات المستخدم نفسه |
+| Mobile Attendance UI | واجهة الحضور الجوال | استخدام `GET` للقراءات فقط وتحميل اللوحة عبر `Promise.allSettled` حتى لا يؤدي تعثر تحميل المواقع إلى إسقاط الصفحة بالكامل |
+| Employee Org Tree | شجرة الارتباط الوظيفي | إضافة صفحة Desk جديدة لعرض الأقسام والتقارير المباشرة والموافقين، مع إظهارها داخل مساحة عمل Saudi HR |
+| Annual Leave Workflow | سير الإجازة السنوية | إضافة مرحلة `Pending Finance Approval` وربط صلاحيات `Accounts Manager` باستعلامات وصلاحيات الإجازة السنوية |
+| Voice Verification Runtime | تشغيل البصمة الصوتية | معالجة تعارض SpeechBrain مع إصدارات Torch الحالية عبر shim لتوافق `torch.amp` قبل تحميل مكتبات التحقق الصوتي |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يحول الإضافات الأخيرة من مجرد كود موجود داخل المستودع إلى مسارات تشغيلية قابلة للاستخدام فعليًا: حضور جوال بواجهات تكامل واضحة، شجرة تنظيمية متاحة من الـ Workspace، مسار اعتماد سنوي ينتهي بالمالية، وتوافق runtime أفضل للبصمة الصوتية في البيئات الحية.
+
+> **بعد الترقية | Post-upgrade:** شغّل `bench --site <your-site-name> migrate` ثم `bench build --app saudi_hr` و`bench --site <your-site-name> clear-cache`. إذا كانت الـ Workspace موجودة مسبقًا في قاعدة البيانات، فتأكد من استيراد التغييرات القياسية أثناء الترقية حتى يظهر اختصار `Employee Org Tree` والمسار المحدّث للإجازة السنوية.
+
+### v1.15.0 — ٢٧ أبريل ٢٠٢٦
 
 **الواجهة العربية الموحّدة وتجربة العمل اليومية | Unified Arabic UX and Daily Operations Experience:**
 
