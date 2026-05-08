@@ -6,6 +6,14 @@ install.py — تُنفَّذ عند تثبيت التطبيق لأوّل مرة
 import frappe
 
 
+def _get_existing_employee_approver_fields():
+	return [
+		fieldname
+		for fieldname in ("leave_approver", "expense_approver")
+		if frappe.db.has_column("Employee", fieldname)
+	]
+
+
 def after_install():
 	create_workflow_states()
 	ensure_department_approver_role()
@@ -56,16 +64,21 @@ def sync_department_approver_role_assignments():
 
 def sync_department_approver_company_permissions():
 	"""Keep approver users aligned with the companies of employees they approve."""
+	approver_fields = _get_existing_employee_approver_fields()
+	if not approver_fields:
+		return
+
 	from frappe.permissions import add_user_permission
 
 	for user in _get_department_approver_users():
+		conditions = " OR ".join(f"{fieldname} = %(user)s" for fieldname in approver_fields)
 		companies = frappe.db.sql(
 			"""
 				SELECT DISTINCT company
 				FROM `tabEmployee`
-				WHERE (leave_approver = %(user)s OR expense_approver = %(user)s)
+				WHERE ({conditions})
 				  AND IFNULL(company, '') != ''
-			""",
+			""".format(conditions=conditions),
 			{"user": user},
 			as_dict=True,
 		)
@@ -80,7 +93,7 @@ def sync_department_approver_company_permissions():
 
 def _get_department_approver_users():
 	approver_users = set()
-	for fieldname in ("leave_approver", "expense_approver"):
+	for fieldname in _get_existing_employee_approver_fields():
 		approver_users.update(
 			user
 			for user in frappe.get_all("Employee", filters={fieldname: ["!=", ""]}, pluck=fieldname)

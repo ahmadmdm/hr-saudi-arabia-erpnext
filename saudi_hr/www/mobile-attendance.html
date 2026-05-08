@@ -1003,8 +1003,10 @@
 				fileReadFailed: "تعذر قراءة الملف المحدد.",
 				maxAttachments: "الحد الأقصى للمرفقات في كل عملية هو ثلاثة ملفات فقط.",
 				audioUnsupported: "المتصفح الحالي لا يدعم تسجيل الصوت المباشر.",
+				speechRecognitionUnsupported: "هذا المتصفح لا يدعم تحويل الكلام إلى نص، وهو مطلوب في وضع التحدي الخفيف.",
 				audioMax: "لا يمكن إضافة تسجيل صوتي لأن الحد الأعلى للمرفقات وصل إلى ثلاثة.",
 				audioSaved: "تم حفظ العينة الصوتية لهذه الحركة.",
+				speechTranscriptMissing: "تم حفظ العينة، لكن لم يصل نص التحدي من المتصفح.",
 				audioStarted: "بدأ التسجيل الصوتي. اضغط مرة أخرى للإيقاف.",
 				attendanceSaved: "تم تسجيل الحركة بنجاح.",
 				startDateRequired: "حدد تاريخ بداية الإجازة أولاً.",
@@ -1151,8 +1153,10 @@
 				fileReadFailed: "Unable to read the selected file.",
 				maxAttachments: "You can attach up to three files per action.",
 				audioUnsupported: "This browser does not support direct voice recording.",
+				speechRecognitionUnsupported: "This browser does not support speech-to-text, which is required in lightweight challenge mode.",
 				audioMax: "You cannot add a voice recording because the maximum attachment count was reached.",
 				audioSaved: "The voice sample was saved for this attendance movement.",
+				speechTranscriptMissing: "The sample was saved, but the browser did not return a challenge transcript.",
 				audioStarted: "Voice recording started. Press again to stop.",
 				attendanceSaved: "Attendance movement saved successfully.",
 				startDateRequired: "Select a leave start date first.",
@@ -1213,6 +1217,8 @@
 			isSubmittingLeave: false,
 			isSubmittingVoiceEnrollment: false,
 			recorder: null,
+			speechRecognition: null,
+			voiceTranscriptDraft: "",
 			recordingStream: null,
 			audioChunks: [],
 			deviceBiometricAvailable: false,
@@ -1730,7 +1736,7 @@
 		}
 
 		function canUseSelfVoiceEnrollment(status = state.status) {
-			return Boolean(status?.voice_profile?.can_self_enroll);
+			return Boolean(status?.verification_features?.voice_enrollment_supported && status?.voice_profile?.can_self_enroll);
 		}
 
 		function canUseVoiceChallenge(status = state.status) {
@@ -1774,7 +1780,7 @@
 					{ label: t("policySourceLabel"), value: schedule.policy_source || "--", note: schedule.shift_assignment || "" },
 					{ label: t("voicePolicyLabel"), value: schedule.voice_policy || "--", note: schedule.voice_max_duration_seconds ? `${schedule.voice_max_duration_seconds}s` : "" },
 					{ label: t("voiceProfileLabel"), value: voiceProfile.has_voice_profile ? t("voiceProfileEnrolled") : t("voiceProfileNotEnrolled"), note: voiceProfile.last_enrolled_on ? formatDateTime(voiceProfile.last_enrolled_on) : "" },
-					{ label: t("voiceRuntimeLabel"), value: verificationFeatures.voice_runtime_ready ? t("granted") : t("blocked"), note: (verificationFeatures.voice_runtime_missing_dependencies || []).join(", ") },
+					{ label: t("voiceRuntimeLabel"), value: verificationFeatures.voice_runtime_ready ? t("granted") : t("blocked"), note: (verificationFeatures.voice_runtime_missing_dependencies || []).join(", ") || verificationFeatures.voice_runtime_mode || "" },
 				],
 				t("scheduleUnavailable")
 			);
@@ -1975,6 +1981,12 @@
 		async function toggleAudioRecording() {
 			const button = $("#record-audio");
 			if (state.recorder?.state === "recording") {
+				if (state.speechRecognition) {
+					try {
+						state.speechRecognition.stop();
+					} catch (error) {
+					}
+				}
 				state.recorder.stop();
 				button.textContent = t("recordAudio");
 				return;
@@ -1984,10 +1996,16 @@
 				showBanner(t("audioUnsupported"), "error");
 				return;
 			}
+			if (requiresBrowserTranscript() && !getSpeechRecognitionConstructor()) {
+				showBanner(t("speechRecognitionUnsupported"), "error");
+				return;
+			}
 
 			try {
 				state.audioChunks = [];
+				state.voiceTranscriptDraft = "";
 				state.recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				state.speechRecognition = startSpeechRecognition();
 				state.recorder = new MediaRecorder(state.recordingStream);
 				state.recorder.ondataavailable = (event) => {
 					if (event.data?.size) {
@@ -1998,12 +2016,20 @@
 					const blob = new Blob(state.audioChunks, { type: state.recorder.mimeType || "audio/webm" });
 					state.recordingStream?.getTracks().forEach((track) => track.stop());
 					state.recordingStream = null;
+					if (state.speechRecognition) {
+						try {
+							state.speechRecognition.stop();
+						} catch (error) {
+						}
+						state.speechRecognition = null;
+					}
 					const extension = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "m4a" : "webm";
 					const file = new File([blob], `voice-note-${Date.now()}.${extension}`, { type: blob.type });
 					state.voiceSample = await fileToAttachment(file, "voice", "voice");
-					state.voiceSample.transcriptPreview = state.voiceChallenge?.challenge_text || "";
+					state.voiceSample.transcript = (state.voiceTranscriptDraft || "").trim();
+					state.voiceSample.transcriptPreview = state.voiceSample.transcript;
 					renderVerificationPanel();
-					showBanner(t("audioSaved"));
+					showBanner(state.voiceSample.transcript ? t("audioSaved") : t("speechTranscriptMissing"));
 				};
 				state.recorder.start();
 				button.textContent = t("stopAudio");
@@ -2013,16 +2039,59 @@
 			}
 		}
 
+		function getSpeechRecognitionConstructor() {
+			return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+		}
+
+		function requiresBrowserTranscript() {
+			const features = state.status?.verification_features || {};
+			return Boolean(features.voice_accepts_browser_transcript && !features.voice_enrollment_supported);
+		}
+
+		function getVoiceRecognitionLanguage() {
+			const language = (state.status?.verification_features?.voice_language || "ar").toLowerCase();
+			return language.startsWith("ar") ? "ar-SA" : language;
+		}
+
+		function startSpeechRecognition() {
+			const SpeechRecognition = getSpeechRecognitionConstructor();
+			if (!SpeechRecognition) {
+				return null;
+			}
+
+			const recognition = new SpeechRecognition();
+			recognition.lang = getVoiceRecognitionLanguage();
+			recognition.continuous = true;
+			recognition.interimResults = true;
+			recognition.onresult = (event) => {
+				let transcript = "";
+				for (let index = 0; index < event.results.length; index += 1) {
+					transcript += event.results[index][0]?.transcript || "";
+				}
+				state.voiceTranscriptDraft = transcript.trim();
+				$("#voice-transcript-preview").value = state.voiceTranscriptDraft;
+			};
+			recognition.onerror = () => {};
+
+			try {
+				recognition.start();
+				return recognition;
+			} catch (error) {
+				return null;
+			}
+		}
+
 		function buildVoicePayload() {
 			if (!state.voiceSample) {
 				return null;
 			}
-			const { filename, content, size } = state.voiceSample;
-			return JSON.stringify({ filename, content, size });
+			const { filename, content, size, transcript } = state.voiceSample;
+			return JSON.stringify({ filename, content, size, transcript: transcript || "" });
 		}
 
 		function clearVoiceSample() {
 			state.voiceSample = null;
+			state.voiceTranscriptDraft = "";
 			$("#voice-transcript-preview").value = "";
 			renderVerificationPanel();
 		}

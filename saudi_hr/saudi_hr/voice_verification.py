@@ -27,6 +27,10 @@ VOICE_VERIFICATION_STATUS_PENDING = "Pending / بانتظار"
 VOICE_VERIFICATION_STATUS_PASSED = "Passed / ناجح"
 VOICE_VERIFICATION_STATUS_FAILED = "Failed / فشل"
 
+VOICE_RUNTIME_MODE_CHALLENGE_ONLY = "Challenge Only / تحدي فقط"
+VOICE_RUNTIME_MODE_FULL_BIOMETRIC = "Full Biometric / بصمة كاملة"
+VOICE_RUNTIME_MODES = {VOICE_RUNTIME_MODE_CHALLENGE_ONLY, VOICE_RUNTIME_MODE_FULL_BIOMETRIC}
+
 _MODEL_CACHE = {}
 _ARABIC_NUMERAL_TRANSLATION = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 _DIGIT_WORDS = {
@@ -70,6 +74,9 @@ _DIGIT_WORDS = {
 
 def get_voice_runtime_settings():
 	settings = frappe.get_single("Saudi HR Settings")
+	mode = getattr(settings, "voice_verification_mode", "") or VOICE_RUNTIME_MODE_CHALLENGE_ONLY
+	if mode not in VOICE_RUNTIME_MODES:
+		mode = VOICE_RUNTIME_MODE_CHALLENGE_ONLY
 	bonafide_labels = [
 		item.strip().lower()
 		for item in (getattr(settings, "voice_bonafide_labels", "") or "bonafide,genuine,human,real").split(",")
@@ -78,6 +85,7 @@ def get_voice_runtime_settings():
 
 	return {
 		"enabled": cint(getattr(settings, "enable_voice_verification", 0) or 0),
+		"mode": mode,
 		"speaker_model_source": getattr(settings, "speaker_model_source", "") or "speechbrain/spkrec-ecapa-voxceleb",
 		"anti_spoof_model_source": getattr(settings, "anti_spoof_model_source", "") or "",
 		"whisper_model_size": getattr(settings, "voice_whisper_model_size", "") or "small",
@@ -91,6 +99,20 @@ def get_voice_runtime_settings():
 
 
 def get_voice_runtime_status():
+	settings = get_voice_runtime_settings()
+	mode = _get_voice_mode(settings)
+	if mode != VOICE_RUNTIME_MODE_FULL_BIOMETRIC:
+		return {
+			"enabled": bool(settings["enabled"]),
+			"mode": mode,
+			"runtime_ready": True,
+			"missing_dependencies": [],
+			"requires_enrollment": False,
+			"enrollment_supported": False,
+			"accepts_browser_transcript": True,
+			"voice_language": settings["voice_language"],
+		}
+
 	runtime_packages = {
 		"torch": "torch",
 		"torchaudio": "torchaudio",
@@ -106,12 +128,25 @@ def get_voice_runtime_status():
 		except Exception as exc:
 			missing.append(f"{label}:{type(exc).__name__}")
 
-	settings = get_voice_runtime_settings()
 	return {
 		"enabled": bool(settings["enabled"]),
+		"mode": mode,
 		"runtime_ready": not missing,
 		"missing_dependencies": missing,
+		"requires_enrollment": True,
+		"enrollment_supported": True,
+		"accepts_browser_transcript": False,
+		"voice_language": settings["voice_language"],
 	}
+
+
+def _get_voice_mode(settings):
+	mode = (settings or {}).get("mode") or (settings or {}).get("voice_verification_mode")
+	return mode if mode in VOICE_RUNTIME_MODES else VOICE_RUNTIME_MODE_FULL_BIOMETRIC
+
+
+def _is_full_biometric_mode(settings):
+	return _get_voice_mode(settings) == VOICE_RUNTIME_MODE_FULL_BIOMETRIC
 
 
 def _sanitize_speechbrain_lazy_modules():
@@ -194,6 +229,8 @@ def enroll_employee_voice_profile(employee, voice_payload, challenge_token):
 	settings = get_voice_runtime_settings()
 	if not settings["enabled"]:
 		frappe.throw(_("Voice verification is disabled in Saudi HR Settings."))
+	if not _is_full_biometric_mode(settings):
+		frappe.throw(_("Voiceprint enrollment is only available in Full Biometric voice mode."))
 	profile_status = get_employee_voice_profile_status(employee)
 	if profile_status.get("profile_exists") and not profile_status.get("can_self_enroll"):
 		frappe.throw(
@@ -329,7 +366,7 @@ def _load_runtime_libraries():
 		from speechbrain.inference.speaker import SpeakerRecognition
 	except ModuleNotFoundError:
 		frappe.throw(
-			_("Voice verification runtime is not installed yet. Install torch, torchaudio, speechbrain, and faster-whisper first.")
+			_("Full biometric voice runtime is not installed yet. Install torch, torchaudio, speechbrain, and faster-whisper first.")
 		)
 
 	_sanitize_speechbrain_lazy_modules()
@@ -348,8 +385,11 @@ def _run_voice_verification(employee, voice_payload, challenge_token, require_en
 		frappe.throw(_("لم يتم إرسال عينة صوتية صالحة."), frappe.PermissionError)
 
 	challenge = _consume_voice_challenge(employee, challenge_token)
-	runtime = _load_runtime_libraries()
 	settings = get_voice_runtime_settings()
+	if not _is_full_biometric_mode(settings):
+		return _run_challenge_only_verification(challenge, voice_payload, settings)
+
+	runtime = _load_runtime_libraries()
 	audio_path = _write_voice_temp_file(voice_payload)
 
 	try:
@@ -386,6 +426,37 @@ def _run_voice_verification(employee, voice_payload, challenge_token, require_en
 	finally:
 		with suppress(OSError):
 			os.remove(audio_path)
+
+
+def _run_challenge_only_verification(challenge, voice_payload, settings):
+	transcript = _get_payload_transcript(voice_payload)
+	if not transcript:
+		frappe.throw(
+			_("لم يصل نص التحدي الصوتي من المتصفح. استخدم متصفحًا يدعم التعرف على الكلام أو فعّل وضع البصمة الكاملة."),
+			frappe.PermissionError,
+		)
+
+	speech_match_score = _calculate_speech_match_score(challenge.get("challenge_text"), transcript)
+	if speech_match_score < settings["speech_match_threshold"]:
+		frappe.throw(_("الرقم المقروء لا يطابق التحدي الصوتي المطلوب."), frappe.PermissionError)
+
+	return {
+		"challenge_text": challenge.get("challenge_text"),
+		"transcript": transcript,
+		"anti_spoof_score": 1.0,
+		"anti_spoof_label": "not_required",
+		"speech_match_score": speech_match_score,
+		"speaker_match_score": None,
+		"embedding": [],
+	}
+
+
+def _get_payload_transcript(voice_payload):
+	for fieldname in ("transcript", "recognized_text", "speech_text"):
+		value = (voice_payload or {}).get(fieldname)
+		if value:
+			return str(value).strip()
+	return ""
 
 
 def _write_voice_temp_file(voice_payload):

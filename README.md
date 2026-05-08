@@ -120,14 +120,17 @@ bench build --app saudi_hr
 bench --site <your-site-name> clear-cache
 ```
 
-> **ملاحظة:** يجب تثبيت `frappe` و`erpnext` قبل هذا التطبيق. تبعيات التطبيق الخلفية موصوفة داخل `pyproject.toml` و`setup.py` و`requirements.txt`، وتشمل الآن `openpyxl`, `openlocationcode`, `numpy`, `torch`, `torchaudio`, `speechbrain`, و`faster-whisper`. عند استخدام `bench get-app` أو `pip install -e apps/saudi_hr` سيتم سحب هذه التبعيات تلقائيًا من بيانات الحزمة.  
-> **Note:** `frappe` and `erpnext` must be installed first. The backend runtime dependencies are declared in `pyproject.toml`, `setup.py`, and `requirements.txt`, and now include `openpyxl`, `openlocationcode`, `numpy`, `torch`, `torchaudio`, `speechbrain`, and `faster-whisper`. When you use `bench get-app` or `pip install -e apps/saudi_hr`, these dependencies are installed automatically from the package metadata.
+> **ملاحظة:** يجب تثبيت `frappe` و`erpnext` قبل هذا التطبيق. التثبيت الأساسي يحتاج `openpyxl` و`openlocationcode` فقط. وضع التحقق الصوتي الخفيف يعمل عبر نص التحدي المرسل من المتصفح ولا يسحب حزم الذكاء الاصطناعي الثقيلة. لتفعيل وضع البصمة الصوتية الكاملة ثبّت الإضافة الاختيارية `saudi_hr[voice-full]` أو استخدم `requirements-voice-cpu.txt`.
+> **Note:** `frappe` and `erpnext` must be installed first. The base install only requires `openpyxl` and `openlocationcode`. Lightweight voice verification uses the browser-provided challenge transcript and does not pull the heavy AI packages. To enable full voice biometric mode, install the optional `saudi_hr[voice-full]` extra or use `requirements-voice-cpu.txt`.
 
 ### التحقق من الاعتماديات | Dependency Verification
 
 ```bash
 # Verify Python package dependencies
-./env/bin/python -c "import openpyxl, openlocationcode, torch, torchaudio, speechbrain, faster_whisper; print('runtime dependencies ok')"
+./env/bin/python -c "import openpyxl, openlocationcode; print('base runtime dependencies ok')"
+
+# Optional: verify full biometric voice dependencies after installing them
+./env/bin/python -c "import torch, torchaudio, speechbrain, faster_whisper; print('full voice runtime dependencies ok')"
 
 # Verify bench app test suite
 bench --site <your-site-name> run-tests --app saudi_hr --skip-test-records

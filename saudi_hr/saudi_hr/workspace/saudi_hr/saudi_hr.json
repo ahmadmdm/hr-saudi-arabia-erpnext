@@ -29,7 +29,7 @@
    "label": "Nationality Distribution"
   }
  ],
- "content": "[{\"id\":\"saudi_hr_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>مركز عمل الموارد البشرية السعودية</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_header_guide\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted\\\">ابدأ من متابعة اليوم، ثم نفّذ معاملة الموظف، وبعدها انتقل إلى الإعدادات والامتثال عند الحاجة.</span>\",\"col\":12}},{\"id\":\"saudi_hr_spacer_top\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_daily\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>١. متابعة اليوم</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_daily_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Action Hub\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Team Attendance Review\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Monthly Payroll\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Mobile Attendance\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Org Tree\",\"col\":3}},{\"id\":\"saudi_hr_spacer_daily_cards\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_card_1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Contracts\",\"col\":3}},{\"id\":\"saudi_hr_card_2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring Iqamas\",\"col\":3}},{\"id\":\"saudi_hr_card_3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Overtime\",\"col\":3}},{\"id\":\"saudi_hr_card_4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total GOSI This Month\",\"col\":3}},{\"id\":\"saudi_hr_spacer_employee\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_employee\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٢. إجراءات الموظف</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_employee_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Hiring Requisition\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Onboarding\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ملف الموظف الشامل\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Employment Contract\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Annual Leave\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Performance Review\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary Adjustment\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Promotion Transfer\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exit Clearance\",\"col\":4}},{\"id\":\"saudi_hr_spacer_shift\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_shift\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٣. الدوام والورديات والسياسات</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_shift_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Type\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Assignment\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Assignment Tool\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Location\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Employee Voice Profile\",\"col\":6}},{\"id\":\"saudi_hr_shortcut_shift_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi HR Settings\",\"col\":6}},{\"id\":\"saudi_hr_spacer_wps\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_wps\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٤. الرواتب والامتثال</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_wps_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WPS Submission\",\"col\":6}},{\"id\":\"saudi_hr_shortcut_wps_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WPS Submission Tracker\",\"col\":6}},{\"id\":\"saudi_hr_spacer_governance\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_governance\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٥. الإعداد والحوكمة</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_governance_1\",\"type\":\"card\",\"data\":{\"card_name\":\"الإعداد والتأسيس\",\"col\":4}},{\"id\":\"saudi_hr_card_governance_2\",\"type\":\"card\",\"data\":{\"card_name\":\"موافقات الموظفين\",\"col\":4}},{\"id\":\"saudi_hr_card_governance_3\",\"type\":\"card\",\"data\":{\"card_name\":\"إعدادات سير الموافقات\",\"col\":4}},{\"id\":\"saudi_hr_spacer_catalog\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_catalog\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٦. الفهرس التشغيلي حسب المجال</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_catalog_1\",\"type\":\"card\",\"data\":{\"card_name\":\"الوقت والإجازات والرواتب\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_2\",\"type\":\"card\",\"data\":{\"card_name\":\"الأداء والتطوير\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_3\",\"type\":\"card\",\"data\":{\"card_name\":\"علاقات الموظفين\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_4\",\"type\":\"card\",\"data\":{\"card_name\":\"الامتثال والشؤون القانونية\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_5\",\"type\":\"card\",\"data\":{\"card_name\":\"إنهاء الخدمة والمغادرة\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_6\",\"type\":\"card\",\"data\":{\"card_name\":\"التقارير والتحليلات\",\"col\":4}},{\"id\":\"saudi_hr_spacer_insights\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_insights\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٧. المؤشرات</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_chart_1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Active Contracts by Type\",\"col\":4}},{\"id\":\"saudi_hr_chart_2\",\"type\":\"chart\",\"data\":{\"chart_name\":\"GOSI Monthly Contributions\",\"col\":4}},{\"id\":\"saudi_hr_chart_3\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Compliance Actions by Area\",\"col\":4}}]",
+ "content": "[{\"id\":\"saudi_hr_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>مركز عمل الموارد البشرية السعودية</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_header_guide\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h6 text-muted\\\">ابدأ من متابعة اليوم، ثم نفّذ معاملة الموظف، وبعدها انتقل إلى الإعدادات والامتثال عند الحاجة.</span>\",\"col\":12}},{\"id\":\"saudi_hr_spacer_top\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_daily\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>١. متابعة اليوم</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_daily_0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Professional HR Hub\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Mobile Attendance\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Action Hub\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Team Attendance Review\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Monthly Payroll\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_daily_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Org Tree\",\"col\":3}},{\"id\":\"saudi_hr_spacer_daily_cards\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_card_1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Contracts\",\"col\":3}},{\"id\":\"saudi_hr_card_2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Expiring Iqamas\",\"col\":3}},{\"id\":\"saudi_hr_card_3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Overtime\",\"col\":3}},{\"id\":\"saudi_hr_card_4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total GOSI This Month\",\"col\":3}},{\"id\":\"saudi_hr_spacer_employee\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_employee\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٢. إجراءات الموظف</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_employee_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Hiring Requisition\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Onboarding\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"ملف الموظف الشامل\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Employment Contract\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Annual Leave\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Performance Review\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Salary Adjustment\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Promotion Transfer\",\"col\":4}},{\"id\":\"saudi_hr_shortcut_employee_9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Exit Clearance\",\"col\":4}},{\"id\":\"saudi_hr_spacer_shift\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_shift\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٣. الدوام والورديات والسياسات</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_shift_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Type\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Assignment\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shift Assignment Tool\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Attendance Location\",\"col\":3}},{\"id\":\"saudi_hr_shortcut_shift_5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi Employee Voice Profile\",\"col\":6}},{\"id\":\"saudi_hr_shortcut_shift_6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Saudi HR Settings\",\"col\":6}},{\"id\":\"saudi_hr_spacer_wps\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_wps\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٤. الرواتب والامتثال</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_shortcut_wps_1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WPS Submission\",\"col\":6}},{\"id\":\"saudi_hr_shortcut_wps_2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WPS Submission Tracker\",\"col\":6}},{\"id\":\"saudi_hr_spacer_governance\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_governance\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٥. الإعداد والحوكمة</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_governance_1\",\"type\":\"card\",\"data\":{\"card_name\":\"الإعداد والتأسيس\",\"col\":4}},{\"id\":\"saudi_hr_card_governance_2\",\"type\":\"card\",\"data\":{\"card_name\":\"موافقات الموظفين\",\"col\":4}},{\"id\":\"saudi_hr_card_governance_3\",\"type\":\"card\",\"data\":{\"card_name\":\"إعدادات سير الموافقات\",\"col\":4}},{\"id\":\"saudi_hr_spacer_catalog\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_catalog\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٦. الفهرس التشغيلي حسب المجال</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_card_catalog_1\",\"type\":\"card\",\"data\":{\"card_name\":\"الوقت والإجازات والرواتب\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_2\",\"type\":\"card\",\"data\":{\"card_name\":\"الأداء والتطوير\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_3\",\"type\":\"card\",\"data\":{\"card_name\":\"علاقات الموظفين\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_4\",\"type\":\"card\",\"data\":{\"card_name\":\"الامتثال والشؤون القانونية\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_5\",\"type\":\"card\",\"data\":{\"card_name\":\"إنهاء الخدمة والمغادرة\",\"col\":4}},{\"id\":\"saudi_hr_card_catalog_6\",\"type\":\"card\",\"data\":{\"card_name\":\"التقارير والتحليلات\",\"col\":4}},{\"id\":\"saudi_hr_spacer_insights\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"saudi_hr_header_insights\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\"><b>٧. المؤشرات</b></span>\",\"col\":12}},{\"id\":\"saudi_hr_chart_1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Active Contracts by Type\",\"col\":4}},{\"id\":\"saudi_hr_chart_2\",\"type\":\"chart\",\"data\":{\"chart_name\":\"GOSI Monthly Contributions\",\"col\":4}},{\"id\":\"saudi_hr_chart_3\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Compliance Actions by Area\",\"col\":4}}]",
  "creation": "2026-03-25 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -44,7 +44,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "الإعداد والتأسيس",
+   "label": "الإعداد والتأسيس",
    "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
@@ -254,7 +254,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "الاستقطاب",
+   "label": "الاستقطاب",
    "link_count": 2,
    "link_type": "DocType",
    "onboard": 0,
@@ -283,7 +283,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "التهيئة والتوظيف",
+   "label": "التهيئة والتوظيف",
    "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
@@ -332,8 +332,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "الوقت والإجازات والرواتب",
-    "link_count": 20,
+   "label": "الوقت والإجازات والرواتب",
+   "link_count": 20,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -351,7 +351,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "WPS Submission",
+   "label": "WPS Submission",
    "link_count": 0,
    "link_to": "WPS Submission",
    "link_type": "DocType",
@@ -381,83 +381,83 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Attendance Action Hub",
-    "link_count": 0,
-    "link_to": "attendance-action-hub",
-    "link_type": "Page",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Employee Org Tree",
-    "link_count": 0,
-    "link_to": "employee-org-tree",
-    "link_type": "Page",
-    "onboard": 0,
-    "type": "Link"
+   "label": "Attendance Action Hub",
+   "link_count": 0,
+   "link_to": "attendance-action-hub",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
   },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-  "label": "Team Attendance Review",
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Employee Org Tree",
+   "link_count": 0,
+   "link_to": "employee-org-tree",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Team Attendance Review",
    "link_count": 0,
    "link_to": "Team Attendance Review",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-    "label": "Saudi Employee Voice Profile",
-     "link_count": 0,
-     "link_to": "Saudi Employee Voice Profile",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-    "label": "Shift Type",
-     "link_count": 0,
-     "link_to": "Shift Type",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-    "label": "Shift Assignment",
-     "link_count": 0,
-     "link_to": "Shift Assignment",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-    "label": "Shift Assignment Tool",
-     "link_count": 0,
-     "link_to": "Shift Assignment Tool",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-    "label": "Attendance Location",
-     "link_count": 0,
-     "link_to": "Attendance Location",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Saudi Employee Voice Profile",
+   "link_count": 0,
+   "link_to": "Saudi Employee Voice Profile",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shift Type",
+   "link_count": 0,
+   "link_to": "Shift Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shift Assignment",
+   "link_count": 0,
+   "link_to": "Shift Assignment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shift Assignment Tool",
+   "link_count": 0,
+   "link_to": "Shift Assignment Tool",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Attendance Location",
+   "link_count": 0,
+   "link_to": "Attendance Location",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
   {
    "hidden": 0,
    "is_query_report": 0,
@@ -481,56 +481,56 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Saudi Annual Leave",
-    "link_count": 0,
-    "link_to": "Saudi Annual Leave",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Saudi Sick Leave",
-    "link_count": 0,
-    "link_to": "Saudi Sick Leave",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Maternity Paternity Leave",
-    "link_count": 0,
-    "link_to": "Maternity Paternity Leave",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Special Leave",
-    "link_count": 0,
-    "link_to": "Special Leave",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Employee Loan",
-    "link_count": 0,
-    "link_to": "Employee Loan",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
+   "label": "Saudi Annual Leave",
+   "link_count": 0,
+   "link_to": "Saudi Annual Leave",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Saudi Sick Leave",
+   "link_count": 0,
+   "link_to": "Saudi Sick Leave",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Maternity Paternity Leave",
+   "link_count": 0,
+   "link_to": "Maternity Paternity Leave",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Special Leave",
+   "link_count": 0,
+   "link_to": "Special Leave",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Employee Loan",
+   "link_count": 0,
+   "link_to": "Employee Loan",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "GOSI Contribution",
    "link_count": 0,
    "link_to": "GOSI Contribution",
@@ -551,8 +551,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "الأداء والتطوير",
-    "link_count": 4,
+   "label": "الأداء والتطوير",
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -567,26 +567,26 @@
    "onboard": 0,
    "type": "Link"
   },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-     "label": "Salary Adjustment",
-     "link_count": 0,
-     "link_to": "Salary Adjustment",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
-    {
-     "hidden": 0,
-     "is_query_report": 0,
-     "label": "Promotion Transfer",
-     "link_count": 0,
-     "link_to": "Promotion Transfer",
-     "link_type": "DocType",
-     "onboard": 0,
-     "type": "Link"
-    },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Salary Adjustment",
+   "link_count": 0,
+   "link_to": "Salary Adjustment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Promotion Transfer",
+   "link_count": 0,
+   "link_to": "Promotion Transfer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
   {
    "hidden": 0,
    "is_query_report": 0,
@@ -600,7 +600,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "علاقات الموظفين",
+   "label": "علاقات الموظفين",
    "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
@@ -639,35 +639,35 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Absence Case",
-    "link_count": 0,
-    "link_to": "Absence Case",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Work Injury",
-    "link_count": 0,
-    "link_to": "Work Injury",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "الامتثال والشؤون القانونية",
-    "link_count": 6,
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Card Break"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
+   "label": "Absence Case",
+   "link_count": 0,
+   "link_to": "Absence Case",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Work Injury",
+   "link_count": 0,
+   "link_to": "Work Injury",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "الامتثال والشؤون القانونية",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Disciplinary Procedure",
    "link_count": 0,
    "link_to": "Disciplinary Procedure",
@@ -728,8 +728,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "إنهاء الخدمة والمغادرة",
-    "link_count": 5,
+   "label": "إنهاء الخدمة والمغادرة",
+   "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -747,26 +747,26 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-    "label": "Exit Clearance",
-    "link_count": 0,
-    "link_to": "Exit Clearance",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
-    "label": "Exit Interview",
-    "link_count": 0,
-    "link_to": "Exit Interview",
-    "link_type": "DocType",
-    "onboard": 0,
-    "type": "Link"
-    },
-    {
-    "hidden": 0,
-    "is_query_report": 0,
+   "label": "Exit Clearance",
+   "link_count": 0,
+   "link_to": "Exit Clearance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Exit Interview",
+   "link_count": 0,
+   "link_to": "Exit Interview",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "End of Service Benefit",
    "link_count": 0,
    "link_to": "End of Service Benefit",
@@ -787,7 +787,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-  "label": "التقارير والتحليلات",
+   "label": "التقارير والتحليلات",
    "link_count": 15,
    "link_type": "Report",
    "onboard": 0,
@@ -925,18 +925,18 @@
   },
   {
    "hidden": 0,
-  "is_query_report": 1,
+   "is_query_report": 1,
    "label": "WPS Export Report",
    "link_count": 0,
-  "link_to": "WPS Export Report",
-  "link_type": "Report",
+   "link_to": "WPS Export Report",
+   "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 1,
-  "label": "WPS Submission Tracker",
+   "label": "WPS Submission Tracker",
    "link_count": 0,
    "link_to": "WPS Submission Tracker",
    "link_type": "Report",
@@ -1013,18 +1013,18 @@
  "public": 1,
  "quick_lists": [],
  "roles": [],
- "sequence_id": 29.0,
+ "sequence_id": 29,
  "shortcuts": [
   {
    "color": "Blue",
-  "doc_view": "List",
+   "doc_view": "List",
    "label": "Hiring Requisition",
    "link_to": "Hiring Requisition",
    "type": "DocType"
   },
   {
    "color": "Blue",
-  "doc_view": "List",
+   "doc_view": "List",
    "label": "Saudi HR Settings",
    "link_to": "Saudi HR Settings",
    "type": "DocType"
@@ -1115,63 +1115,70 @@
   {
    "color": "Green",
    "doc_view": "List",
-  "label": "Attendance Action Hub",
+   "label": "Professional HR Hub",
+   "link_to": "professional-hr-hub",
+   "type": "Page"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Attendance Action Hub",
    "link_to": "attendance-action-hub",
    "type": "Page"
   },
   {
    "color": "Cyan",
    "doc_view": "List",
-  "label": "Team Attendance Review",
+   "label": "Team Attendance Review",
    "link_to": "Team Attendance Review",
    "type": "Report"
   },
   {
    "color": "Purple",
    "doc_view": "List",
-  "label": "Saudi Employee Voice Profile",
+   "label": "Saudi Employee Voice Profile",
    "link_to": "Saudi Employee Voice Profile",
    "type": "DocType"
   },
   {
    "color": "Blue",
    "doc_view": "List",
-  "label": "Shift Type",
+   "label": "Shift Type",
    "link_to": "Shift Type",
    "type": "DocType"
   },
   {
    "color": "Orange",
    "doc_view": "List",
-  "label": "Shift Assignment",
+   "label": "Shift Assignment",
    "link_to": "Shift Assignment",
    "type": "DocType"
   },
   {
    "color": "Green",
    "doc_view": "List",
-  "label": "Shift Assignment Tool",
+   "label": "Shift Assignment Tool",
    "link_to": "Shift Assignment Tool",
    "type": "DocType"
   },
   {
    "color": "Cyan",
    "doc_view": "List",
-  "label": "Attendance Location",
+   "label": "Attendance Location",
    "link_to": "Attendance Location",
    "type": "DocType"
   },
   {
    "color": "Red",
    "doc_view": "List",
-  "label": "WPS Submission",
+   "label": "WPS Submission",
    "link_to": "WPS Submission",
    "type": "DocType"
   },
   {
    "color": "Cyan",
    "doc_view": "List",
-  "label": "WPS Submission Tracker",
+   "label": "WPS Submission Tracker",
    "link_to": "WPS Submission Tracker",
    "type": "Report"
   }

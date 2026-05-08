@@ -27,6 +27,7 @@
   "notice_period_non_monthly_days",
    "voice_section",
    "enable_voice_verification",
+  "voice_verification_mode",
    "voice_language",
    "voice_whisper_model_size",
    "voice_compute_type",
@@ -182,6 +183,13 @@
     "fieldtype": "Check",
     "label": "Enable Voice Verification / تفعيل التحقق الصوتي"
    },
+    {
+     "default": "Challenge Only / تحدي فقط",
+     "fieldname": "voice_verification_mode",
+     "fieldtype": "Select",
+     "label": "Voice Verification Mode / نمط التحقق الصوتي",
+     "options": "Challenge Only / تحدي فقط\nFull Biometric / بصمة كاملة"
+    },
    {
     "default": "ar",
     "fieldname": "voice_language",

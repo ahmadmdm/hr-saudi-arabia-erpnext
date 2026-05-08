@@ -1117,6 +1117,9 @@ def get_attendance_status():
 	location = _get_location_for_branch(profile.branch)
 	voice_runtime = get_voice_runtime_status()
 	voice_profile = get_employee_voice_profile_status(employee)
+	requires_voice_enrollment = voice_runtime.get("requires_enrollment")
+	if requires_voice_enrollment is None:
+		requires_voice_enrollment = bool(voice_runtime.get("enabled") and not voice_runtime.get("accepts_browser_transcript"))
 
 	last_log_type = None
 	last_checkin_time = None
@@ -1159,9 +1162,13 @@ def get_attendance_status():
 			"voice_challenge_ttl_seconds": schedule.get("voice_challenge_ttl_seconds"),
 			"voice_max_duration_seconds": schedule.get("voice_max_duration_seconds"),
 			"voice_runtime_enabled": voice_runtime.get("enabled"),
+			"voice_runtime_mode": voice_runtime.get("mode"),
 			"voice_runtime_ready": voice_runtime.get("runtime_ready"),
 			"voice_runtime_missing_dependencies": voice_runtime.get("missing_dependencies"),
-			"voice_enrollment_required": bool(voice_runtime.get("enabled") and voice_profile.get("can_self_enroll")),
+			"voice_accepts_browser_transcript": voice_runtime.get("accepts_browser_transcript"),
+			"voice_enrollment_supported": voice_runtime.get("enrollment_supported"),
+			"voice_language": voice_runtime.get("voice_language") or "ar",
+			"voice_enrollment_required": bool(requires_voice_enrollment and voice_profile.get("can_self_enroll")),
 		},
 	}
 
@@ -1181,6 +1188,7 @@ def issue_mobile_voice_challenge():
 	result["voice_policy"] = policy.get("voice_policy")
 	result["voice_max_duration_seconds"] = policy.get("voice_max_duration_seconds")
 	result["has_voice_profile"] = get_employee_voice_profile_status(employee).get("has_voice_profile")
+	result["voice_runtime"] = get_voice_runtime_status()
 	return result
 
 
@@ -1216,9 +1224,12 @@ def do_mobile_checkin(
 	location = _get_location_for_branch(branch)
 	voice_runtime = get_voice_runtime_status()
 	voice_profile = get_employee_voice_profile_status(employee)
+	requires_voice_enrollment = voice_runtime.get("requires_enrollment")
+	if requires_voice_enrollment is None:
+		requires_voice_enrollment = bool(voice_runtime.get("enabled") and not voice_runtime.get("accepts_browser_transcript"))
 	if attachments:
 		frappe.throw(_("مرفقات الحضور والانصراف أزيلت. استخدم الملاحظة أو التحقق الصوتي المخصص بدلاً منها."))
-	if voice_runtime.get("enabled") and voice_profile.get("can_self_enroll"):
+	if requires_voice_enrollment and voice_profile.get("can_self_enroll"):
 		message = _("يجب تسجيل البصمة الصوتية لأول مرة من صفحة الحضور قبل تسجيل أي حركة.")
 		if not voice_runtime.get("runtime_ready"):
 			message = _("تسجيل البصمة الصوتية الأولى مطلوب، لكن محرك التحقق الصوتي غير جاهز في البيئة الحالية.")
