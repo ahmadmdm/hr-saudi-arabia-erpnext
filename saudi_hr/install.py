@@ -3,6 +3,9 @@ install.py — تُنفَّذ عند تثبيت التطبيق لأوّل مرة
 تُنشئ: أنواع الإجازات السعودية، قواعد EOSB، إعدادات GOSI الافتراضية.
 """
 
+import json
+from pathlib import Path
+
 import frappe
 
 
@@ -16,6 +19,7 @@ def _get_existing_employee_approver_fields():
 
 def after_install():
 	create_workflow_states()
+	sync_workflow_configs()
 	ensure_department_approver_role()
 	sync_department_approver_role_assignments()
 	sync_department_approver_company_permissions()
@@ -28,6 +32,7 @@ def after_install():
 def after_migrate():
 	"""Called after every bench migrate — ensures workflow states always exist."""
 	create_workflow_states()
+	sync_workflow_configs()
 	ensure_department_approver_role()
 	sync_department_approver_role_assignments()
 	sync_department_approver_company_permissions()
@@ -193,6 +198,52 @@ def create_workflow_states():
                                 "workflow_state_name": state_name,
                                 "style": style,
                         }).insert(ignore_permissions=True)
+
+
+def sync_workflow_configs():
+	workflow_dir = Path(frappe.get_app_path("saudi_hr", "saudi_hr", "workflow"))
+	if not workflow_dir.exists():
+		return
+
+	for path in sorted(workflow_dir.glob("*/*.json")):
+		with path.open(encoding="utf-8") as workflow_file:
+			workflow_data = json.load(workflow_file)
+
+		if workflow_data.get("doctype") != "Workflow":
+			continue
+
+		workflow_name = workflow_data.get("name") or workflow_data.get("workflow_name")
+		if not workflow_name:
+			continue
+
+		workflow_data["name"] = workflow_name
+		workflow_data["workflow_name"] = workflow_name
+		workflow_data.setdefault("module", "Saudi HR")
+		ensure_workflow_actions(workflow_data)
+
+		try:
+			if frappe.db.exists("Workflow", workflow_name):
+				workflow = frappe.get_doc("Workflow", workflow_name)
+				workflow.update(workflow_data)
+				workflow.save(ignore_permissions=True)
+			else:
+				frappe.get_doc(workflow_data).insert(ignore_permissions=True)
+		except Exception:
+			frappe.log_error(frappe.get_traceback(), f"Saudi HR Workflow Sync Failed: {workflow_name}")
+
+
+def ensure_workflow_actions(workflow_data):
+	for transition in workflow_data.get("transitions", []):
+		action = transition.get("action")
+		if not action or frappe.db.exists("Workflow Action Master", action):
+			continue
+
+		frappe.get_doc(
+			{
+				"doctype": "Workflow Action Master",
+				"workflow_action_name": action,
+			}
+		).insert(ignore_permissions=True)
 
 
 # ─── Leave Types ───────────────────────────────────────────────────────────────

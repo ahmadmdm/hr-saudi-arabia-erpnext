@@ -60,6 +60,10 @@ def _employee_permission(doc, user=None):
 	return bool(employee and getattr(doc, "employee", None) == employee)
 
 
+def _get_existing_employee_fields(fieldnames):
+	return tuple(fieldname for fieldname in fieldnames if frappe.db.has_column("Employee", fieldname))
+
+
 def _employee_or_approver_query(doctype, approver_fields=None, user=None):
 	if _has_elevated_access(user):
 		return ""
@@ -70,12 +74,16 @@ def _employee_or_approver_query(doctype, approver_fields=None, user=None):
 	if employee:
 		conditions.append(f"`tab{doctype}`.`employee` = {frappe.db.escape(employee)}")
 
-	if approver_fields and _has_department_approver_role(user):
-		approver_checks = " OR ".join(
+	approver_fields = _get_existing_employee_fields(approver_fields or ())
+	manager_employee = _get_employee_for_user(user)
+	if _has_department_approver_role(user) and (approver_fields or manager_employee):
+		approver_checks = [
 			f"`tabEmployee`.`{fieldname}` = {frappe.db.escape(user)}" for fieldname in approver_fields
-		)
+		]
+		if "reports_to" in _get_existing_employee_fields(("reports_to",)) and manager_employee:
+			approver_checks.append(f"`tabEmployee`.`reports_to` = {frappe.db.escape(manager_employee)}")
 		conditions.append(
-			f"EXISTS (SELECT 1 FROM `tabEmployee` WHERE `tabEmployee`.`name` = `tab{doctype}`.`employee` AND ({approver_checks}))"
+			f"EXISTS (SELECT 1 FROM `tabEmployee` WHERE `tabEmployee`.`name` = `tab{doctype}`.`employee` AND ({' OR '.join(approver_checks)}))"
 		)
 
 	if not conditions:
@@ -93,11 +101,19 @@ def _employee_or_approver_permission(doc, approver_fields=None, user=None):
 	if employee and getattr(doc, "employee", None) == employee:
 		return True
 
-	if not approver_fields or not _has_department_approver_role(user):
+	approver_fields = _get_existing_employee_fields(approver_fields or ())
+	if not _has_department_approver_role(user):
 		return False
 
 	approver_values = frappe.db.get_value("Employee", getattr(doc, "employee", None), list(approver_fields), as_dict=True) or {}
-	return any(approver_values.get(fieldname) == user for fieldname in approver_fields)
+	if any(approver_values.get(fieldname) == user for fieldname in approver_fields):
+		return True
+
+	manager_employee = _get_employee_for_user(user)
+	if manager_employee and frappe.db.has_column("Employee", "reports_to"):
+		return frappe.db.get_value("Employee", getattr(doc, "employee", None), "reports_to") == manager_employee
+
+	return False
 
 
 def _workflow_role_query(doctype, role, allowed_states, user=None):

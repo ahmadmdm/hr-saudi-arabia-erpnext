@@ -21,6 +21,7 @@
   "leave_balance_before",
   "leave_balance_after",
   "status",
+  "workflow_state",
   "approval_section",
   "approved_by",
   "approval_date",
@@ -126,6 +127,15 @@
    "in_list_view": 1,
    "label": "Status / الحالة",
    "options": "Draft / مسودة\nApproved / موافق عليها\nRejected / مرفوضة\nCancelled / ملغاة",
+   "read_only": 1
+  },
+  {
+    "default": "Draft",
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Workflow State / حالة سير الموافقة",
+   "options": "Workflow State",
    "read_only": 1
   },
   {
