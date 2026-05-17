@@ -3,7 +3,13 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
-from saudi_hr.saudi_hr.utils import assert_doctype_permissions, get_employee_basic_salary as get_current_basic_salary
+from saudi_hr.saudi_hr.utils import (
+	assert_doctype_permissions,
+	get_contract_nationality_lookup,
+	get_employee_basic_salary as get_current_basic_salary,
+	get_employee_nationality,
+	is_saudi_nationality,
+)
 
 # الحد الأقصى لوعاء الاشتراك في التأمينات
 GOSI_MAX_BASE = 45000.0
@@ -20,14 +26,12 @@ class GOSIContribution(Document):
 
 	def _set_nationality(self):
 		if not self.nationality:
-			self.nationality = frappe.db.get_value("Employee", self.employee, "nationality") or ""
+			self.nationality = get_employee_nationality(self.employee) or ""
 
 	def _apply_gosi_rates(self):
 		"""تحديد معدلات GOSI بحسب الجنسية."""
 		settings = frappe.get_single("Saudi HR Settings")
-		is_saudi = (self.nationality or "").lower() in ("saudi", "سعودي", "sa", "saudi arabia")
-
-		if is_saudi:
+		if is_saudi_nationality(self.nationality):
 			self.employee_contribution_rate = flt(settings.gosi_saudi_employee_rate) or 10.0
 			self.employer_contribution_rate = flt(settings.gosi_saudi_employer_rate) or 12.0
 		else:
@@ -198,8 +202,9 @@ def generate_gosi_for_month(company: str, month: str, year: int):
 	employees = frappe.get_all(
 		"Employee",
 		filters={"company": company, "status": "Active"},
-		fields=["name", "employee_name", "nationality"],
+		fields=_get_employee_fetch_fields(),
 	)
+	contract_nationalities = get_contract_nationality_lookup([emp.name for emp in employees])
 
 	created = 0
 	for emp in employees:
@@ -219,6 +224,7 @@ def generate_gosi_for_month(company: str, month: str, year: int):
 			"company": company,
 			"month": month,
 			"year": year,
+			"nationality": emp.get("nationality") or contract_nationalities.get(emp.name) or "",
 			"contribution_base": min(base, GOSI_MAX_BASE),
 		})
 		doc.insert()
@@ -232,3 +238,10 @@ def generate_gosi_for_month(company: str, month: str, year: int):
 	)
 
 	return created
+
+
+def _get_employee_fetch_fields():
+	fields = ["name", "employee_name"]
+	if frappe.get_meta("Employee").has_field("nationality"):
+		fields.append("nationality")
+	return fields

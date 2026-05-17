@@ -3,6 +3,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
+from saudi_hr.saudi_hr.utils import get_contract_nationality_lookup, is_saudi_nationality
+
 
 # Nitaqat band thresholds — approximate general industry values.
 # These should be configured per sector in Saudi HR Settings.
@@ -25,17 +27,16 @@ class NitaqatRecord(Document):
 
 	def _count_employees(self):
 		"""حساب عدد الموظفين السعوديين وغير السعوديين من جدول الموظفين."""
-		saudi_keywords = ("saudi", "سعودي", "sa", "saudi arabia")
-
 		all_employees = frappe.get_all(
 			"Employee",
 			filters={"company": self.company, "status": "Active"},
-			fields=["name", "nationality"],
+			fields=_get_employee_fetch_fields(),
 		)
+		contract_nationalities = get_contract_nationality_lookup([employee.name for employee in all_employees])
 
 		saudi = sum(
 			1 for e in all_employees
-			if (e.nationality or "").lower().strip() in saudi_keywords
+			if is_saudi_nationality(e.get("nationality") or contract_nationalities.get(e.name))
 		)
 
 		self.total_employees = len(all_employees)
@@ -92,3 +93,10 @@ class NitaqatRecord(Document):
 			if pct < t:
 				return t
 		return None
+
+
+def _get_employee_fetch_fields():
+	fields = ["name"]
+	if frappe.get_meta("Employee").has_field("nationality"):
+		fields.append("nationality")
+	return fields

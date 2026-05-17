@@ -86,7 +86,6 @@
    "options": "Department"
   },
   {
-   "fetch_from": "employee.nationality",
    "fieldname": "nationality",
    "fieldtype": "Link",
    "label": "Nationality / الجنسية",

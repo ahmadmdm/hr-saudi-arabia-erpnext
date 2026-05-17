@@ -285,16 +285,33 @@ def _get_employee_details_lookup(employee_rows):
     if not employees:
         return {}
 
-    return {
-        row.name: row
+    fields = _get_existing_fields(
+        "Employee",
+        ["name", "employee_name", "iban", "bank_name", "national_id", "iqama_number", "passport_number", "nationality"],
+    )
+    details = {
+        row.name: frappe._dict(
+            {
+                "name": row.name,
+                "employee_name": row.get("employee_name"),
+                "iban": row.get("iban"),
+                "bank_name": row.get("bank_name"),
+                "national_id": row.get("national_id"),
+                "iqama_number": row.get("iqama_number"),
+                "passport_number": row.get("passport_number"),
+                "nationality": row.get("nationality"),
+            }
+        )
         for row in frappe.get_all(
             "Employee",
             filters={"name": ["in", employees]},
-            fields=["name", "employee_name", "iban", "bank_name", "passport_number", "nationality"],
+            fields=fields,
             limit_page_length=0,
             as_list=False,
         )
     }
+    _merge_contract_identity_details(details, employees)
+    return details
 
 
 def _get_identity_lookup(employee_rows):
@@ -308,11 +325,18 @@ def _get_identity_lookup(employee_rows):
         if identity:
             lookup[row.employee] = str(identity).strip()
 
-    for doctype, fields in (
-        ("Saudi Employment Contract", ["employee", "iqama_number", "passport_number"]),
-        ("Work Permit Iqama", ["employee", "iqama_number"]),
-        ("Employee", ["name", "passport_number"]),
+    for doctype, employee_field, candidate_fields in (
+        ("Saudi Employment Contract", "employee", ["employee", "iqama_number", "passport_number"]),
+        ("Work Permit Iqama", "employee", ["employee", "iqama_number"]),
+        ("Employee", "name", ["name", "national_id", "iqama_number", "passport_number"]),
     ):
+        fields = _get_existing_fields(doctype, candidate_fields)
+        if employee_field not in fields:
+            continue
+        identity_fields = [field for field in ("national_id", "iqama_number", "passport_number") if field in fields]
+        if not identity_fields:
+            continue
+
         for row in frappe.get_all(
             doctype,
             filters={"employee": ["in", employees]} if doctype != "Employee" else {"name": ["in", employees]},
@@ -324,11 +348,47 @@ def _get_identity_lookup(employee_rows):
             employee = row.get("employee") or row.get("name")
             if employee in lookup:
                 continue
-            identity = row.get("iqama_number") or row.get("passport_number")
+            identity = row.get("national_id") or row.get("iqama_number") or row.get("passport_number")
             if identity:
                 lookup[employee] = str(identity).strip()
 
     return lookup
+
+
+def _get_existing_fields(doctype, candidate_fields):
+    if not frappe.db.exists("DocType", doctype):
+        return []
+
+    meta = frappe.get_meta(doctype)
+    existing = []
+    for fieldname in candidate_fields:
+        if fieldname == "name" or meta.has_field(fieldname):
+            existing.append(fieldname)
+    return existing
+
+
+def _merge_contract_identity_details(details, employees):
+    fields = _get_existing_fields(
+        "Saudi Employment Contract",
+        ["employee", "iqama_number", "passport_number", "nationality"],
+    )
+    if "employee" not in fields:
+        return
+
+    for row in frappe.get_all(
+        "Saudi Employment Contract",
+        filters={"employee": ["in", employees], "docstatus": ["<", 2]},
+        fields=fields,
+        order_by="start_date desc, modified desc",
+        limit_page_length=0,
+        as_list=False,
+    ):
+        employee = row.get("employee")
+        if employee not in details:
+            continue
+        for fieldname in ("iqama_number", "passport_number", "nationality"):
+            if fieldname in fields and row.get(fieldname) and not details[employee].get(fieldname):
+                details[employee][fieldname] = row.get(fieldname)
 
 
 def _get_wps_status(iban, identity_value, net_salary):

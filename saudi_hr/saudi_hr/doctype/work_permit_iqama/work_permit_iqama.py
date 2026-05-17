@@ -2,12 +2,19 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import date_diff, getdate, today
 
+from saudi_hr.saudi_hr.utils import get_employee_nationality
+
 
 class WorkPermitIqama(Document):
 
 	def validate(self):
+		self._set_nationality()
 		self._calculate_iqama_status()
 		self._calculate_permit_status()
+
+	def _set_nationality(self):
+		if self.employee and not self.nationality:
+			self.nationality = get_employee_nationality(self.employee)
 
 	def _calculate_iqama_status(self):
 		if not self.iqama_expiry_date:

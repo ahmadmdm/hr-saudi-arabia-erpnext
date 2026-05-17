@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.16.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.16.2-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.16.0-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.16.2-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -97,9 +97,9 @@ Built for establishments of any size operating in Saudi Arabia. Includes:
 
 **بيئة التحقق الحالية | Verified Stack**
 
-- Frappe `15.103.3`
-- ERPNext `15.103.1`
-- Python `3.11`
+- Frappe `15.107.2`
+- ERPNext `15.107.0`
+- Python `3.10`
 - MariaDB `10.6+`
 - Node.js `24.x`
 - لا يعتمد التطبيق على HRMS، ويعمل بشكل مستقل فوق `frappe` و`erpnext` فقط
@@ -151,11 +151,14 @@ bench --site <your-site-name> install-app saudi_hr
 # 3. طبّق الترقيات | Apply schema changes
 bench --site <your-site-name> migrate
 
-# 4. تحقق من التبعيات الأساسية | Verify runtime dependencies
-./env/bin/python -c "import openpyxl, openlocationcode, torch, torchaudio, speechbrain, faster_whisper; print('dependencies ok')"
+# 4. تحقق من التبعيات الأساسية | Verify base runtime dependencies
+./env/bin/python -c "import openpyxl, openlocationcode; print('base dependencies ok')"
 
 # Optional fallback for CPU-only environments with restricted package indexes
 ./env/bin/pip install -r apps/saudi_hr/requirements-voice-cpu.txt
+
+# Optional: verify full voice dependencies after installing voice support
+./env/bin/python -c "import torch, torchaudio, speechbrain, faster_whisper; print('voice dependencies ok')"
 
 # 5. تحقّق من أهم المسارات بعد التثبيت | Validate the key app flows after install
 bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_hr.doctype.special_leave.test_special_leave --module saudi_hr.saudi_hr.doctype.annual_leave_disbursement.test_annual_leave_disbursement --module saudi_hr.saudi_hr.report.saudi_labor_coverage_matrix.test_saudi_labor_coverage_matrix
@@ -163,6 +166,8 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 
 > **توصية تشغيلية:** إذا كنت ستستخدم صفحة الحضور بالجوال أو مواقع Plus Code مباشرة بعد النقل، شغّل `bench restart` أو أعد تشغيل خدمات الويب والـ workers بعد `migrate` لضمان تحميل الأصول وملفات الخدمة الحديثة.  
 > **Operational note:** If you will use the mobile attendance page or Plus Code locations immediately after migration, run `bench restart` or restart the web and worker processes after `migrate` so the latest assets and service worker are loaded.
+
+راجع [DEPENDENCIES.md](DEPENDENCIES.md) لعقد التبعيات الكامل، بما في ذلك تأكيد أن `hrms` ليس اعتماداً مطلوباً.
 
 ---
 

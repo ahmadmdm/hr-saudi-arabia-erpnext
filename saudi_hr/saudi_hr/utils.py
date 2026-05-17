@@ -298,9 +298,8 @@ def get_gosi_rates(nationality: str) -> dict:
 	إرجاع معدلات GOSI حسب الجنسية.
 	"""
 	settings = frappe.get_single("Saudi HR Settings")
-	is_saudi = (nationality or "").lower() in ("saudi", "سعودي", "sa")
 
-	if is_saudi:
+	if is_saudi_nationality(nationality):
 		return {
 			"employee_rate": flt(settings.gosi_saudi_employee_rate) or 10.0,
 			"employer_rate": flt(settings.gosi_saudi_employer_rate) or 12.0,
@@ -310,6 +309,40 @@ def get_gosi_rates(nationality: str) -> dict:
 			"employee_rate": flt(settings.gosi_non_saudi_employee_rate) or 0.0,
 			"employer_rate": flt(settings.gosi_non_saudi_employer_rate) or 2.0,
 		}
+
+
+def is_saudi_nationality(nationality: str) -> bool:
+	text = (nationality or "").strip().lower()
+	if not text:
+		return False
+	return text == "sa" or "saudi" in text or "سعودي" in text
+
+
+def get_employee_nationality(employee: str) -> str:
+	if not employee:
+		return ""
+
+	if frappe.get_meta("Employee").has_field("nationality"):
+		return frappe.db.get_value("Employee", employee, "nationality") or ""
+
+	return get_contract_nationality_lookup([employee]).get(employee) or ""
+
+
+def get_contract_nationality_lookup(employees: list[str]) -> dict[str, str]:
+	if not employees:
+		return {}
+
+	lookup = {}
+	for row in frappe.get_all(
+		"Saudi Employment Contract",
+		filters={"employee": ["in", employees], "docstatus": ["<", 2]},
+		fields=["employee", "nationality"],
+		order_by="start_date desc, modified desc",
+		limit_page_length=0,
+	):
+		if row.get("nationality") and row.employee not in lookup:
+			lookup[row.employee] = row.nationality
+	return lookup
 
 
 def get_sick_leave_pay(employee: str, sick_days_this_year: int) -> dict:

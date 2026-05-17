@@ -2,10 +2,13 @@ import frappe
 from frappe.model.document import Document
 from frappe import _
 
+from saudi_hr.saudi_hr.utils import get_employee_nationality
+
 
 class TrainingRecord(Document):
     def validate(self):
         self._validate_dates()
+        self._set_nationality()
         self._set_mandatory_flag()
 
     def _validate_dates(self):
@@ -16,6 +19,10 @@ class TrainingRecord(Document):
     def _set_mandatory_flag(self):
         if self.training_type and "Saudization" in self.training_type:
             self.is_saudization_related = 1
+
+    def _set_nationality(self):
+        if self.employee and not self.nationality:
+            self.nationality = get_employee_nationality(self.employee)
 
     def on_submit(self):
         if not self.result:

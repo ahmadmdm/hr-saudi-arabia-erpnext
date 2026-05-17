@@ -77,7 +77,6 @@
    "reqd": 1
   },
   {
-   "fetch_from": "employee.nationality",
    "fieldname": "nationality",
    "fieldtype": "Data",
    "label": "Nationality / الجنسية"

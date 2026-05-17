@@ -1,7 +1,7 @@
 frappe.ui.form.on("Training Record", {
     employee: function (frm) {
         if (frm.doc.employee) {
-            frappe.db.get_value("Employee", frm.doc.employee, ["employee_name", "company", "department", "nationality"], (r) => {
+            frappe.db.get_value("Employee", frm.doc.employee, ["employee_name", "company", "department"], (r) => {
                 if (r) {
                     frm.set_value("employee_name", r.employee_name);
                     frm.set_value("company", r.company);

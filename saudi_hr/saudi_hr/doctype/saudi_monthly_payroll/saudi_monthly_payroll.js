@@ -1110,7 +1110,7 @@ function _calc_row(frm, cdt, cdn) {
 
     // GOSI اقتطاع الموظف
     const nat = (row.nationality || '').toLowerCase();
-    const is_saudi = ['saudi', 'سعودي', 'sa', 'saudi arabia'].includes(nat);
+    const is_saudi = nat === 'sa' || nat.includes('saudi') || nat.includes('سعودي');
     const gosi_rate = is_saudi ? 10.0 : 0.0;
     const gosi_base = Math.min(basic, 45000);
     const gosi_ded  = parseFloat((gosi_base * gosi_rate / 100).toFixed(2));

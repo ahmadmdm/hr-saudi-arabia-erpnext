@@ -68,7 +68,7 @@ frappe.ui.form.on('GOSI Contribution', {
 
 function _apply_rates(frm) {
     const nat = (frm.doc.nationality || '').toLowerCase();
-    const is_saudi = ['saudi', 'سعودي', 'sa', 'saudi arabia'].includes(nat);
+    const is_saudi = nat === 'sa' || nat.includes('saudi') || nat.includes('سعودي');
     if (is_saudi) {
         frm.set_value('employee_contribution_rate', 10.0);
         frm.set_value('employer_contribution_rate', 12.0);
