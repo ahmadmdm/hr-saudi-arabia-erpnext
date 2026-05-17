@@ -749,7 +749,7 @@ def _auto_create_missing_employees_for_import(doc) -> dict:
 def create_journal_entry_from_payroll(doc_name: str):
 	"""
 	إنشاء قيد يومي مباشر من بيانات Saudi Monthly Payroll
-	بدلاً من الاعتماد على Payroll Entry في ERPNext/HRMS.
+	بدلاً من الاعتماد على Payroll Entry خارجي.
 	يُستدعى من زر "Create Journal Entry".
 	"""
 	import calendar as _cal

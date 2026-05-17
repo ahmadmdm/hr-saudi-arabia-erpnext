@@ -102,8 +102,8 @@
     {
      "fieldname": "shift_type",
      "fieldtype": "Link",
-     "label": "Shift Type / الوردية",
-     "options": "Shift Type",
+     "label": "Saudi Shift Type / الوردية السعودية",
+     "options": "Saudi Shift Type",
      "read_only": 1
     },
     {

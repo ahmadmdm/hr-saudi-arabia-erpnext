@@ -68,7 +68,7 @@ doctype_js = {
 }
 
 # ─── Custom Fields on Employee ──────────────────────────────────────────────────
-# Added via install.py to avoid modifying ERPNext/HRMS directly
+# Added via install.py to avoid modifying ERPNext directly
 # custom_fields = {}
 
 # ─── Jinja ──────────────────────────────────────────────────────────────────────

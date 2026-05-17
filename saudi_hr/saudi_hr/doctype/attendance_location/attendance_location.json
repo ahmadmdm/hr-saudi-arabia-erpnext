@@ -147,8 +147,8 @@
   {
    "fieldname": "default_shift_type",
    "fieldtype": "Link",
-   "label": "Default Shift Type / الوردية الافتراضية",
-   "options": "Shift Type"
+   "label": "Default Saudi Shift Type / الوردية السعودية الافتراضية",
+   "options": "Saudi Shift Type"
   },
   {
    "fieldname": "column_break_policy",

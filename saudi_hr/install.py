@@ -25,6 +25,7 @@ def after_install():
 	sync_department_approver_company_permissions()
 	sync_dashboard_chart_configs()
 	sync_notification_configs()
+	create_default_saudi_shift_type()
 	create_default_settings()
 	frappe.db.commit()
 
@@ -38,6 +39,8 @@ def after_migrate():
 	sync_department_approver_company_permissions()
 	sync_dashboard_chart_configs()
 	sync_notification_configs()
+	create_default_saudi_shift_type()
+	migrate_legacy_shift_data()
 	migrate_legacy_annual_leave()
 	migrate_legacy_employee_loans()
 
@@ -246,10 +249,113 @@ def ensure_workflow_actions(workflow_data):
 		).insert(ignore_permissions=True)
 
 
+# ─── Saudi Shift Management ───────────────────────────────────────────────────
+
+def create_default_saudi_shift_type():
+	"""Create a local Saudi HR shift so attendance works without an external HR app."""
+	if not frappe.db.exists("DocType", "Saudi Shift Type"):
+		return
+	if frappe.db.exists("Saudi Shift Type", "Day Shift"):
+		return
+
+	frappe.get_doc(
+		{
+			"doctype": "Saudi Shift Type",
+			"shift_name": "Day Shift",
+			"start_time": "08:00:00",
+			"end_time": "17:00:00",
+			"begin_check_in_before_shift_start_time": 60,
+			"allow_check_out_after_shift_end_time": 60,
+			"enable_late_entry_marking": 1,
+			"late_entry_grace_period": 15,
+			"enable_early_exit_marking": 1,
+			"early_exit_grace_period": 15,
+		}
+	).insert(ignore_permissions=True)
+
+
+def migrate_legacy_shift_data():
+	"""Copy legacy shift records into Saudi HR-owned doctypes before removing the old app."""
+	if not frappe.db.exists("DocType", "Saudi Shift Type"):
+		return
+
+	if frappe.db.exists("DocType", "Shift Type"):
+		shift_type_fields = [
+			"name",
+			"start_time",
+			"end_time",
+			"begin_check_in_before_shift_start_time",
+			"allow_check_out_after_shift_end_time",
+			"enable_late_entry_marking",
+			"late_entry_grace_period",
+			"enable_early_exit_marking",
+			"early_exit_grace_period",
+		]
+		if frappe.db.has_column("Shift Type", "disabled"):
+			shift_type_fields.append("disabled")
+
+		for row in frappe.get_all(
+			"Shift Type",
+			fields=shift_type_fields,
+		):
+			if frappe.db.exists("Saudi Shift Type", row.name):
+				continue
+			frappe.get_doc(
+				{
+					"doctype": "Saudi Shift Type",
+					"shift_name": row.name,
+					"start_time": row.start_time,
+					"end_time": row.end_time,
+					"begin_check_in_before_shift_start_time": row.begin_check_in_before_shift_start_time,
+					"allow_check_out_after_shift_end_time": row.allow_check_out_after_shift_end_time,
+					"enable_late_entry_marking": row.enable_late_entry_marking,
+					"late_entry_grace_period": row.late_entry_grace_period,
+					"enable_early_exit_marking": row.enable_early_exit_marking,
+					"early_exit_grace_period": row.early_exit_grace_period,
+					"disabled": row.get("disabled", 0),
+				}
+			).insert(ignore_permissions=True)
+
+	if not frappe.db.exists("DocType", "Saudi Shift Assignment") or not frappe.db.exists("DocType", "Shift Assignment"):
+		return
+
+	for row in frappe.get_all(
+		"Shift Assignment",
+		fields=["name", "employee", "shift_type", "start_date", "end_date", "status", "docstatus"],
+	):
+		if not frappe.db.exists("Saudi Shift Type", row.shift_type):
+			continue
+		if frappe.db.exists(
+			"Saudi Shift Assignment",
+			{
+				"employee": row.employee,
+				"shift_type": row.shift_type,
+				"start_date": row.start_date,
+				"end_date": row.end_date,
+			},
+		):
+			continue
+
+		doc = frappe.get_doc(
+			{
+				"doctype": "Saudi Shift Assignment",
+				"employee": row.employee,
+				"shift_type": row.shift_type,
+				"start_date": row.start_date,
+				"end_date": row.end_date,
+				"status": row.status or "Active",
+				"notes": f"Migrated from legacy Shift Assignment {row.name}",
+			}
+		)
+		doc.insert(ignore_permissions=True)
+		if row.docstatus == 1:
+			doc.submit()
+
+
 # ─── Leave Types ───────────────────────────────────────────────────────────────
 
 def migrate_legacy_annual_leave():
-	"""Copy legacy annual leave requests into Saudi Annual Leave before HRMS removal."""
+	"""Copy legacy annual leave requests into Saudi Annual Leave before removing the old app."""
 	if not frappe.db.exists("DocType", "Saudi Annual Leave"):
 		return
 	if not frappe.db.exists("DocType", "Leave Application"):

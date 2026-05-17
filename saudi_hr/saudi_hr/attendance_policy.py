@@ -9,7 +9,7 @@ VOICE_POLICY_REQUIRED = "Required / إلزامي"
 
 def _get_shift_assignment(employee, attendance_date):
 	assignment = frappe.db.get_value(
-		"Shift Assignment",
+		"Saudi Shift Assignment",
 		{
 			"employee": employee,
 			"status": "Active",
@@ -20,13 +20,13 @@ def _get_shift_assignment(employee, attendance_date):
 		["name", "shift_type", "start_date", "end_date"],
 		as_dict=True,
 	)
-	if assignment or not frappe.db.exists("DocType", "Shift Assignment"):
+	if assignment or not frappe.db.exists("DocType", "Saudi Shift Assignment"):
 		return assignment
 
 	rows = frappe.db.sql(
 		"""
 		SELECT name, shift_type, start_date, end_date
-		FROM `tabShift Assignment`
+		FROM `tabSaudi Shift Assignment`
 		WHERE employee = %s
 		  AND status = 'Active'
 		  AND docstatus = 1
@@ -45,7 +45,7 @@ def _get_shift_type(shift_type):
 	if not shift_type:
 		return None
 	return frappe.db.get_value(
-		"Shift Type",
+		"Saudi Shift Type",
 		shift_type,
 		[
 			"name",
@@ -149,7 +149,7 @@ def resolve_mobile_attendance_policy(employee, attendance_date, location=None):
 	attendance_date = getdate(attendance_date)
 	assignment = _get_shift_assignment(employee, attendance_date)
 	shift_type_name = assignment.shift_type if assignment else None
-	policy_source = "Shift Assignment"
+	policy_source = "Saudi Shift Assignment"
 
 	if not shift_type_name and location:
 		shift_type_name = location.get("default_shift_type")

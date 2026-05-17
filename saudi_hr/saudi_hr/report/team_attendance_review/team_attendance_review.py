@@ -40,7 +40,7 @@ def get_columns():
 		{"fieldname": "department", "label": _("Department / القسم"), "fieldtype": "Link", "options": "Department", "width": 150},
 		{"fieldname": "attendance_status", "label": _("Attendance Status / حالة الحركة"), "fieldtype": "Data", "width": 180},
 		{"fieldname": "schedule_status", "label": _("Shift Status / حالة الوردية"), "fieldtype": "Data", "width": 190},
-		{"fieldname": "shift_type", "label": _("Shift / الوردية"), "fieldtype": "Link", "options": "Shift Type", "width": 140},
+		{"fieldname": "shift_type", "label": _("Saudi Shift / الوردية السعودية"), "fieldtype": "Link", "options": "Saudi Shift Type", "width": 140},
 		{"fieldname": "attendance_location", "label": _("Location / الموقع"), "fieldtype": "Link", "options": "Attendance Location", "width": 150},
 		{"fieldname": "expected_start", "label": _("Expected Start / البداية المتوقعة"), "fieldtype": "Datetime", "width": 165},
 		{"fieldname": "expected_end", "label": _("Expected End / النهاية المتوقعة"), "fieldtype": "Datetime", "width": 165},
