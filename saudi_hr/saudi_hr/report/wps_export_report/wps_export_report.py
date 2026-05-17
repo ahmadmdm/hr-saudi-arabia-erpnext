@@ -150,7 +150,7 @@ def get_columns():
 def get_data(filters):
     payroll_name = filters.get("payroll_document")
     if not payroll_name:
-        frappe.throw(_("Please select a Saudi Monthly Payroll document"))
+        return []
 
     payroll = frappe.get_doc("Saudi Monthly Payroll", payroll_name)
     company = payroll.company

@@ -1,3 +1,6 @@
+from urllib.parse import unquote
+
+import frappe
 from frappe.tests.utils import FrappeTestCase
 
 from saudi_hr.saudi_hr.professional_hr_catalog import get_professional_hr_catalog, get_professional_hr_feature
@@ -50,3 +53,34 @@ class TestProfessionalHrCatalog(FrappeTestCase):
 		self.assertEqual(result["category"]["id"], "time")
 		self.assertTrue(result["related"])
 		self.assertGreaterEqual(result["catalog_summary"]["total_features"], 70)
+
+	def test_every_feature_has_a_valid_target_and_staged_routes(self):
+		catalog = get_professional_hr_catalog()
+		category_ids = {category["id"] for category in catalog["categories"]}
+		feature_ids = [feature["id"] for feature in catalog["features"]]
+
+		self.assertEqual(len(feature_ids), len(set(feature_ids)))
+
+		for feature in catalog["features"]:
+			self.assertIn(feature["category"], category_ids)
+			self.assertEqual(feature["detail_route"], f"/app/professional-hr-feature/{feature['id']}")
+
+			if feature["target_type"] == "DocType" and feature.get("allow_entry") is not False:
+				self.assertEqual(feature["entry_route"], f"/app/professional-hr-entry/{feature['id']}")
+			else:
+				self.assertNotIn("entry_route", feature)
+
+			target_type = feature.get("route_target_type") or feature["target_type"]
+			target = feature.get("route_target") or feature["target"]
+			if target_type == "DocType":
+				self.assertTrue(frappe.db.exists("DocType", target), feature["id"])
+			elif target_type == "Page":
+				self.assertTrue(frappe.db.exists("Page", target), feature["id"])
+			elif target_type == "Report":
+				self.assertTrue(frappe.db.exists("Report", target), feature["id"])
+			else:
+				self.assertTrue(feature["route"].startswith("/"), feature["id"])
+
+			if feature["target_type"] == "URL" and feature["route"].startswith("/app/workflow/"):
+				workflow_name = unquote(feature["route"].split("/app/workflow/", 1)[1])
+				self.assertTrue(frappe.db.exists("Workflow", workflow_name), feature["id"])

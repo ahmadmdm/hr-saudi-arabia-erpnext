@@ -4,8 +4,7 @@ frappe.query_reports["WPS Export Report"] = {
             fieldname: "payroll_document",
             label: __("Saudi Monthly Payroll"),
             fieldtype: "Link",
-            options: "Saudi Monthly Payroll",
-            reqd: 1
+            options: "Saudi Monthly Payroll"
         }
     ],
 
