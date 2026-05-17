@@ -1,47 +1,75 @@
-<div dir="rtl" align="right">
+<div align="center" dir="rtl">
 
-# نظام إدارة الموارد البشرية — المملكة العربية السعودية
+# Saudi HR for ERPNext
 
-**تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
-المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
+## نظام موارد بشرية سعودي مستقل لبيئات ERPNext v15
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.16.3-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
-[![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
-[![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
-[![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
+**تشغيل يومي، امتثال سعودي، رواتب، حضور، عقود، وموافقات في تجربة واحدة مصممة للمنشآت داخل المملكة.**
 
-</div>
+<br>
 
----
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.3"><img alt="Version 1.16.3" src="https://img.shields.io/badge/version-1.16.3-0F766E?style=for-the-badge"></a>
+<img alt="Frappe v15" src="https://img.shields.io/badge/Frappe-v15-2563EB?style=for-the-badge">
+<img alt="ERPNext v15" src="https://img.shields.io/badge/ERPNext-v15-7C3AED?style=for-the-badge">
+<img alt="No HRMS dependency" src="https://img.shields.io/badge/HRMS-not%20required-16A34A?style=for-the-badge">
+<a href="LICENSE"><img alt="GPL 3.0" src="https://img.shields.io/badge/license-GPL--3.0-EA580C?style=for-the-badge"></a>
 
-<div dir="ltr" align="left">
+<br><br>
 
-# Saudi HR — Saudi Arabia Labor Law ERP Module
-
-**A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
-Royal Decree No. M/51 of 1426H and its amendments through 1446H
-
-[![Version](https://img.shields.io/badge/version-1.16.3-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
-[![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
-[![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
-[![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
+<a href="#-بطاقة-المنتج--product-card">بطاقة المنتج</a>
+ · <a href="#-الجولة-السريعة--quick-tour">الجولة السريعة</a>
+ · <a href="#-التثبيت--installation">التثبيت</a>
+ · <a href="#-المكونات--features">المكونات</a>
+ · <a href="#-سجل-التغييرات--changelog">الإصدارات</a>
 
 </div>
 
+<br>
+
+<p align="center">
+  <img src="docs/images/professional-hr-hub-desktop.png" alt="Professional HR Hub desktop dashboard" width="100%">
+</p>
+
+<p align="center">
+  <sub>واجهة <strong>Professional HR Hub</strong> الفعلية من الاختبار البصري: مؤشرات، إجراءات، امتثال، وتنقل سريع من شاشة واحدة.</sub>
+</p>
+
 ---
 
-## 📋 فهرس المحتويات | Table of Contents
+## 📌 بطاقة المنتج | Product Card
 
-- [نظرة عامة | Overview](#-نظرة-عامة--overview)
-- [الجولة المرئية | Visual Product Tour](#-الجولة-المرئية--visual-product-tour)
-- [المتطلبات | Requirements](#-المتطلبات--requirements)
-- [التثبيت | Installation](#-التثبيت--installation)
-- [المكونات | Features](#-المكونات--features)
-- [التغطية القانونية | Legal Coverage](#-التغطية-القانونية--legal-coverage)
-- [الاستخدام | Usage](#-الاستخدام--usage)
-- [سجل التغييرات | Changelog](#-سجل-التغييرات--changelog)
-- [المساهمة | Contributing](#-المساهمة--contributing)
-- [الرخصة | License](#-الرخصة--license)
+<table>
+<tr>
+<td width="25%" align="center">
+  <strong>Standalone</strong>
+  <br>
+  يعمل فوق <code>frappe</code> و<code>erpnext</code> فقط
+  <br>
+  <sub>لا يحتاج HRMS</sub>
+</td>
+<td width="25%" align="center">
+  <strong>Saudi Compliance</strong>
+  <br>
+  GOSI, WPS, Nitaqat, EOSB
+  <br>
+  <sub>مهيأ لنظام العمل السعودي</sub>
+</td>
+<td width="25%" align="center">
+  <strong>Operational Hub</strong>
+  <br>
+  واجهة Professional HR Hub
+  <br>
+  <sub>للعمل اليومي لا للعروض فقط</sub>
+</td>
+<td width="25%" align="center">
+  <strong>Ready to Move</strong>
+  <br>
+  تبعيات موثقة واختبارات جاهزة
+  <br>
+  <sub>أسهل عند النقل لبيئة أخرى</sub>
+</td>
+</tr>
+</table>
 
 ---
 
@@ -51,101 +79,92 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 <tr>
 <td width="50%" dir="rtl" align="right">
 
-### 🇸🇦 بالعربية
+### بالعربية
 
-**saudi_hr** هو طبقة تشغيل موارد بشرية سعودية مستقلة فوق **Frappe + ERPNext**، وليس امتدادًا تابعًا لـ HRMS. صُمّم ليجمع العمل اليومي، الامتثال، الرواتب، الحضور، العقود، والموافقات داخل تجربة واحدة واضحة للمنشآت العاملة في المملكة.
+**saudi_hr** ليس مجرد مجموعة DocTypes. هو مساحة تشغيل موارد بشرية سعودية متكاملة داخل ERPNext: يبدأ من متابعة اليوم، يمر بالحضور والورديات والإجازات والرواتب، وينتهي بالتقارير النظامية والوثائق الرسمية.
 
-الفكرة الأساسية: أن يكون لدى فريق الموارد البشرية لوحة عمل جاهزة تشبه طريقة العمل الفعلية داخل المنشأة، من التوظيف وحتى نهاية الخدمة، مع توثيق نظامي قابل للتدقيق.
+صُمّم التطبيق ليبقى مستقلًا عن HRMS، وهذا يجعل نقله وترقيته أوضح في البيئات التي تريد ERPNext مع طبقة موارد بشرية سعودية متخصصة فقط.
 
-- مستقل عن HRMS ويعتمد فقط على `frappe` و`erpnext`
-- واجهة تشغيل احترافية عبر صفحة **professional-hr-hub**
-- مساحة عمل Saudi HR مرتبة للعمليات اليومية والامتثال
-- عقود، حضور، إجازات، مخالفات، رواتب، WPS، GOSI، نطاقات
-- تقارير ولوحات متابعة قابلة للاستخدام الفوري بعد التثبيت
-- صيغ طباعة عربية RTL ومسارات موافقة للقرارات الحساسة
+**النتيجة:** تجربة HR عملية، عربية، قابلة للتدقيق، ومتصلة بالاحتياج السعودي الحقيقي.
 
 </td>
-<td width="50%" align="left">
+<td width="50%" dir="ltr" align="left">
 
-### 🇬🇧 In English
+### In English
 
-**saudi_hr** is an independent Saudi HR operations layer for **Frappe + ERPNext**. It is not an HRMS-dependent module. It brings daily HR work, compliance, payroll, attendance, contracts, and approvals into one practical experience for Saudi-based organizations.
+**saudi_hr** is more than a set of DocTypes. It is a Saudi HR operating layer inside ERPNext: daily monitoring, attendance, shifts, leaves, payroll, compliance reports, and official documents in one focused experience.
 
-The product goal is simple: give HR teams an operational cockpit that follows how work actually moves inside a company, from hiring to exit, with auditable Saudi labor compliance built in.
+The app is deliberately independent from HRMS, making deployment and upgrades clearer for teams that want ERPNext with a dedicated Saudi HR layer.
 
-- No HRMS dependency; runs on `frappe` and `erpnext`
-- Professional operating console through **professional-hr-hub**
-- Saudi HR Workspace organized for daily operations and compliance
-- Contracts, attendance, leaves, discipline, payroll, WPS, GOSI, Nitaqat
-- Ready-to-use reports and dashboards after installation
-- Arabic RTL print formats and approval workflows for sensitive decisions
+**The result:** a practical, auditable, Arabic-first HR experience for Saudi operations.
 
 </td>
 </tr>
 </table>
 
-### ما الذي يميّزه؟ | What Makes It Different?
+### لماذا يلفت الانتباه؟ | Why It Stands Out
 
 | المسار | Track | القيمة العملية |
 |--------|-------|----------------|
-| تجربة تشغيلية | Operational UX | واجهة تبدأ من عمل HR اليومي، لا من قائمة مستندات جامدة |
-| استقلالية تقنية | Technical Independence | لا يحتاج HRMS، مما يقلل التبعيات عند النقل أو الترقية |
-| امتثال سعودي | Saudi Compliance | تغطية GOSI، WPS، نطاقات، الإجازات، نهاية الخدمة، العقود، والإصابات |
+| تجربة تشغيلية | Operational UX | يبدأ من عمل HR اليومي بدل قائمة مستندات طويلة |
+| استقلالية تقنية | Technical Independence | لا يعتمد على HRMS ويعمل فوق `frappe` و`erpnext` فقط |
+| امتثال سعودي | Saudi Compliance | يغطي GOSI، WPS، نطاقات، الإجازات، نهاية الخدمة، العقود، والإصابات |
 | جاهزية ميدانية | Field Readiness | حضور جوال، مواقع، ورديات، مراجعة فريق، وشجرة تنظيمية |
-| توثيق رسمي | Official Output | صيغ طباعة عربية ومسارات اعتماد قابلة للتدقيق |
+| توثيق رسمي | Official Output | صيغ طباعة عربية ومسارات اعتماد قابلة للمراجعة |
 
 ---
 
-## 🖼️ الجولة المرئية | Visual Product Tour
-
-<div align="center">
-  <img src="docs/images/professional-hr-hub-desktop.png" alt="Professional HR Hub desktop dashboard" width="100%">
-  <p><strong>Professional HR Hub</strong> — واجهة تشغيل مركزية تجمع المؤشرات، الإجراءات، الامتثال، والتنقل السريع في أول شاشة.</p>
-</div>
+## 🖼️ الجولة السريعة | Quick Tour
 
 <table>
 <tr>
-<td width="50%" align="center">
+<td width="58%" align="center">
   <img src="docs/images/saudi-hr-workspace.png" alt="Saudi HR Workspace" width="100%">
-  <br>
-  <strong>Saudi HR Workspace</strong>
-  <br>
-  مساحة عمل مرتبة حسب دورة العمل: متابعة اليوم، عمليات الموظف، السياسات، الرواتب، والامتثال.
 </td>
-<td width="50%" align="center">
-  <img src="docs/images/professional-hr-hub-mobile.png" alt="Professional HR Hub mobile" width="60%">
-  <br>
-  <strong>Responsive Experience</strong>
-  <br>
-  الواجهة الأساسية تعمل بوضوح على الجوال لمراجعة المؤشرات والتنقل السريع أثناء العمل الميداني.
+<td width="42%" dir="rtl" align="right">
+  <h3>1. ابدأ من مساحة عمل مرتبة</h3>
+  <p>مساحة Saudi HR تقسم العمل حسب الاستخدام الفعلي: متابعة اليوم، عمليات الموظف، الحضور، الرواتب، السياسات، والامتثال.</p>
 </td>
 </tr>
 <tr>
-<td width="50%" align="center">
+<td width="58%" align="center">
   <img src="docs/images/team-attendance-review.png" alt="Team Attendance Review report" width="100%">
-  <br>
-  <strong>Team Attendance Review</strong>
-  <br>
-  مراجعة الحضور والتأخير والحركات المفتوحة ومشكلات التحقق من شاشة واحدة.
 </td>
-<td width="50%" align="center">
-  <img src="docs/images/leave-balance-report.png" alt="Saudi Leave Balance report" width="100%">
-  <br>
-  <strong>Saudi Leave Balance</strong>
-  <br>
-  قراءة دقيقة لأرصدة الإجازات السعودية وربطها بالسياسات والاعتمادات.
+<td width="42%" dir="rtl" align="right">
+  <h3>2. راقب الحضور قبل أن يتحول إلى مشكلة</h3>
+  <p>تقرير مراجعة الفريق يساعد المشرفين وHR على رؤية التأخير، الغياب، الحركات المفتوحة، ومشكلات التحقق من نفس الشاشة.</p>
 </td>
 </tr>
 <tr>
-<td colspan="2" align="center">
+<td width="58%" align="center">
+  <img src="docs/images/leave-balance-report.png" alt="Saudi Leave Balance report" width="100%">
+</td>
+<td width="42%" dir="rtl" align="right">
+  <h3>3. اربط الإجازات بالسياسات السعودية</h3>
+  <p>أرصدة الإجازات تظهر بصورة قابلة للمراجعة، مع مسارات اعتماد مناسبة للموظف والمدير والموارد البشرية والمالية.</p>
+</td>
+</tr>
+<tr>
+<td width="58%" align="center">
   <img src="docs/images/employee-org-tree.png" alt="Employee Org Tree page" width="100%">
-  <br>
-  <strong>Employee Org Tree</strong>
-  <br>
-  خريطة تنظيمية تساعد HR والمدراء على فهم العلاقات الإدارية، الأقسام، والموافقين بسرعة.
+</td>
+<td width="42%" dir="rtl" align="right">
+  <h3>4. افهم الهيكل قبل القرار</h3>
+  <p>الشجرة التنظيمية تعرض الأقسام، العلاقات الإدارية، والموافقين حتى تصبح القرارات الإدارية أسرع وأوضح.</p>
 </td>
 </tr>
 </table>
+
+<details>
+<summary><strong>Mobile view | عرض الجوال</strong></summary>
+<br>
+<p align="center">
+  <img src="docs/images/professional-hr-hub-mobile.png" alt="Professional HR Hub mobile" width="340">
+</p>
+<p align="center">
+  <sub>الواجهة مصممة لتبقى قابلة للقراءة والتنقل على الجوال أثناء العمل الميداني.</sub>
+</p>
+</details>
 
 ---
 
