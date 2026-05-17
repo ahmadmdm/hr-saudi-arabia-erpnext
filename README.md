@@ -5,7 +5,7 @@
 **تطبيق Frappe/ERPNext متكامل لإدارة شؤون الموظفين وفق نظام العمل السعودي**  
 المرسوم الملكي م/51 لعام 1426هـ وتعديلاته حتى 1446هـ
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-1.16.2-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![الإصدار](https://img.shields.io/badge/الإصدار-1.16.3-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![الرخصة](https://img.shields.io/badge/الرخصة-GPL--3.0-orange)](LICENSE)
@@ -21,7 +21,7 @@
 **A complete Frappe/ERPNext application for HR management compliant with Saudi Labor Law**  
 Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
-[![Version](https://img.shields.io/badge/version-1.16.2-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
+[![Version](https://img.shields.io/badge/version-1.16.3-blue)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)
 [![Frappe](https://img.shields.io/badge/Frappe-v15-brightgreen)](https://frappeframework.com)
 [![ERPNext](https://img.shields.io/badge/ERPNext-v15-blue)](https://erpnext.com)
 [![License](https://img.shields.io/badge/license-GPL--3.0-orange)](LICENSE)
@@ -33,6 +33,7 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 ## 📋 فهرس المحتويات | Table of Contents
 
 - [نظرة عامة | Overview](#-نظرة-عامة--overview)
+- [الجولة المرئية | Visual Product Tour](#-الجولة-المرئية--visual-product-tour)
 - [المتطلبات | Requirements](#-المتطلبات--requirements)
 - [التثبيت | Installation](#-التثبيت--installation)
 - [المكونات | Features](#-المكونات--features)
@@ -52,33 +53,96 @@ Royal Decree No. M/51 of 1426H and its amendments through 1446H
 
 ### 🇸🇦 بالعربية
 
-**saudi_hr** هو تطبيق Frappe مستقل، مبني على قمة ERPNext، يُغطي **كامل متطلبات نظام العمل السعودي** الخاصة بإدارة الموارد البشرية.
+**saudi_hr** هو طبقة تشغيل موارد بشرية سعودية مستقلة فوق **Frappe + ERPNext**، وليس امتدادًا تابعًا لـ HRMS. صُمّم ليجمع العمل اليومي، الامتثال، الرواتب، الحضور، العقود، والموافقات داخل تجربة واحدة واضحة للمنشآت العاملة في المملكة.
 
-صُمّم خصيصاً للمنشآت العاملة في المملكة العربية السعودية، بجميع أحجامها، ويشمل:
+الفكرة الأساسية: أن يكون لدى فريق الموارد البشرية لوحة عمل جاهزة تشبه طريقة العمل الفعلية داخل المنشأة، من التوظيف وحتى نهاية الخدمة، مع توثيق نظامي قابل للتدقيق.
 
-- **20 نوع بيانات** تغطي دورة حياة الموظف كاملاً
-- **7 تقارير** للامتثال والرواتب والتحليل
-- **5 صيغ طباعة** عربية RTL رسمية
-- **5 مسارات موافقات** معتمدة
-- **4 إشعارات بريدية** تلقائية
-- تكامل مع **GOSI, MLSD, Nitaqat, WPS**
+- مستقل عن HRMS ويعتمد فقط على `frappe` و`erpnext`
+- واجهة تشغيل احترافية عبر صفحة **professional-hr-hub**
+- مساحة عمل Saudi HR مرتبة للعمليات اليومية والامتثال
+- عقود، حضور، إجازات، مخالفات، رواتب، WPS، GOSI، نطاقات
+- تقارير ولوحات متابعة قابلة للاستخدام الفوري بعد التثبيت
+- صيغ طباعة عربية RTL ومسارات موافقة للقرارات الحساسة
 
 </td>
 <td width="50%" align="left">
 
 ### 🇬🇧 In English
 
-**saudi_hr** is a standalone Frappe application built on ERPNext that covers **all Saudi Labor Law requirements** for HR management.
+**saudi_hr** is an independent Saudi HR operations layer for **Frappe + ERPNext**. It is not an HRMS-dependent module. It brings daily HR work, compliance, payroll, attendance, contracts, and approvals into one practical experience for Saudi-based organizations.
 
-Built for establishments of any size operating in Saudi Arabia. Includes:
+The product goal is simple: give HR teams an operational cockpit that follows how work actually moves inside a company, from hiring to exit, with auditable Saudi labor compliance built in.
 
-- **Core DocTypes** covering the full employee lifecycle
-- **Operational Reports** for compliance, payroll, and analytics
-- **5 Arabic RTL Print Formats** for official documents
-- **5 Approval Workflows** for key HR transactions
-- **4 Automated Email Notifications**
-- Integration with **GOSI, MLSD, Nitaqat, WPS**
+- No HRMS dependency; runs on `frappe` and `erpnext`
+- Professional operating console through **professional-hr-hub**
+- Saudi HR Workspace organized for daily operations and compliance
+- Contracts, attendance, leaves, discipline, payroll, WPS, GOSI, Nitaqat
+- Ready-to-use reports and dashboards after installation
+- Arabic RTL print formats and approval workflows for sensitive decisions
 
+</td>
+</tr>
+</table>
+
+### ما الذي يميّزه؟ | What Makes It Different?
+
+| المسار | Track | القيمة العملية |
+|--------|-------|----------------|
+| تجربة تشغيلية | Operational UX | واجهة تبدأ من عمل HR اليومي، لا من قائمة مستندات جامدة |
+| استقلالية تقنية | Technical Independence | لا يحتاج HRMS، مما يقلل التبعيات عند النقل أو الترقية |
+| امتثال سعودي | Saudi Compliance | تغطية GOSI، WPS، نطاقات، الإجازات، نهاية الخدمة، العقود، والإصابات |
+| جاهزية ميدانية | Field Readiness | حضور جوال، مواقع، ورديات، مراجعة فريق، وشجرة تنظيمية |
+| توثيق رسمي | Official Output | صيغ طباعة عربية ومسارات اعتماد قابلة للتدقيق |
+
+---
+
+## 🖼️ الجولة المرئية | Visual Product Tour
+
+<div align="center">
+  <img src="docs/images/professional-hr-hub-desktop.png" alt="Professional HR Hub desktop dashboard" width="100%">
+  <p><strong>Professional HR Hub</strong> — واجهة تشغيل مركزية تجمع المؤشرات، الإجراءات، الامتثال، والتنقل السريع في أول شاشة.</p>
+</div>
+
+<table>
+<tr>
+<td width="50%" align="center">
+  <img src="docs/images/saudi-hr-workspace.png" alt="Saudi HR Workspace" width="100%">
+  <br>
+  <strong>Saudi HR Workspace</strong>
+  <br>
+  مساحة عمل مرتبة حسب دورة العمل: متابعة اليوم، عمليات الموظف، السياسات، الرواتب، والامتثال.
+</td>
+<td width="50%" align="center">
+  <img src="docs/images/professional-hr-hub-mobile.png" alt="Professional HR Hub mobile" width="60%">
+  <br>
+  <strong>Responsive Experience</strong>
+  <br>
+  الواجهة الأساسية تعمل بوضوح على الجوال لمراجعة المؤشرات والتنقل السريع أثناء العمل الميداني.
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+  <img src="docs/images/team-attendance-review.png" alt="Team Attendance Review report" width="100%">
+  <br>
+  <strong>Team Attendance Review</strong>
+  <br>
+  مراجعة الحضور والتأخير والحركات المفتوحة ومشكلات التحقق من شاشة واحدة.
+</td>
+<td width="50%" align="center">
+  <img src="docs/images/leave-balance-report.png" alt="Saudi Leave Balance report" width="100%">
+  <br>
+  <strong>Saudi Leave Balance</strong>
+  <br>
+  قراءة دقيقة لأرصدة الإجازات السعودية وربطها بالسياسات والاعتمادات.
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center">
+  <img src="docs/images/employee-org-tree.png" alt="Employee Org Tree page" width="100%">
+  <br>
+  <strong>Employee Org Tree</strong>
+  <br>
+  خريطة تنظيمية تساعد HR والمدراء على فهم العلاقات الإدارية، الأقسام، والموافقين بسرعة.
 </td>
 </tr>
 </table>
@@ -99,6 +163,7 @@ Built for establishments of any size operating in Saudi Arabia. Includes:
 
 - Frappe `15.107.2`
 - ERPNext `15.107.0`
+- Saudi HR `1.16.3`
 - Python `3.10`
 - MariaDB `10.6+`
 - Node.js `24.x`
@@ -110,7 +175,7 @@ Built for establishments of any size operating in Saudi Arabia. Includes:
 
 ```bash
 # 1. احصل على التطبيق | Get the app
-bench get-app https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
+bench get-app --branch version-15 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 
 # 2. ثبّت على الموقع | Install on your site
 bench --site <your-site-name> install-app saudi_hr
@@ -143,7 +208,7 @@ bench --site <your-site-name> run-tests --app saudi_hr --skip-test-records
 
 ```bash
 # 1. داخل بيئة bench الجديدة | Inside the new bench environment
-bench get-app https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
+bench get-app --branch version-15 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 
 # 2. ثبّت التطبيق على الموقع | Install the app on the target site
 bench --site <your-site-name> install-app saudi_hr
@@ -355,38 +420,26 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 
 ```
 saudi_hr/
+├── docs/
+│   └── images/                             # README visual product screenshots
 ├── saudi_hr/
-│   ├── __init__.py                         # v1.1.0
-│   ├── hooks.py                            # Frappe hooks & scheduler
-│   ├── tasks.py                            # Scheduled tasks (probation alerts)
+│   ├── __init__.py                         # App version
+│   ├── hooks.py                            # Frappe hooks, pages, assets, scheduler
+│   ├── tasks.py                            # Scheduled alerts and compliance tasks
 │   └── saudi_hr/
-│       ├── doctype/                        # DocType modules
-│       │   ├── annual_leave_disbursement/  # م.109
-│       │   ├── disciplinary_procedure/     # م.65-80
-│       │   ├── end_of_service_benefit/     # م.84
-│       │   ├── gosi_contribution/          # GOSI
-│       │   ├── labor_dispute/              # م.218-221
-│       │   ├── maternity_paternity_leave/  # م.151,160
-│       │   ├── medical_examination/        # ★ NEW v1.1.0
-│       │   ├── monthly_attendance_detail/  # ★ NEW v1.1.0 (child)
-│       │   ├── monthly_attendance_record/  # ★ NEW v1.1.0  م.102
-│       │   ├── nitaqat_record/             # Nitaqat
-│       │   ├── overtime_request/           # م.107
-│       │   ├── saudi_employment_contract/  # م.37-46
-│       │   ├── saudi_hr_settings/          # Settings
-│       │   ├── saudi_monthly_payroll/      # م.90-102
-│       │   ├── saudi_monthly_payroll_employee/ # Child table
-│       │   ├── saudi_sick_leave/           # م.117
-│       │   ├── special_leave/              # م.113
-│       │   ├── termination_notice/         # م.75-76
-│       │   ├── training_record/            # ★ NEW v1.1.0  م.60-64
-│       │   ├── work_injury/               # م.148-156
-│       │   └── work_permit_iqama/         # Iqama/Visa
-│       ├── report/                        # Report modules
-│       ├── print_format/                  # Arabic print formats
-│       ├── workflow/                      # Workflow definitions
-│       ├── notification/                  # 4 Notifications
-│       └── workspace/                    # Saudi HR Workspace
+│       ├── doctype/                        # Saudi HR DocTypes and controllers
+│       ├── page/                           # Professional HR Hub, Org Tree, Attendance Hub
+│       ├── report/                         # Compliance, payroll, attendance, leave reports
+│       ├── print_format/                   # Arabic RTL official documents
+│       ├── workflow/                       # Approval workflows
+│       ├── notification/                   # Automated alerts
+│       ├── workspace/                      # Saudi HR Desk workspace
+│       ├── dashboard/                      # Desk dashboards
+│       ├── dashboard_chart/                # KPI charts
+│       └── number_card/                    # KPI number cards
+├── DEPENDENCIES.md                         # Runtime and transfer dependency contract
+├── requirements.txt                        # Base Python dependencies
+├── requirements-voice-cpu.txt              # Optional full voice runtime fallback
 ├── pyproject.toml
 ├── setup.py
 └── README.md
@@ -396,7 +449,23 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.16.0 — ٢٨ أبريل ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.16.3 — ١٧ مايو ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**نشر GitHub المرئي وتثبيت هوية المنتج المستقل | Visual GitHub Release and Independent Product Identity:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| README Experience | تجربة README | إعادة صياغة المقدمة كشرح منتج احترافي ثنائي اللغة مع صور فعلية من الواجهة |
+| Visual Assets | أصول الصور | إضافة لقطات `professional-hr-hub`، مساحة العمل، مراجعة الحضور، أرصدة الإجازات، والشجرة التنظيمية |
+| Release Version | رقم الإصدار | رفع نسخة التطبيق إلى `1.16.3` وتجهيز وسم Git للإصدار |
+| Independence Statement | استقلالية التطبيق | توثيق أوضح أن التطبيق مستقل عن HRMS ويعمل فوق `frappe` و`erpnext` فقط |
+| Transfer Readiness | جاهزية النقل | توضيح أوامر التثبيت على الفرع `version-15` لتقليل أخطاء النقل بين البيئات |
+
+> **تعليق الإصدار | Release Note:** هذا الإصدار يركز على جاهزية النشر الخارجي: README أصبح واجهة عرض احترافية للتطبيق، الصور المرفقة مأخوذة من اختبار بصري فعلي، ورقم النسخة يثبت حالة التطبيق بعد فصل HRMS وتحسين مساحة العمل وواجهة `professional-hr-hub`.
+
+> **بعد الترقية | Post-upgrade:** شغّل `bench --site <your-site-name> migrate` ثم `bench build --app saudi_hr` و`bench --site <your-site-name> clear-cache`. عند النقل إلى نظام جديد استخدم أمر `bench get-app --branch version-15` لضمان تحميل فرع ERPNext v15 الصحيح.
+
+### v1.16.0 — ٢٨ أبريل ٢٠٢٦
 
 **التشغيل الحي للحضور الجوال ومسار اعتماد المالية | Live Mobile Attendance, Finance Routing, and Runtime Compatibility:**
 
