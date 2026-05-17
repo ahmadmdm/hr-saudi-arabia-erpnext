@@ -6,7 +6,7 @@ app_title = "Saudi HR"
 app_publisher = "IdeaOrbit"
 app_description = "Saudi HR Management System per Saudi Labor Law (Royal Decree M/51)"
 app_email = "info@ideaorbit.net"
-app_license = "MIT"
+app_license = "GPL-3.0"
 required_apps = ["frappe/erpnext"]
 
 # Apps Screen

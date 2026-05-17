@@ -1,0 +1,41 @@
+name: Saudi HR Quality
+
+on:
+  push:
+    branches:
+      - version-15
+  pull_request:
+    branches:
+      - version-15
+
+jobs:
+  quality:
+    name: Dependency and presentation checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install base dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Verify importable base dependencies
+        run: |
+          python - <<'PY'
+          import openlocationcode
+          import openpyxl
+
+          print("base dependencies ok")
+          PY
+
+      - name: Validate Saudi HR release contract
+        run: python scripts/validate_quality.py
+

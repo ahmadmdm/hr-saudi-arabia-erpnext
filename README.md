@@ -8,16 +8,18 @@
 
 <br>
 
-<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.3"><img alt="Version 1.16.3" src="https://img.shields.io/badge/version-1.16.3-0F766E?style=for-the-badge"></a>
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.4"><img alt="Version 1.16.4" src="https://img.shields.io/badge/version-1.16.4-0F766E?style=for-the-badge"></a>
 <img alt="Frappe v15" src="https://img.shields.io/badge/Frappe-v15-2563EB?style=for-the-badge">
 <img alt="ERPNext v15" src="https://img.shields.io/badge/ERPNext-v15-7C3AED?style=for-the-badge">
 <img alt="No HRMS dependency" src="https://img.shields.io/badge/HRMS-not%20required-16A34A?style=for-the-badge">
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/actions/workflows/quality.yml"><img alt="Quality checks" src="https://img.shields.io/github/actions/workflow/status/ahmadmdm/hr-saudi-arabia-erpnext/quality.yml?branch=version-15&label=quality&style=for-the-badge"></a>
 <a href="LICENSE"><img alt="GPL 3.0" src="https://img.shields.io/badge/license-GPL--3.0-EA580C?style=for-the-badge"></a>
 
 <br><br>
 
 <a href="#-بطاقة-المنتج--product-card">بطاقة المنتج</a>
  · <a href="#-الجولة-السريعة--quick-tour">الجولة السريعة</a>
+ · <a href="#-الوثائق--docs">الوثائق</a>
  · <a href="#-التثبيت--installation">التثبيت</a>
  · <a href="#-المكونات--features">المكونات</a>
  · <a href="#-سجل-التغييرات--changelog">الإصدارات</a>
@@ -116,6 +118,10 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 ## 🖼️ الجولة السريعة | Quick Tour
 
+<p align="center">
+  <img src="docs/images/saudi-hr-tour.gif" alt="Saudi HR animated product tour" width="100%">
+</p>
+
 <table>
 <tr>
 <td width="58%" align="center">
@@ -168,6 +174,19 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 ---
 
+## 🧭 الوثائق | Docs
+
+| الدليل | Guide | متى تستخدمه؟ |
+|--------|-------|--------------|
+| [التثبيت](docs/installation.md) | Installation | تثبيت التطبيق على bench جديد أو موقع ERPNext v15 |
+| [النقل والتشغيل](docs/deployment.md) | Deployment | نقل التطبيق إلى نظام آخر والتحقق بعد الترقية |
+| [فصل HRMS](docs/hrms-decoupling.md) | HRMS Decoupling | إثبات أن التطبيق لا يحتاج HRMS ومعرفة البدائل السعودية داخله |
+| [الجولة المرئية](docs/visual-tour.md) | Visual Tour | استعراض الصور، GIF، وصورة Social Preview |
+| [بيانات الديمو](docs/demo-data.md) | Demo Data | إنشاء موظف ومدير وعقد وإجازة ورواتب تجريبية في بيئة اختبار |
+| [التبعيات](DEPENDENCIES.md) | Dependencies | عقد التبعيات الكامل ومسار الصوت الاختياري |
+
+---
+
 ## 💻 المتطلبات | Requirements
 
 | المكوّن | Component | الإصدار الأدنى | Min Version |
@@ -182,7 +201,7 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 - Frappe `15.107.2`
 - ERPNext `15.107.0`
-- Saudi HR `1.16.3`
+- Saudi HR `1.16.4`
 - Python `3.10`
 - MariaDB `10.6+`
 - Node.js `24.x`
@@ -440,7 +459,12 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 ```
 saudi_hr/
 ├── docs/
-│   └── images/                             # README visual product screenshots
+│   ├── images/                             # README, release, and social preview assets
+│   ├── installation.md                     # Install guide
+│   ├── deployment.md                       # Transfer and production checklist
+│   ├── hrms-decoupling.md                  # HRMS independence notes
+│   ├── visual-tour.md                      # Visual product tour
+│   └── demo-data.md                        # Demo lifecycle seed guide
 ├── saudi_hr/
 │   ├── __init__.py                         # App version
 │   ├── hooks.py                            # Frappe hooks, pages, assets, scheduler
@@ -468,7 +492,25 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.16.3 — ١٧ مايو ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.16.4 — ١٧ مايو ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**تحسين العرض العام والتوثيق الاحترافي | Presentation, Docs, and Quality Release:**
+
+| المكوّن | Component | التحديث |
+|---------|-----------|----------|
+| README Polish | تحسين README | تحويل المقدمة إلى صفحة عرض منتج أوضح مع GIF قصير وروابط وثائق مباشرة |
+| Social Preview | صورة المشاركة | إضافة `docs/images/social-preview.png` لاستخدامها كصورة مشاركة للمستودع |
+| Animated Tour | الجولة المتحركة | إضافة `docs/images/saudi-hr-tour.gif` كاستعراض سريع لواجهات التطبيق الفعلية |
+| Documentation | الوثائق | إضافة أدلة مستقلة للتثبيت، النقل، فصل HRMS، الجولة المرئية، وبيانات الديمو |
+| Demo Data | بيانات الديمو | توثيق أمر إنشاء سيناريو موظف ومدير وعقد وإجازة ورواتب للاختبار |
+| GitHub Actions | فحوصات GitHub | إضافة فحص جودة خفيف للتبعيات، النسخة، README، والصور داخل GitHub Actions |
+| License Metadata | بيانات الرخصة | توحيد ملف `LICENSE` وبيانات Frappe مع تصريح GPL v3.0 الموجود في README |
+
+> **تعليق الإصدار | Release Note:** هذا إصدار عرض وتوثيق يجعل المستودع أكثر جاهزية للعرض العام والمشاركة: README أجمل، أصول المشاركة موجودة داخل المستودع، الوثائق منفصلة، وفحص GitHub Actions يؤكد سلامة التبعيات الأساسية ومسارات الصور.
+
+> **بعد الترقية | Post-upgrade:** لا توجد تغييرات مخطط قاعدة بيانات في هذا الإصدار. إذا كنت تحدّث من نسخة أقدم، يكفي `bench --site <your-site-name> migrate` ثم `bench build --app saudi_hr` و`bench --site <your-site-name> clear-cache` كإجراء قياسي.
+
+### v1.16.3 — ١٧ مايو ٢٠٢٦
 
 **نشر GitHub المرئي وتثبيت هوية المنتج المستقل | Visual GitHub Release and Independent Product Identity:**
 
@@ -815,7 +857,7 @@ Please follow [Frappe Development Guidelines](https://frappeframework.com/docs/u
 
 مُرخَّص بموجب **GNU GPL v3.0** — Licensed under **GNU General Public License v3.0**
 
-See [license.txt](license.txt) for details.
+See [LICENSE](LICENSE) for details.
 
 ---
 
