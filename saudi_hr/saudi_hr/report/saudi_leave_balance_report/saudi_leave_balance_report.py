@@ -48,7 +48,7 @@ def get_data(filters):
 	employees = frappe.db.sql(
 		f"""
 		SELECT e.name AS employee, e.employee_name, e.department,
-			e.date_of_joining, e.company, e.nationality
+			e.date_of_joining, e.company
 		FROM `tabEmployee` e
 		{where}
 		ORDER BY e.employee_name

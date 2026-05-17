@@ -256,6 +256,16 @@ async function importEmployeeBranches(frm) {
 	});
 }
 
+async function refreshAttendanceApiReference(frm) {
+	const result = await clientCall(
+		"saudi_hr.saudi_hr.doctype.saudi_hr_settings.saudi_hr_settings.refresh_mobile_attendance_api_reference"
+	);
+	frm.set_value("mobile_attendance_api_reference", result.reference);
+	frm.refresh_field("mobile_attendance_api_reference");
+	frappe.show_alert({ message: __("Attendance API reference refreshed"), indicator: "green" });
+	return result;
+}
+
 frappe.ui.form.on("Saudi HR Settings", {
 	async refresh(frm) {
 		frm.add_custom_button(__("Refresh Employee Branches"), async () => {
@@ -275,6 +285,12 @@ frappe.ui.form.on("Saudi HR Settings", {
 		frm.add_custom_button(__("Import Employee Branches"), async () => {
 			await importEmployeeBranches(frm);
 		});
+
+		if (frappe.user.has_role("System Manager")) {
+			frm.add_custom_button(__("Refresh External API Reference"), async () => {
+				await refreshAttendanceApiReference(frm);
+			}, __("External API"));
+		}
 
 		if (!frm.doc.branch_employee_directory || !frm.doc.branch_employee_directory.length) {
 			await syncDirectoryTable(frm, { save: true });

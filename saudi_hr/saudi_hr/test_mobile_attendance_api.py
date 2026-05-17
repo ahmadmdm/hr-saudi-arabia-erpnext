@@ -22,6 +22,17 @@ class _UserDoc:
 		return self
 
 
+class _SettingsDoc:
+	def __init__(self):
+		self.mobile_attendance_base_url = "https://hr.example.test"
+		self.mobile_attendance_api_reference = None
+		self.saved = False
+
+	def save(self):
+		self.saved = True
+		return self
+
+
 class TestMobileAttendanceApi(FrappeTestCase):
 	def test_issue_mobile_attendance_api_credentials_allows_current_user(self):
 		user_doc = _UserDoc()
@@ -110,3 +121,24 @@ class TestMobileAttendanceApi(FrappeTestCase):
 		self.assertEqual(result["actor"]["employee"], "EMP-0001")
 		self.assertEqual(result["auth"]["scheme"], "token")
 		self.assertGreaterEqual(len(result["endpoints"]), 4)
+
+	def test_refresh_mobile_attendance_api_reference_saves_external_app_reference_without_credentials(self):
+		from saudi_hr.saudi_hr.doctype.saudi_hr_settings import saudi_hr_settings
+
+		settings = _SettingsDoc()
+
+		with patch.object(saudi_hr_settings, "_assert_attendance_api_admin"), patch.object(
+			saudi_hr_settings.frappe, "get_single", return_value=settings
+		), patch.object(
+			saudi_hr_settings.frappe.db, "commit"
+		):
+			result = saudi_hr_settings.refresh_mobile_attendance_api_reference()
+
+		self.assertEqual(result["base_url"], "https://hr.example.test")
+		self.assertIn("Authorization: token <api_key>:<api_secret>", settings.mobile_attendance_api_reference)
+		self.assertIn("https://hr.example.test/api/method/saudi_hr.saudi_hr.api.mobile_attendance_api_status", settings.mobile_attendance_api_reference)
+		self.assertIn("Saudi Monthly Payroll", settings.mobile_attendance_api_reference)
+		self.assertIn("Salary Slip", settings.mobile_attendance_api_reference)
+		self.assertNotIn("APIKEY123", settings.mobile_attendance_api_reference)
+		self.assertNotIn("SECRET456", settings.mobile_attendance_api_reference)
+		self.assertTrue(settings.saved)

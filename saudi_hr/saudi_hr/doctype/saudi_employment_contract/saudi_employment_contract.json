@@ -253,7 +253,6 @@
    "label": "Personal Details / البيانات الشخصية"
   },
   {
-   "fetch_from": "employee.nationality",
    "fieldname": "nationality",
    "fieldtype": "Data",
    "label": "Nationality / الجنسية"

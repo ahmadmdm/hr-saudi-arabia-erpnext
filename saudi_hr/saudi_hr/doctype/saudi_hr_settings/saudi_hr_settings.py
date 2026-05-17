@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from io import BytesIO
 from os.path import splitext
 
@@ -22,6 +23,125 @@ class SaudiHRSettings(Document):
 
 def _assert_settings_access():
 	frappe.only_for(("System Manager", "HR Manager"))
+
+
+def _assert_attendance_api_admin():
+	frappe.only_for(("System Manager",))
+
+
+def _resolve_attendance_base_url(settings):
+	from frappe.utils import get_url
+
+	return (settings.mobile_attendance_base_url or get_url()).rstrip("/")
+
+
+def _resource_endpoint(base_url: str, doctype: str):
+	encoded_doctype = frappe.utils.quote(doctype)
+	return {
+		"doctype": doctype,
+		"list": f"{base_url}/api/resource/{encoded_doctype}",
+		"detail": f"{base_url}/api/resource/{encoded_doctype}/<name>",
+		"create": f"POST {base_url}/api/resource/{encoded_doctype}",
+		"update": f"PUT {base_url}/api/resource/{encoded_doctype}/<name>",
+	}
+
+
+def _build_attendance_api_settings_reference(settings):
+	from saudi_hr.saudi_hr.api import MOBILE_ATTENDANCE_API_ENDPOINTS
+
+	base_url = _resolve_attendance_base_url(settings)
+	mobile_endpoints = []
+	for endpoint in MOBILE_ATTENDANCE_API_ENDPOINTS:
+		mobile_endpoints.append(
+			{
+				"key": endpoint["key"],
+				"http_method": endpoint["http_method"],
+				"method": endpoint["method"],
+				"path": f"{base_url}/api/method/{endpoint['method']}",
+				"description": endpoint["description"],
+				"payload_fields": endpoint.get("payload_fields") or [],
+			}
+		)
+
+	return {
+		"title": "External HR Application API Reference",
+		"base_url": base_url,
+		"auth": {
+			"scheme": "token",
+			"header": "Authorization: token <api_key>:<api_secret>",
+			"source": "Generate API Key and API Secret from the standard ERPNext User page. Saudi HR Settings does not generate or store credentials.",
+			"example_curl_header": "-H 'Authorization: token YOUR_API_KEY:YOUR_API_SECRET'",
+		},
+		"admin_steps": [
+			"Create a dedicated ERPNext User for the external app and assign only the roles it needs.",
+			"Generate API Key and API Secret from the ERPNext User page, not from Saudi HR Settings.",
+			"Set Base URL in Saudi HR Settings so the reference matches the target environment.",
+			"Configure the external app to send Authorization: token <api_key>:<api_secret> on every request.",
+			"Rotate the ERPNext User credentials from the User page if a device, server, or vendor changes.",
+		],
+		"mobile_attendance_methods": mobile_endpoints,
+		"rest_resources": {
+			"employee_profile": {
+				"description": "Read employee master data, manager links, department, branch, company, status, and user mapping.",
+				"resource": _resource_endpoint(base_url, "Employee"),
+				"recommended_fields": ["name", "employee_name", "user_id", "company", "department", "branch", "reports_to", "status", "date_of_joining"],
+			},
+			"attendance_and_absence": {
+				"description": "Create and read check-ins, approved attendance rows, absent days, and attendance locations.",
+				"resources": [
+					_resource_endpoint(base_url, "Employee Checkin"),
+					_resource_endpoint(base_url, "Attendance"),
+					_resource_endpoint(base_url, "Attendance Location"),
+				],
+				"absence_filter_example": f"{base_url}/api/resource/Attendance?filters=[[\"Attendance\",\"status\",\"=\",\"Absent\"]]",
+			},
+			"leave_and_requests": {
+				"description": "Submit and track annual leave and ERPNext leave applications using the configured workflow.",
+				"resources": [
+					_resource_endpoint(base_url, "Saudi Annual Leave"),
+					_resource_endpoint(base_url, "Leave Application"),
+				],
+			},
+			"payroll_and_salary": {
+				"description": "Read Saudi monthly payroll runs and ERPNext salary slips for employee-facing salary summaries.",
+				"resources": [
+					_resource_endpoint(base_url, "Saudi Monthly Payroll"),
+					_resource_endpoint(base_url, "Saudi Monthly Payroll Employee"),
+					_resource_endpoint(base_url, "Salary Slip"),
+				],
+				"privacy_note": "Expose salary endpoints only to a trusted integration user with tightly scoped roles and server-side filtering.",
+			},
+			"contracts_and_discipline": {
+				"description": "Read employment contracts, warnings, investigations, and disciplinary procedures for HR self-service surfaces.",
+				"resources": [
+					_resource_endpoint(base_url, "Saudi Employment Contract"),
+					_resource_endpoint(base_url, "Employee Warning Notice"),
+					_resource_endpoint(base_url, "Investigation Record"),
+					_resource_endpoint(base_url, "Disciplinary Procedure"),
+				],
+			},
+			"organization_reference": {
+				"description": "Reference data usually cached by external apps.",
+				"resources": [
+					_resource_endpoint(base_url, "Company"),
+					_resource_endpoint(base_url, "Department"),
+					_resource_endpoint(base_url, "Branch"),
+					_resource_endpoint(base_url, "Designation"),
+				],
+			},
+		},
+		"request_examples": {
+			"list_active_employees": f"GET {base_url}/api/resource/Employee?filters=[[\"Employee\",\"status\",\"=\",\"Active\"]]&fields=[\"name\",\"employee_name\",\"department\",\"branch\",\"reports_to\"]",
+			"employee_salary_slips": f"GET {base_url}/api/resource/Salary%20Slip?filters=[[\"Salary Slip\",\"employee\",\"=\",\"<employee_id>\"],[\"Salary Slip\",\"docstatus\",\"=\",1]]",
+			"employee_absences": f"GET {base_url}/api/resource/Attendance?filters=[[\"Attendance\",\"employee\",\"=\",\"<employee_id>\"],[\"Attendance\",\"status\",\"=\",\"Absent\"]]",
+			"mobile_checkin": f"POST {base_url}/api/method/saudi_hr.saudi_hr.api.mobile_attendance_api_checkin",
+		},
+		"response_rules": {
+			"success": "Frappe REST responses return data in the top-level data key. Custom mobile methods return {ok, data, error}.",
+			"errors": "Handle HTTP 401/403 for invalid credentials or missing roles, 417 for validation errors, and 404 for missing records.",
+			"dates": "Use ISO date strings: YYYY-MM-DD. Use site timezone for attendance timestamps unless the endpoint documents otherwise.",
+		},
+	}
 
 
 def _get_employee_directory_rows():
@@ -49,6 +169,17 @@ def _sync_directory_table():
 				"company": row.company,
 			},
 		)
+	settings.save()
+	frappe.db.commit()
+	return settings
+
+
+def _save_attendance_api_reference(settings):
+	settings.mobile_attendance_api_reference = json.dumps(
+		_build_attendance_api_settings_reference(settings),
+		indent=2,
+		ensure_ascii=False,
+	)
 	settings.save()
 	frappe.db.commit()
 	return settings
@@ -193,4 +324,15 @@ def import_employee_branch_template(file_url: str | None = None):
 		"created_branch_count": created_branch_count,
 		"skipped_count": skipped_count,
 		"errors": errors[:20],
+	}
+
+
+@frappe.whitelist()
+def refresh_mobile_attendance_api_reference():
+	_assert_attendance_api_admin()
+	settings = frappe.get_single("Saudi HR Settings")
+	_save_attendance_api_reference(settings)
+	return {
+		"base_url": _resolve_attendance_base_url(settings),
+		"reference": settings.mobile_attendance_api_reference,
 	}

@@ -47,7 +47,11 @@
  "branch_employee_import_section",
  "branch_employee_import_help",
  "employee_branch_import_file",
- "branch_employee_directory"
+ "branch_employee_directory",
+ "attendance_api_section",
+ "attendance_api_help",
+ "mobile_attendance_base_url",
+ "mobile_attendance_api_reference"
  ],
  "fields": [
   {
@@ -309,7 +313,36 @@
      "read_only": 1,
      "cannot_add_rows": 1,
      "cannot_delete_rows": 1
-  }
+    },
+    {
+     "fieldname": "attendance_api_section",
+     "fieldtype": "Section Break",
+     "label": "External HR API Reference / مرجع ربط تطبيقات الموارد البشرية",
+     "permlevel": 1
+    },
+    {
+     "default": "This section is a connection reference only. Generate API Key and API Secret from the standard ERPNext User page, then use them in the external app with the Base URL below. / هذا القسم مرجع ربط فقط. يتم توليد API Key و API Secret من صفحة المستخدم القياسية في ERPNext ثم استخدامها في التطبيق الخارجي مع رابط Base URL أدناه.",
+     "fieldname": "attendance_api_help",
+     "fieldtype": "Small Text",
+     "label": "Integration Instructions / تعليمات الربط",
+     "permlevel": 1,
+     "read_only": 1
+    },
+    {
+     "description": "Leave empty to use the current site URL. / اتركه فارغاً لاستخدام رابط الموقع الحالي.",
+     "fieldname": "mobile_attendance_base_url",
+     "fieldtype": "Data",
+     "label": "Base URL / رابط النظام الأساسي",
+     "permlevel": 1
+    },
+    {
+     "fieldname": "mobile_attendance_api_reference",
+     "fieldtype": "Code",
+     "label": "External App API Reference / مستند ربط التطبيق الخارجي",
+     "options": "JSON",
+     "permlevel": 1,
+     "read_only": 1
+    }
  ],
  "issingle": 1,
  "links": [],
@@ -319,6 +352,17 @@
  "name": "Saudi HR Settings",
  "owner": "Administrator",
  "permissions": [
+  {
+   "role": "System Manager",
+   "permlevel": 1,
+   "read": 1,
+   "write": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  },
   {
    "role": "System Manager",
    "read": 1,
