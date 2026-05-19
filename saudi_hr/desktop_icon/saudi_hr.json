@@ -1,0 +1,23 @@
+{
+ "app": "saudi_hr",
+ "bg_color": "gray",
+ "creation": "2026-05-18 12:05:08.722939",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "users",
+ "icon_type": "App",
+ "idx": 0,
+ "label": "Saudi HR",
+ "link": "/desk/saudi-hr",
+ "link_to": "Saudi HR",
+ "link_type": "Workspace Sidebar",
+ "logo_url": "/assets/saudi_hr/images/logo.svg",
+ "modified": "2026-05-19 09:07:08.536085",
+ "modified_by": "Administrator",
+ "name": "Saudi HR",
+ "owner": "Administrator",
+ "restrict_removal": 1,
+ "roles": [],
+ "standard": 1
+}
