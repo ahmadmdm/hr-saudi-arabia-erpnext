@@ -136,10 +136,10 @@
    "child": 1,
    "collapsible": 1,
    "label": "الحضور عبر الجوال",
-   "link_type": "URL",
+   "link_to": "mobile-attendance",
+   "link_type": "Page",
    "show_arrow": 0,
-   "type": "Link",
-   "url": "/mobile-attendance"
+   "type": "Link"
   },
   {
    "child": 1,

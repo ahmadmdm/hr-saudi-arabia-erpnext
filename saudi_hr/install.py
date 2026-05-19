@@ -27,6 +27,7 @@ def after_install():
 	sync_notification_configs()
 	create_default_saudi_shift_type()
 	create_default_settings()
+	sync_desktop_workspace_icon()
 	frappe.db.commit()
 
 
@@ -43,6 +44,62 @@ def after_migrate():
 	migrate_legacy_shift_data()
 	migrate_legacy_annual_leave()
 	migrate_legacy_employee_loans()
+	sync_desktop_workspace_icon()
+
+
+def sync_desktop_workspace_icon():
+	"""Keep the Saudi HR desktop icon routed through the v16 Workspace."""
+	if not frappe.db.exists("DocType", "Desktop Icon") or not frappe.db.exists("Workspace", "Saudi HR"):
+		return
+
+	icon_name = frappe.db.exists(
+		"Desktop Icon",
+		{"label": "Saudi HR", "icon_type": "Link", "link_type": "Workspace Sidebar"},
+	)
+	if not icon_name:
+		icon_name = frappe.db.exists("Desktop Icon", "Saudi HR")
+
+	values = {
+		"label": "Saudi HR",
+		"icon_type": "App",
+		"link_type": "Workspace Sidebar",
+		"link": "/desk/saudi-hr",
+		"link_to": "Saudi HR",
+		"icon": "users",
+		"logo_url": "/assets/saudi_hr/images/logo.svg",
+		"app": "saudi_hr",
+		"parent_icon": None,
+		"hidden": 0,
+		"standard": 1,
+		"restrict_removal": 1,
+	}
+
+	if icon_name:
+		icon = frappe.get_doc("Desktop Icon", icon_name)
+		icon.update(values)
+		icon.save(ignore_permissions=True)
+	else:
+		icon = frappe.get_doc({"doctype": "Desktop Icon", **values})
+		icon.insert(ignore_permissions=True)
+
+	for name in frappe.get_all(
+		"Desktop Icon",
+		filters={"label": "Saudi HR", "icon_type": "App"},
+		pluck="name",
+	):
+		if name == icon.name:
+			continue
+		frappe.db.set_value(
+			"Desktop Icon",
+			name,
+			{
+				"hidden": 1,
+				"link": "/desk/saudi-hr",
+			},
+			update_modified=False,
+		)
+
+	frappe.clear_cache()
 
 
 def ensure_department_approver_role():

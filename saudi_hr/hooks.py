@@ -15,7 +15,7 @@ add_to_apps_screen = [
 		"name": "saudi_hr",
 		"logo": "/assets/saudi_hr/images/logo.svg",
 		"title": "Saudi HR",
-		"route": "/app/saudi-hr",
+		"route": "/desk/saudi-hr",
 	},
 	{
 		"name": "saudi_hr_mobile",
@@ -66,6 +66,10 @@ doc_events = {
 doctype_js = {
 	"Employee": "public/js/employee.js",
 }
+
+app_include_js = [
+	"/assets/saudi_hr/js/desk_shortcuts.js",
+]
 
 # ─── Custom Fields on Employee ──────────────────────────────────────────────────
 # Added via install.py to avoid modifying ERPNext directly
