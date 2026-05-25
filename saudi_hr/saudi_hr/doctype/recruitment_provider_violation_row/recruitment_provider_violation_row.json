@@ -1,0 +1,90 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-25 08:22:21.990046",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "violation_date",
+  "violation_type",
+  "column_break_1",
+  "severity",
+  "status",
+  "details_section",
+  "description",
+  "corrective_action",
+  "evidence_attachment"
+ ],
+ "fields": [
+  {
+   "fieldname": "violation_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Violation Date / \u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u062e\u0627\u0644\u0641\u0629",
+   "reqd": 1
+  },
+  {
+   "fieldname": "violation_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Violation Type / \u0646\u0648\u0639 \u0627\u0644\u0645\u062e\u0627\u0644\u0641\u0629",
+   "options": "\nLicense Breach / \u0645\u062e\u0627\u0644\u0641\u0629 \u0627\u0644\u062a\u0631\u062e\u064a\u0635\nFalse Documents / \u0648\u062b\u0627\u0626\u0642 \u063a\u064a\u0631 \u0635\u062d\u064a\u062d\u0629\nUnauthorized Branch / \u0641\u0631\u0639 \u063a\u064a\u0631 \u0645\u0631\u062e\u0635\nComplaint Handling Breach / \u0645\u062e\u0627\u0644\u0641\u0629 \u0645\u0639\u0627\u0644\u062c\u0629 \u0627\u0644\u0634\u0643\u0627\u0648\u0649\nHuman Trafficking Risk / \u062e\u0637\u0631 \u0627\u062a\u062c\u0627\u0631 \u0628\u0627\u0644\u0623\u0634\u062e\u0627\u0635\nFinancial or Insurance Breach / \u0645\u062e\u0627\u0644\u0641\u0629 \u0645\u0627\u0644\u064a\u0629 \u0623\u0648 \u062a\u0623\u0645\u064a\u0646\u064a\u0629\nOther / \u0623\u062e\u0631\u0649",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Medium / \u0645\u062a\u0648\u0633\u0637\u0629",
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "label": "Severity / \u0627\u0644\u062e\u0637\u0648\u0631\u0629",
+   "options": "Low / \u0645\u0646\u062e\u0641\u0636\u0629\nMedium / \u0645\u062a\u0648\u0633\u0637\u0629\nHigh / \u0639\u0627\u0644\u064a\u0629\nCritical / \u062d\u0631\u062c\u0629"
+  },
+  {
+   "default": "Open / \u0645\u0641\u062a\u0648\u062d\u0629",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / \u0627\u0644\u062d\u0627\u0644\u0629",
+   "options": "Open / \u0645\u0641\u062a\u0648\u062d\u0629\nCorrective Action / \u0625\u062c\u0631\u0627\u0621 \u062a\u0635\u062d\u064a\u062d\u064a\nReported / \u0645\u0628\u0644\u063a\u0629\nClosed / \u0645\u063a\u0644\u0642\u0629"
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details / \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description / \u0627\u0644\u0648\u0635\u0641"
+  },
+  {
+   "fieldname": "corrective_action",
+   "fieldtype": "Small Text",
+   "label": "Corrective Action / \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u062a\u0635\u062d\u064a\u062d\u064a"
+  },
+  {
+   "fieldname": "evidence_attachment",
+   "fieldtype": "Attach",
+   "label": "Evidence / \u0645\u0631\u0641\u0642 \u0627\u0644\u0625\u062b\u0628\u0627\u062a"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-25 18:33:15.362856",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Recruitment Provider Violation Row",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": []
+}

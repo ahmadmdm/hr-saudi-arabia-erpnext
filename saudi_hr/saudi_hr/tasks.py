@@ -298,3 +298,132 @@ def send_probation_end_alerts():
 			doctype="Saudi Employment Contract",
 			docname=rec.name,
 		)
+
+
+def _doctype_exists(doctype):
+	return bool(frappe.db.exists("DocType", doctype))
+
+
+def _send_due_alerts(doctype, date_field, title_field, subject_label, closed_statuses=None, days_ahead=7, status_field="status"):
+	if not _doctype_exists(doctype):
+		return
+
+	closed_statuses = closed_statuses or []
+	filters = {
+		date_field: ["<=", add_days(today(), days_ahead)],
+	}
+	if closed_statuses:
+		filters[status_field] = ["not in", closed_statuses]
+
+	records = frappe.get_all(
+		doctype,
+		filters=filters,
+		fields=["name", title_field, date_field, status_field],
+		order_by=f"{date_field} asc",
+		limit_page_length=50,
+	)
+	for rec in records:
+		due_date = rec.get(date_field)
+		if not due_date:
+			continue
+		days_left = (getdate(due_date) - getdate(today())).days
+		if days_left > days_ahead:
+			continue
+		title = rec.get(title_field) or rec.name
+		_send_alert(
+			subject=f"{subject_label}: {title} خلال {days_left} يوم",
+			message=(
+				f"يوجد بند امتثال يتطلب متابعة: {title}. "
+				f"تاريخ الاستحقاق: {due_date}. الحالة الحالية: {rec.get(status_field) or '-'}."
+			),
+			doctype=doctype,
+			docname=rec.name,
+		)
+
+
+def send_ministry_filing_due_alerts():
+	_send_due_alerts(
+		"Ministry Filing Tracker",
+		"due_date",
+		"filing_title",
+		"تنبيه مهلة بلاغ أو إفصاح للوزارة",
+		closed_statuses=["Accepted / مقبول", "Cancelled / ملغى"],
+	)
+
+
+def send_final_settlement_sla_alerts():
+	_send_due_alerts(
+		"Final Settlement SLA",
+		"settlement_due_date",
+		"employee_name",
+		"تنبيه مهلة مخالصة نهاية الخدمة",
+		closed_statuses=["Settled / تمت التسوية", "Cancelled / ملغى"],
+		days_ahead=5,
+	)
+
+
+def send_employee_document_custody_alerts():
+	_send_due_alerts(
+		"Employee Document Custody Log",
+		"return_due_date",
+		"employee_name",
+		"تنبيه إعادة مستندات العامل",
+		closed_statuses=["Returned / أعيد للموظف", "Not Held / غير محتفظ به"],
+		days_ahead=3,
+		status_field="custody_status",
+	)
+
+
+def send_inspection_fine_sla_alerts():
+	_send_due_alerts(
+		"Inspection Fine SLA",
+		"payment_due_date",
+		"fine_reference",
+		"تنبيه مهلة سداد غرامة تفتيش",
+		closed_statuses=["Paid / مدفوعة", "Waived / معفاة", "Closed / مغلقة"],
+		days_ahead=10,
+	)
+
+
+def send_wps_correction_due_alerts():
+	_send_due_alerts(
+		"WPS Submission",
+		"correction_due_date",
+		"pay_period",
+		"تنبيه مهلة تصحيح حماية الأجور",
+		closed_statuses=["Accepted / مقبول", "Cancelled / ملغى"],
+		days_ahead=5,
+	)
+
+
+def send_work_regulation_review_alerts():
+	_send_due_alerts(
+		"Work Regulation",
+		"next_review_date",
+		"regulation_title",
+		"تنبيه مراجعة لائحة تنظيم العمل",
+		closed_statuses=["Archived / مؤرشفة"],
+		days_ahead=30,
+	)
+
+
+def send_expat_authorization_due_alerts():
+	_send_due_alerts(
+		"Expat Work Authorization Control",
+		"due_date",
+		"employee_name",
+		"تنبيه مهلة إجراء عامل غير سعودي",
+		closed_statuses=["Approved / معتمد", "Closed / مغلق"],
+		days_ahead=14,
+	)
+
+
+def send_training_disclosure_due_alerts():
+	_send_due_alerts(
+		"Training Disclosure Register",
+		"disclosure_due_date",
+		"company",
+		"تنبيه مهلة الإفصاح التدريبي",
+		closed_statuses=["Accepted / مقبول", "Closed / مغلق"],
+		days_ahead=30,
+	)

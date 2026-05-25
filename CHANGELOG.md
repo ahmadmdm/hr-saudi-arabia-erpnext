@@ -2,6 +2,15 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.16.5 - 2026-05-25
+
+- Added the Saudi labor regulations compliance layer for ERPNext v15, including statutory records, ministry filings, document custody, work arrangements, working-time checks, inspection fine SLAs, and final settlement tracking.
+- Added Annex 1 disciplinary violation catalog defaults and Annex 2 disability accommodation catalog defaults with legal references and workspace shortcuts.
+- Added official Saudi contract print formats for standard, part-time, temporary/casual, and seasonal contracts.
+- Added Saudi Labor Coverage Matrix, Saudi Compliance Obligation Backlog, and Saudi Legal Review Queue reports for operational compliance follow-up.
+- Added scheduler alerts and validation hooks for ministry filings, document custody, final settlements, inspection fines, WPS corrections, work regulations, expat authorizations, and training disclosures.
+- Tightened compliance DocType permissions so HR users can operate records without delete/share privileges while HR managers and system managers retain administrative control.
+
 ## v1.16.0 - 2026-04-28
 
 - Added a documented token-based mobile attendance API contract for external apps, including credential issuance, status, location, check-in, and leave request endpoints that preserve the calling user's permissions.

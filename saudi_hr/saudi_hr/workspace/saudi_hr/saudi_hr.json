@@ -29,8 +29,8 @@
    "label": "Nationality Distribution"
   }
  ],
- "content": "[{\"id\": \"saudi_hr_header\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>مركز الموارد البشرية السعودية</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_header_guide\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h6 text-muted\\\">لوحة تشغيل واحدة تبدأ بمتابعة اليوم، ثم معاملات الموظف، ثم الدوام والرواتب، ثم الحوكمة والتحليلات.</span>\", \"col\": 12}}, {\"id\": \"saudi_hr_spacer_top\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_daily\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>١. القيادة اليومية</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_daily_professional_hub\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Professional HR Hub\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_attendance_hub\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Attendance Action Hub\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_mobile\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Mobile Attendance\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_settings\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi HR Settings\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_team_review\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Team Attendance Review\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_payroll\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Monthly Payroll\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_wps_tracker\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WPS Submission Tracker\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_org_tree\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Employee Org Tree\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_daily_metrics\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_metric_contracts\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Active Contracts\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_iqamas\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Expiring Iqamas\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_overtime\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Overtime\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_gosi\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total GOSI This Month\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_employee_journey\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_employee_journey\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>٢. رحلة الموظف</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_employee_requisition\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hiring Requisition\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_candidate\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Candidate Pipeline\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_onboarding\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Employee Onboarding\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_master\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"ملف الموظف الشامل\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_contract\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Employment Contract\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_leave\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Annual Leave\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_performance\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Performance Review\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_salary\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Salary Adjustment\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_promotion\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Promotion Transfer\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_exit\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Exit Clearance\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_time_payroll\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_time_payroll\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>٣. الدوام والرواتب</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_time_shift_type\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Shift Type\", \"col\": 3}}, {\"id\": \"saudi_hr_time_assignment\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Shift Assignment\", \"col\": 3}}, {\"id\": \"saudi_hr_time_assignment_tool\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Shift Assignment Tool\", \"col\": 3}}, {\"id\": \"saudi_hr_time_location\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Attendance Location\", \"col\": 3}}, {\"id\": \"saudi_hr_time_voice\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Employee Voice Profile\", \"col\": 3}}, {\"id\": \"saudi_hr_time_leave_balance\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Leave Balance Report\", \"col\": 3}}, {\"id\": \"saudi_hr_time_wps\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WPS Submission\", \"col\": 3}}, {\"id\": \"saudi_hr_time_wps_tracker\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WPS Submission Tracker\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_governance_metrics\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_governance\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>٤. الحوكمة والامتثال</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_metric_policies\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Approved HR Policies\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_compliance\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Compliance Actions In Progress\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_grievances\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Grievances Under Review\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_investigations\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Investigations In Progress\", \"col\": 3}}, {\"id\": \"saudi_hr_card_setup\", \"type\": \"card\", \"data\": {\"card_name\": \"الإعداد والتأسيس\", \"col\": 4}}, {\"id\": \"saudi_hr_card_employee_approvals\", \"type\": \"card\", \"data\": {\"card_name\": \"موافقات الموظفين\", \"col\": 4}}, {\"id\": \"saudi_hr_card_workflow_settings\", \"type\": \"card\", \"data\": {\"card_name\": \"إعدادات سير الموافقات\", \"col\": 4}}, {\"id\": \"saudi_hr_card_employee_relations\", \"type\": \"card\", \"data\": {\"card_name\": \"علاقات الموظفين\", \"col\": 4}}, {\"id\": \"saudi_hr_card_compliance_legal\", \"type\": \"card\", \"data\": {\"card_name\": \"الامتثال والشؤون القانونية\", \"col\": 4}}, {\"id\": \"saudi_hr_card_exit\", \"type\": \"card\", \"data\": {\"card_name\": \"إنهاء الخدمة والمغادرة\", \"col\": 4}}, {\"id\": \"saudi_hr_spacer_analytics\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_analytics\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>٥. التقارير والتحليلات</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_card_reports\", \"type\": \"card\", \"data\": {\"card_name\": \"التقارير والتحليلات\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_contracts\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Active Contracts by Type\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_gosi\", \"type\": \"chart\", \"data\": {\"chart_name\": \"GOSI Monthly Contributions\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_compliance\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Compliance Actions by Area\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_legal_risk\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Legal Risk Distribution\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_nationality\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Nationality Distribution\", \"col\": 4}}]",
- "creation": "2026-03-25 00:00:00.000000",
+ "content": "[{\"id\": \"saudi_hr_header\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>\u0645\u0631\u0643\u0632 \u0627\u0644\u0645\u0648\u0627\u0631\u062f \u0627\u0644\u0628\u0634\u0631\u064a\u0629 \u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_header_guide\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h6 text-muted\\\">\u0644\u0648\u062d\u0629 \u062a\u0634\u063a\u064a\u0644 \u0648\u0627\u062d\u062f\u0629 \u062a\u0628\u062f\u0623 \u0628\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u064a\u0648\u0645\u060c \u062b\u0645 \u0645\u0639\u0627\u0645\u0644\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641\u060c \u062b\u0645 \u0627\u0644\u062f\u0648\u0627\u0645 \u0648\u0627\u0644\u0631\u0648\u0627\u062a\u0628\u060c \u062b\u0645 \u0627\u0644\u062d\u0648\u0643\u0645\u0629 \u0648\u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a.</span>\", \"col\": 12}}, {\"id\": \"saudi_hr_spacer_top\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_daily\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>\u0661. \u0627\u0644\u0642\u064a\u0627\u062f\u0629 \u0627\u0644\u064a\u0648\u0645\u064a\u0629</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_daily_professional_hub\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Professional HR Hub\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_attendance_hub\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Attendance Action Hub\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_mobile\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Mobile Attendance\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_settings\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi HR Settings\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_team_review\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Team Attendance Review\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_payroll\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Monthly Payroll\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_wps_tracker\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WPS Submission Tracker\", \"col\": 3}}, {\"id\": \"saudi_hr_daily_org_tree\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Employee Org Tree\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_daily_metrics\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_metric_contracts\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Active Contracts\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_iqamas\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Expiring Iqamas\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_overtime\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Pending Overtime\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_gosi\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total GOSI This Month\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_employee_journey\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_employee_journey\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>\u0662. \u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0648\u0638\u0641</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_employee_requisition\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hiring Requisition\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_candidate\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Candidate Pipeline\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_onboarding\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Employee Onboarding\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_master\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"\u0645\u0644\u0641 \u0627\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u0634\u0627\u0645\u0644\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_contract\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Employment Contract\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_leave\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Annual Leave\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_performance\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Performance Review\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_salary\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Salary Adjustment\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_promotion\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Promotion Transfer\", \"col\": 3}}, {\"id\": \"saudi_hr_employee_exit\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Exit Clearance\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_time_payroll\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_time_payroll\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>\u0663. \u0627\u0644\u062f\u0648\u0627\u0645 \u0648\u0627\u0644\u0631\u0648\u0627\u062a\u0628</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_time_shift_type\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Shift Type\", \"col\": 3}}, {\"id\": \"saudi_hr_time_assignment\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Shift Assignment\", \"col\": 3}}, {\"id\": \"saudi_hr_time_assignment_tool\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Shift Assignment Tool\", \"col\": 3}}, {\"id\": \"saudi_hr_time_location\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Attendance Location\", \"col\": 3}}, {\"id\": \"saudi_hr_time_voice\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Employee Voice Profile\", \"col\": 3}}, {\"id\": \"saudi_hr_time_leave_balance\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Saudi Leave Balance Report\", \"col\": 3}}, {\"id\": \"saudi_hr_time_wps\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WPS Submission\", \"col\": 3}}, {\"id\": \"saudi_hr_time_wps_tracker\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WPS Submission Tracker\", \"col\": 3}}, {\"id\": \"saudi_hr_spacer_governance_metrics\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_governance\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>\u0664. \u0627\u0644\u062d\u0648\u0643\u0645\u0629 \u0648\u0627\u0644\u0627\u0645\u062a\u062b\u0627\u0644</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_metric_policies\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Approved HR Policies\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_compliance\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Compliance Actions In Progress\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_grievances\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Grievances Under Review\", \"col\": 3}}, {\"id\": \"saudi_hr_metric_investigations\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Investigations In Progress\", \"col\": 3}}, {\"id\": \"saudi_hr_card_setup\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0627\u0644\u0625\u0639\u062f\u0627\u062f \u0648\u0627\u0644\u062a\u0623\u0633\u064a\u0633\", \"col\": 4}}, {\"id\": \"saudi_hr_card_employee_approvals\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0645\u0648\u0627\u0641\u0642\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646\", \"col\": 4}}, {\"id\": \"saudi_hr_card_workflow_settings\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0633\u064a\u0631 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0627\u062a\", \"col\": 4}}, {\"id\": \"saudi_hr_card_employee_relations\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0639\u0644\u0627\u0642\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646\", \"col\": 4}}, {\"id\": \"saudi_hr_card_compliance_legal\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0627\u0644\u0627\u0645\u062a\u062b\u0627\u0644 \u0648\u0627\u0644\u0634\u0624\u0648\u0646 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064a\u0629\", \"col\": 4}}, {\"id\": \"saudi_hr_card_recruitment_providers\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0645\u0643\u0627\u062a\u0628 \u0627\u0644\u062a\u0648\u0638\u064a\u0641 \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u062f\u0627\u0645\", \"col\": 4}}, {\"id\": \"saudi_hr_card_regulation_records\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0644\u0648\u0627\u0626\u062d \u0648\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0627\u0645\u062a\u062b\u0627\u0644\", \"col\": 4}}, {\"id\": \"saudi_hr_card_employee_evidence\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0625\u062b\u0628\u0627\u062a\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646 \u0648\u0627\u0644\u0639\u0642\u0648\u062f\", \"col\": 4}}, {\"id\": \"saudi_hr_card_working_controls\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0623\u0646\u0645\u0627\u0637 \u0648\u0633\u0627\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644\", \"col\": 4}}, {\"id\": \"saudi_hr_card_safety_inspection\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0627\u0644\u0633\u0644\u0627\u0645\u0629 \u0648\u0627\u0644\u062a\u0641\u062a\u064a\u0634 \u0648\u0627\u0644\u063a\u0631\u0627\u0645\u0627\u062a\", \"col\": 4}}, {\"id\": \"saudi_hr_card_exit\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0625\u0646\u0647\u0627\u0621 \u0627\u0644\u062e\u062f\u0645\u0629 \u0648\u0627\u0644\u0645\u063a\u0627\u062f\u0631\u0629\", \"col\": 4}}, {\"id\": \"saudi_hr_spacer_analytics\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"saudi_hr_section_analytics\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>\u0665. \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0648\u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a</b></span>\", \"col\": 12}}, {\"id\": \"saudi_hr_card_reports\", \"type\": \"card\", \"data\": {\"card_name\": \"\u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0648\u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_contracts\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Active Contracts by Type\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_gosi\", \"type\": \"chart\", \"data\": {\"chart_name\": \"GOSI Monthly Contributions\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_compliance\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Compliance Actions by Area\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_legal_risk\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Legal Risk Distribution\", \"col\": 4}}, {\"id\": \"saudi_hr_chart_nationality\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Nationality Distribution\", \"col\": 4}}]",
+ "creation": "2026-03-25 00:00:00",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
@@ -44,7 +44,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "الإعداد والتأسيس",
+   "label": "\u0627\u0644\u0625\u0639\u062f\u0627\u062f \u0648\u0627\u0644\u062a\u0623\u0633\u064a\u0633",
    "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
@@ -113,7 +113,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "إعدادات سير الموافقات",
+   "label": "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0633\u064a\u0631 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0627\u062a",
    "link_count": 3,
    "link_type": "DocType",
    "onboard": 0,
@@ -152,7 +152,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "موافقات الموظفين",
+   "label": "\u0645\u0648\u0627\u0641\u0642\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646",
    "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
@@ -201,60 +201,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "سجلات سير الموافقات",
-   "link_count": 4,
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "description": "فتح تعريف Workflow الخاص بطلبات العمل الإضافي مباشرة",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Overtime Approval Workflow",
-   "link_count": 0,
-   "link_to": "/app/workflow/Overtime%20Approval%20Workflow",
-   "link_type": "URL",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "description": "فتح تعريف Workflow الخاص بالإجازة السنوية مباشرة",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Annual Leave Approval Workflow",
-   "link_count": 0,
-   "link_to": "/app/workflow/Annual%20Leave%20Approval%20Workflow",
-   "link_type": "URL",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "description": "فتح تعريف Workflow الخاص بالإجازة المرضية مباشرة",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sick Leave Approval Workflow",
-   "link_count": 0,
-   "link_to": "/app/workflow/Sick%20Leave%20Approval%20Workflow",
-   "link_type": "URL",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "description": "فتح تعريف Workflow الخاص بتعديل الراتب مباشرة",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Salary Adjustment Workflow",
-   "link_count": 0,
-   "link_to": "/app/workflow/Salary%20Adjustment%20Workflow",
-   "link_type": "URL",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "الاستقطاب",
+   "label": "\u0627\u0644\u0627\u0633\u062a\u0642\u0637\u0627\u0628",
    "link_count": 2,
    "link_type": "DocType",
    "onboard": 0,
@@ -283,7 +230,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "التهيئة والتوظيف",
+   "label": "\u0627\u0644\u062a\u0647\u064a\u0626\u0629 \u0648\u0627\u0644\u062a\u0648\u0638\u064a\u0641",
    "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
@@ -332,8 +279,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "الوقت والإجازات والرواتب",
-   "link_count": 20,
+   "label": "\u0627\u0644\u0648\u0642\u062a \u0648\u0627\u0644\u0625\u062c\u0627\u0632\u0627\u062a \u0648\u0627\u0644\u0631\u0648\u0627\u062a\u0628",
+   "link_count": 21,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -400,7 +347,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Team Attendance Review",
    "link_count": 0,
    "link_to": "Team Attendance Review",
@@ -551,7 +498,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "الأداء والتطوير",
+   "label": "\u0627\u0644\u0623\u062f\u0627\u0621 \u0648\u0627\u0644\u062a\u0637\u0648\u064a\u0631",
    "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
@@ -600,8 +547,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "علاقات الموظفين",
-   "link_count": 5,
+   "label": "\u0639\u0644\u0627\u0642\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646",
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -649,18 +596,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Work Injury",
-   "link_count": 0,
-   "link_to": "Work Injury",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "الامتثال والشؤون القانونية",
-   "link_count": 6,
+   "label": "\u0627\u0644\u0627\u0645\u062a\u062b\u0627\u0644 \u0648\u0627\u0644\u0634\u0624\u0648\u0646 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064a\u0629",
+   "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -708,16 +645,6 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Labor Inspection",
-   "link_count": 0,
-   "link_to": "Labor Inspection",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
    "label": "HR Compliance Action Log",
    "link_count": 0,
    "link_to": "HR Compliance Action Log",
@@ -728,8 +655,8 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "إنهاء الخدمة والمغادرة",
-   "link_count": 5,
+   "label": "\u0625\u0646\u0647\u0627\u0621 \u0627\u0644\u062e\u062f\u0645\u0629 \u0648\u0627\u0644\u0645\u063a\u0627\u062f\u0631\u0629",
+   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -740,6 +667,16 @@
    "label": "Termination Notice",
    "link_count": 0,
    "link_to": "Termination Notice",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Final Settlement SLA",
+   "link_count": 0,
+   "link_to": "Final Settlement SLA",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -787,15 +724,270 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "التقارير والتحليلات",
-   "link_count": 15,
-   "link_type": "Report",
+   "label": "\u0644\u0648\u0627\u0626\u062d \u0648\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0627\u0645\u062a\u062b\u0627\u0644",
+   "link_count": 6,
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Work Regulation",
+   "link_count": 0,
+   "link_to": "Work Regulation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Disciplinary Violation Catalog",
+   "link_count": 0,
+   "link_to": "Disciplinary Violation Catalog",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Disability Accommodation Catalog",
+   "link_count": 0,
+   "link_to": "Disability Accommodation Catalog",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Statutory HR Records Register",
+   "link_count": 0,
+   "link_to": "Statutory HR Records Register",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ministry Filing Tracker",
+   "link_count": 0,
+   "link_to": "Ministry Filing Tracker",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Training Disclosure Register",
+   "link_count": 0,
+   "link_to": "Training Disclosure Register",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u0625\u062b\u0628\u0627\u062a\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646 \u0648\u0627\u0644\u0639\u0642\u0648\u062f",
+   "link_count": 5,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Employee Document Custody Log",
+   "link_count": 0,
+   "link_to": "Employee Document Custody Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Contract Portal Evidence",
+   "link_count": 0,
+   "link_to": "Contract Portal Evidence",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Training Agreement",
+   "link_count": 0,
+   "link_to": "Training Agreement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Disability Employment Compliance",
+   "link_count": 0,
+   "link_to": "Disability Employment Compliance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Expat Work Authorization Control",
+   "link_count": 0,
+   "link_to": "Expat Work Authorization Control",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u0645\u0643\u0627\u062a\u0628 \u0627\u0644\u062a\u0648\u0638\u064a\u0641 \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u062f\u0627\u0645",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Recruitment Service Provider Compliance",
+   "link_count": 0,
+   "link_to": "Recruitment Service Provider Compliance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Recruitment Provider Complaint",
+   "link_count": 0,
+   "link_to": "Recruitment Provider Complaint",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u0623\u0646\u0645\u0627\u0637 \u0648\u0633\u0627\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Work Arrangement Control",
+   "link_count": 0,
+   "link_to": "Work Arrangement Control",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Working Time Compliance Check",
+   "link_count": 0,
+   "link_to": "Working Time Compliance Check",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Holiday Leave Overlap Rule",
+   "link_count": 0,
+   "link_to": "Holiday Leave Overlap Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Special Employment Category Control",
+   "link_count": 0,
+   "link_to": "Special Employment Category Control",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "\u0627\u0644\u0633\u0644\u0627\u0645\u0629 \u0648\u0627\u0644\u062a\u0641\u062a\u064a\u0634 \u0648\u0627\u0644\u063a\u0631\u0627\u0645\u0627\u062a",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Safety Inspection and Risk Control",
+   "link_count": 0,
+   "link_to": "Safety Inspection and Risk Control",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Inspection Fine SLA",
+   "link_count": 0,
+   "link_to": "Inspection Fine SLA",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Labor Inspection",
+   "link_count": 0,
+   "link_to": "Labor Inspection",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Work Injury",
+   "link_count": 0,
+   "link_to": "Work Injury",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "\u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0648\u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a",
+   "link_count": 18,
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
    "label": "Saudi Labor Coverage Matrix",
    "link_count": 0,
    "link_to": "Saudi Labor Coverage Matrix",
@@ -805,7 +997,27 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
+   "label": "Saudi Compliance Obligation Backlog",
+   "link_count": 0,
+   "link_to": "Saudi Compliance Obligation Backlog",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Saudi Legal Review Queue",
+   "link_count": 0,
+   "link_to": "Saudi Legal Review Queue",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
    "label": "Policy Compliance Register",
    "link_count": 0,
    "link_to": "Policy Compliance Register",
@@ -815,7 +1027,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Compliance Case Tracker",
    "link_count": 0,
    "link_to": "Compliance Case Tracker",
@@ -825,7 +1037,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Labor Inspection Tracker",
    "link_count": 0,
    "link_to": "Labor Inspection Tracker",
@@ -835,7 +1047,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "GOSI Monthly Report",
    "link_count": 0,
    "link_to": "GOSI Monthly Report",
@@ -845,7 +1057,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "EOSB Calculation Report",
    "link_count": 0,
    "link_to": "EOSB Calculation Report",
@@ -855,7 +1067,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Contract Expiry Report",
    "link_count": 0,
    "link_to": "Contract Expiry Report",
@@ -865,7 +1077,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Work Permit Expiry Report",
    "link_count": 0,
    "link_to": "Work Permit Expiry Report",
@@ -875,7 +1087,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Nitaqat Compliance Report",
    "link_count": 0,
    "link_to": "Nitaqat Compliance Report",
@@ -885,7 +1097,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Saudi Leave Balance Report",
    "link_count": 0,
    "link_to": "Saudi Leave Balance Report",
@@ -895,7 +1107,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Outstanding Employee Loans",
    "link_count": 0,
    "link_to": "Outstanding Employee Loans",
@@ -905,7 +1117,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Loan Deduction Register",
    "link_count": 0,
    "link_to": "Loan Deduction Register",
@@ -915,7 +1127,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Monthly Loan Recovery Summary",
    "link_count": 0,
    "link_to": "Monthly Loan Recovery Summary",
@@ -946,7 +1158,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "ملف الموظف الشامل",
+   "label": "\u0645\u0644\u0641 \u0627\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u0634\u0627\u0645\u0644",
    "link_count": 0,
    "link_to": "Employee",
    "link_type": "DocType",
@@ -954,41 +1166,41 @@
    "type": "Link"
   }
  ],
- "modified": "2026-03-27 03:20:00.000000",
+ "modified": "2026-05-25 18:33:23.566696",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "Saudi HR",
  "number_cards": [
   {
-   "label": "العقود النشطة",
+   "label": "\u0627\u0644\u0639\u0642\u0648\u062f \u0627\u0644\u0646\u0634\u0637\u0629",
    "number_card_name": "Total Active Contracts"
   },
   {
-   "label": "إقامات منتهية/قاربت الانتهاء",
+   "label": "\u0625\u0642\u0627\u0645\u0627\u062a \u0645\u0646\u062a\u0647\u064a\u0629/\u0642\u0627\u0631\u0628\u062a \u0627\u0644\u0627\u0646\u062a\u0647\u0627\u0621",
    "number_card_name": "Expiring Iqamas"
   },
   {
-   "label": "طلبات العمل الإضافي المعلقة",
+   "label": "\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0625\u0636\u0627\u0641\u064a \u0627\u0644\u0645\u0639\u0644\u0642\u0629",
    "number_card_name": "Pending Overtime"
   },
   {
-   "label": "إجمالي التأمينات هذا الشهر",
+   "label": "\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u062a\u0623\u0645\u064a\u0646\u0627\u062a \u0647\u0630\u0627 \u0627\u0644\u0634\u0647\u0631",
    "number_card_name": "Total GOSI This Month"
   },
   {
-   "label": "السياسات المعتمدة",
+   "label": "\u0627\u0644\u0633\u064a\u0627\u0633\u0627\u062a \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629",
    "number_card_name": "Approved HR Policies"
   },
   {
-   "label": "إجراءات الامتثال الجارية",
+   "label": "\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u0627\u0645\u062a\u062b\u0627\u0644 \u0627\u0644\u062c\u0627\u0631\u064a\u0629",
    "number_card_name": "Compliance Actions In Progress"
   },
   {
-   "label": "التظلمات قيد المراجعة",
+   "label": "\u0627\u0644\u062a\u0638\u0644\u0645\u0627\u062a \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629",
    "number_card_name": "Grievances Under Review"
   },
   {
-   "label": "التحقيقات الجارية",
+   "label": "\u0627\u0644\u062a\u062d\u0642\u064a\u0642\u0627\u062a \u0627\u0644\u062c\u0627\u0631\u064a\u0629",
    "number_card_name": "Investigations In Progress"
   },
   {
@@ -1013,7 +1225,7 @@
  "public": 1,
  "quick_lists": [],
  "roles": [],
- "sequence_id": 29,
+ "sequence_id": 29.0,
  "shortcuts": [
   {
    "color": "Blue",
@@ -1060,7 +1272,7 @@
   {
    "color": "Blue",
    "doc_view": "List",
-   "label": "ملف الموظف الشامل",
+   "label": "\u0645\u0644\u0641 \u0627\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u0634\u0627\u0645\u0644",
    "link_to": "Employee",
    "type": "DocType"
   },
@@ -1131,6 +1343,7 @@
    "doc_view": "List",
    "label": "Team Attendance Review",
    "link_to": "Team Attendance Review",
+   "report_ref_doctype": "Employee",
    "type": "Report"
   },
   {
@@ -1180,6 +1393,7 @@
    "doc_view": "List",
    "label": "WPS Submission Tracker",
    "link_to": "WPS Submission Tracker",
+   "report_ref_doctype": "WPS Submission",
    "type": "Report"
   },
   {
@@ -1187,6 +1401,7 @@
    "doc_view": "List",
    "label": "Saudi Leave Balance Report",
    "link_to": "Saudi Leave Balance Report",
+   "report_ref_doctype": "Employee",
    "type": "Report"
   }
  ],

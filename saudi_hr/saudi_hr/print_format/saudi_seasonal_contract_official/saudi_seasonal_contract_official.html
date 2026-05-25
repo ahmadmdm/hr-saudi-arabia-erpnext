@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: Tahoma, Arial, sans-serif; direction: rtl; font-size: 12px; line-height: 1.8; color: #1f2933; }
+h1 { text-align: center; color: #2f6f44; font-size: 21px; margin: 0 0 6px; }
+.sub { text-align: center; border-bottom: 2px solid #2f6f44; padding-bottom: 8px; margin-bottom: 14px; }
+.section { background: #ecf8f0; color: #2f6f44; font-weight: bold; padding: 5px 8px; margin-top: 12px; }
+.box { border: 1px solid #d7e6dc; padding: 8px; margin: 8px 0; border-radius: 4px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+.label { font-weight: bold; }
+.signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 42px; }
+.line { border-top: 1px solid #333; padding-top: 8px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>نموذج عقد عمل موسمي</h1>
+<div class="sub">Seasonal Employment Contract - رقم العقد {{ doc.name }}</div>
+
+<div class="section">الأطراف وموسم العمل</div>
+<div class="grid box">
+  <div><span class="label">صاحب العمل:</span> {{ doc.company or "" }}</div>
+  <div><span class="label">العامل:</span> {{ doc.employee_name or doc.employee }}</div>
+  <div><span class="label">المسمى:</span> {{ doc.designation or "" }}</div>
+  <div><span class="label">نوع العقد النظامي:</span> {{ doc.regulatory_contract_variant or "Seasonal / موسمي" }}</div>
+</div>
+
+<div class="section">مدة الموسم</div>
+<div class="box">
+  يعمل الطرف الثاني خلال الموسم المتفق عليه من {{ frappe.format(doc.start_date, "Date") if doc.start_date else "" }} إلى {{ frappe.format(doc.end_date, "Date") if doc.end_date else "" }}،
+  وفق قواعد وضوابط تنظيم العمل الموسمي وبما لا يتعارض مع أحكام نظام العمل.
+</div>
+
+<div class="section">الأجر والالتزامات</div>
+<div class="grid box">
+  <div><span class="label">الأجر الأساسي:</span> {{ frappe.format(doc.basic_salary or 0, {"fieldtype": "Currency"}) }}</div>
+  <div><span class="label">إجمالي الأجر:</span> {{ frappe.format(doc.total_salary or 0, {"fieldtype": "Currency"}) }}</div>
+  <div><span class="label">الساعات اليومية:</span> {{ doc.working_hours_per_day or "" }}</div>
+  <div><span class="label">الراحة الأسبوعية:</span> {{ doc.weekly_rest_day or "" }}</div>
+</div>
+
+<div class="section">النظام الواجب التطبيق</div>
+<div class="box">
+  يخضع هذا العقد لنظام العمل ولائحته التنفيذية والقرارات الصادرة تنفيذاً له في الواجبات، التأديب، ساعات العمل، الراحة، العمل الإضافي، العطل الرسمية، السلامة، وإصابات العمل.
+</div>
+
+<div class="signatures">
+  <div class="line">الطرف الأول<br>{{ doc.company or "" }}</div>
+  <div class="line">الطرف الثاني<br>{{ doc.employee_name or doc.employee }}</div>
+</div>
+</body>
+</html>

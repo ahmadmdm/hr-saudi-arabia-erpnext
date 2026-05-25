@@ -37,6 +37,7 @@
  "report_type": "Script Report",
  "roles": [
   {"role": "HR Manager"},
-  {"role": "HR User"}
+  {"role": "HR User"},
+  {"role": "System Manager"}
  ]
 }

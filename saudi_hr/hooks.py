@@ -39,6 +39,14 @@ scheduler_events = {
 		"saudi_hr.saudi_hr.tasks.send_work_permit_expiry_alerts",
 		"saudi_hr.saudi_hr.tasks.send_sick_leave_threshold_alerts",
 		"saudi_hr.saudi_hr.tasks.send_probation_end_alerts",
+		"saudi_hr.saudi_hr.tasks.send_ministry_filing_due_alerts",
+		"saudi_hr.saudi_hr.tasks.send_final_settlement_sla_alerts",
+		"saudi_hr.saudi_hr.tasks.send_employee_document_custody_alerts",
+		"saudi_hr.saudi_hr.tasks.send_inspection_fine_sla_alerts",
+		"saudi_hr.saudi_hr.tasks.send_wps_correction_due_alerts",
+		"saudi_hr.saudi_hr.tasks.send_work_regulation_review_alerts",
+		"saudi_hr.saudi_hr.tasks.send_expat_authorization_due_alerts",
+		"saudi_hr.saudi_hr.tasks.send_training_disclosure_due_alerts",
 	],
 	"monthly": [
 		"saudi_hr.saudi_hr.tasks.send_gosi_due_alerts",
@@ -60,6 +68,57 @@ doc_events = {
 		"after_insert": "saudi_hr.saudi_hr.doctype.policy_acknowledgement.policy_acknowledgement.update_policy_acknowledgement_summary",
 		"on_update": "saudi_hr.saudi_hr.doctype.policy_acknowledgement.policy_acknowledgement.update_policy_acknowledgement_summary",
 		"on_trash": "saudi_hr.saudi_hr.doctype.policy_acknowledgement.policy_acknowledgement.update_policy_acknowledgement_summary",
+	},
+	"Termination Notice": {
+		"on_submit": "saudi_hr.saudi_hr.compliance_controls.create_final_settlement_from_termination",
+	},
+	"Work Regulation": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Statutory HR Records Register": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Ministry Filing Tracker": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Disability Employment Compliance": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Final Settlement SLA": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Work Arrangement Control": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Working Time Compliance Check": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Inspection Fine SLA": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Special Employment Category Control": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Holiday Leave Overlap Rule": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Expat Work Authorization Control": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Training Disclosure Register": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Disciplinary Procedure": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Recruitment Service Provider Compliance": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Recruitment Provider Complaint": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Training Agreement": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
 	},
 }
 

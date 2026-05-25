@@ -1,0 +1,83 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-24 21:39:45.844392",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "hazard",
+  "severity",
+  "column_break_1",
+  "required_control",
+  "status",
+  "owner_user",
+  "due_date",
+  "evidence_attachment"
+ ],
+ "fields": [
+  {
+   "fieldname": "hazard",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hazard / \u0627\u0644\u062e\u0637\u0631",
+   "reqd": 1
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Severity / \u0627\u0644\u0634\u062f\u0629",
+   "options": "\nLow / \u0645\u0646\u062e\u0641\u0636\nMedium / \u0645\u062a\u0648\u0633\u0637\nHigh / \u0645\u0631\u062a\u0641\u0639\nCritical / \u062d\u0631\u062c",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "required_control",
+   "fieldtype": "Small Text",
+   "label": "Required Control / \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u0648\u0642\u0627\u0626\u064a \u0627\u0644\u0645\u0637\u0644\u0648\u0628"
+  },
+  {
+   "default": "Open / \u0645\u0641\u062a\u0648\u062d",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status / \u0627\u0644\u062d\u0627\u0644\u0629",
+   "options": "Open / \u0645\u0641\u062a\u0648\u062d\nIn Progress / \u0642\u064a\u062f \u0627\u0644\u062a\u0646\u0641\u064a\u0630\nControlled / \u062a\u0645\u062a \u0627\u0644\u0633\u064a\u0637\u0631\u0629\nAccepted Risk / \u062e\u0637\u0631 \u0645\u0642\u0628\u0648\u0644\nClosed / \u0645\u063a\u0644\u0642"
+  },
+  {
+   "fieldname": "owner_user",
+   "fieldtype": "Link",
+   "label": "Owner / \u0627\u0644\u0645\u0633\u0624\u0648\u0644",
+   "options": "User"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date / \u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0627\u0633\u062a\u062d\u0642\u0627\u0642"
+  },
+  {
+   "fieldname": "evidence_attachment",
+   "fieldtype": "Attach",
+   "label": "Evidence / \u0645\u0631\u0641\u0642 \u0627\u0644\u0625\u062b\u0628\u0627\u062a"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-25 18:33:00.824410",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Safety Risk Control Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": []
+}

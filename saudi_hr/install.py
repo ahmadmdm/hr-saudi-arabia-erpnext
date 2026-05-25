@@ -20,6 +20,7 @@ def _get_existing_employee_approver_fields():
 def after_install():
 	create_workflow_states()
 	sync_workflow_configs()
+	sync_compliance_controls()
 	ensure_department_approver_role()
 	sync_department_approver_role_assignments()
 	sync_department_approver_company_permissions()
@@ -34,6 +35,7 @@ def after_migrate():
 	"""Called after every bench migrate — ensures workflow states always exist."""
 	create_workflow_states()
 	sync_workflow_configs()
+	sync_compliance_controls()
 	ensure_department_approver_role()
 	sync_department_approver_role_assignments()
 	sync_department_approver_company_permissions()
@@ -152,6 +154,13 @@ def sync_notification_configs():
 				frappe.rename_doc("Notification", old_name, new_name, force=True, merge=False)
 
 
+def sync_compliance_controls():
+	"""Install and update the Saudi Labor Regulations compliance layer."""
+	from saudi_hr.saudi_hr.compliance_controls import sync_compliance_controls as sync_controls
+
+	sync_controls()
+
+
 # ─── Workflow States ──────────────────────────────────────────────────────────
 
 def create_workflow_states():
@@ -214,6 +223,9 @@ def sync_workflow_configs():
 
 		if workflow_data.get("doctype") != "Workflow":
 			continue
+
+		for constant_field in ("creation", "modified", "modified_by", "owner", "idx"):
+			workflow_data.pop(constant_field, None)
 
 		workflow_name = workflow_data.get("name") or workflow_data.get("workflow_name")
 		if not workflow_name:

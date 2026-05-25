@@ -23,13 +23,13 @@ frappe.ui.form.on('End of Service Benefit', {
                 frm.set_value('department', emp.department);
                 frm.set_value('joining_date', emp.date_of_joining);
                 frm.set_value('nationality', emp.nationality || '');
-                // Fetch last basic salary from latest salary slip
                 frappe.call({
-                    method: 'saudi_hr.saudi_hr.doctype.end_of_service_benefit.end_of_service_benefit.get_last_basic_salary',
+                    method: 'saudi_hr.saudi_hr.doctype.end_of_service_benefit.end_of_service_benefit.get_last_salary_components',
                     args: { employee: frm.doc.employee },
                     callback(s) {
                         if (s.message) {
-                            frm.set_value('last_basic_salary', s.message);
+                            frm.set_value('last_basic_salary', s.message.basic_salary || 0);
+                            frm.set_value('last_total_salary', s.message.total_salary || 0);
                             _trigger_calculation(frm);
                         }
                     }
@@ -41,6 +41,8 @@ frappe.ui.form.on('End of Service Benefit', {
     joining_date(frm)        { _trigger_calculation(frm); },
     termination_date(frm)    { _trigger_calculation(frm); },
     last_basic_salary(frm)   { _trigger_calculation(frm); },
+    last_total_salary(frm)   { _trigger_calculation(frm); },
+    eosb_wage_basis(frm)     { _trigger_calculation(frm); },
     termination_reason(frm)  { _trigger_calculation(frm); },
     eosb_deductions(frm)     { _trigger_calculation(frm); },
 });
@@ -55,6 +57,8 @@ function _trigger_calculation(frm) {
             joining_date: frm.doc.joining_date,
             termination_date: frm.doc.termination_date,
             last_basic_salary: frm.doc.last_basic_salary,
+            last_total_salary: frm.doc.last_total_salary || 0,
+            eosb_wage_basis: frm.doc.eosb_wage_basis || 'Basic Salary / الراتب الأساسي',
             termination_reason: frm.doc.termination_reason || '',
             eosb_deductions: frm.doc.eosb_deductions || 0,
         },

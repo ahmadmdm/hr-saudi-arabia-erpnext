@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: Tahoma, Arial, sans-serif; direction: rtl; font-size: 12px; line-height: 1.8; color: #243447; }
+h1 { text-align: center; color: #205493; font-size: 21px; margin: 0 0 6px; }
+.sub { text-align: center; border-bottom: 2px solid #205493; padding-bottom: 8px; margin-bottom: 14px; }
+.section { background: #edf4fb; color: #205493; font-weight: bold; padding: 5px 8px; margin-top: 12px; }
+.box { border: 1px solid #d8dee4; padding: 8px; margin: 8px 0; border-radius: 4px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+.label { font-weight: bold; }
+.signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 42px; }
+.line { border-top: 1px solid #333; padding-top: 8px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>نموذج عقد عمل لبعض الوقت</h1>
+<div class="sub">Part-time Employment Contract - رقم العقد {{ doc.name }}</div>
+
+<div class="section">الأطراف والوظيفة</div>
+<div class="grid box">
+  <div><span class="label">صاحب العمل:</span> {{ doc.company or "" }}</div>
+  <div><span class="label">العامل:</span> {{ doc.employee_name or doc.employee }}</div>
+  <div><span class="label">الوظيفة:</span> {{ doc.designation or "" }}</div>
+  <div><span class="label">نوع العقد النظامي:</span> {{ doc.regulatory_contract_variant or "Part-time / لبعض الوقت" }}</div>
+</div>
+
+<div class="section">أيام وساعات العمل</div>
+<div class="box">
+  تحدد أيام وساعات العمل بما لا يتعارض مع ضوابط العمل لبعض الوقت، ويستحق العامل الأجر بحسب الاتفاق المثبت في هذا العقد وسجلات الحضور.
+  <div class="grid">
+    <div><span class="label">الساعات اليومية:</span> {{ doc.working_hours_per_day or "" }}</div>
+    <div><span class="label">الساعات الأسبوعية:</span> {{ doc.working_hours_per_week or "" }}</div>
+    <div><span class="label">تاريخ البداية:</span> {{ frappe.format(doc.start_date, "Date") if doc.start_date else "" }}</div>
+    <div><span class="label">تاريخ النهاية:</span> {{ frappe.format(doc.end_date, "Date") if doc.end_date else "" }}</div>
+  </div>
+</div>
+
+<div class="section">الأجر والتوثيق</div>
+<div class="box">
+  الأجر الأساسي {{ frappe.format(doc.basic_salary or 0, {"fieldtype": "Currency"}) }}، وإجمالي الأجر {{ frappe.format(doc.total_salary or 0, {"fieldtype": "Currency"}) }}.
+  يجب حفظ إثبات توثيق العقد أو قبوله في منصة الوزارة عند انطباق ذلك.
+</div>
+
+<div class="section">أحكام نظامية</div>
+<div class="box">
+  يخضع هذا العقد لنظام العمل ولائحته التنفيذية، وتطبق أحكام الراحة والإجازات والعمل الإضافي وحماية الأجور بما يتناسب مع نمط العمل لبعض الوقت.
+</div>
+
+<div class="signatures">
+  <div class="line">الطرف الأول<br>{{ doc.company or "" }}</div>
+  <div class="line">الطرف الثاني<br>{{ doc.employee_name or doc.employee }}</div>
+</div>
+</body>
+</html>
