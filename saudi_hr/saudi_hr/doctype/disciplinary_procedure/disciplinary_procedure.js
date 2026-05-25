@@ -1,4 +1,12 @@
 frappe.ui.form.on("Disciplinary Procedure", {
+    violation_catalog: function (frm) {
+        set_catalog_recommendation(frm);
+    },
+
+    occurrence_number: function (frm) {
+        set_catalog_recommendation(frm);
+    },
+
     employee: function (frm) {
         if (!frm.doc.employee) return;
         frappe.db.get_value("Employee", frm.doc.employee, ["employee_name", "company", "department"], (r) => {
@@ -116,3 +124,41 @@ frappe.ui.form.on("Disciplinary Procedure", {
         }
     }
 });
+
+function set_catalog_recommendation(frm) {
+    if (!frm.doc.violation_catalog) return;
+    frappe.db.get_value(
+        "Disciplinary Violation Catalog",
+        frm.doc.violation_catalog,
+        [
+            "penalty_first",
+            "penalty_second",
+            "penalty_third",
+            "penalty_fourth",
+            "legal_reference",
+            "requires_termination_review",
+            "status"
+        ],
+        (r) => {
+            if (!r) return;
+            const occurrence = Math.min(Math.max(cint(frm.doc.occurrence_number || 1), 1), 4);
+            const fieldMap = {
+                1: "penalty_first",
+                2: "penalty_second",
+                3: "penalty_third",
+                4: "penalty_fourth"
+            };
+            frm.set_value("recommended_penalty", r[fieldMap[occurrence]] || "");
+            frm.set_value("catalog_legal_reference", r.legal_reference || "");
+            frm.set_value(
+                "catalog_requires_review",
+                r.requires_termination_review || r.status === "Needs Legal Review / يحتاج مراجعة قانونية" ? 1 : 0
+            );
+        }
+    );
+}
+
+function cint(value) {
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+}

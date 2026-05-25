@@ -1,0 +1,186 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-24 21:52:20.075922",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "company",
+  "document_type",
+  "custody_status",
+  "custody_section",
+  "original_document_held",
+  "custody_start_date",
+  "return_due_date",
+  "column_break_2",
+  "returned_on",
+  "authorized_by",
+  "legal_reference",
+  "evidence_attachment",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-DOC-CUS-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / \u0627\u0644\u0645\u0648\u0638\u0641",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name / \u0627\u0633\u0645 \u0627\u0644\u0645\u0648\u0638\u0641",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company / \u0627\u0644\u0634\u0631\u0643\u0629",
+   "options": "Company"
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Document Type / \u0646\u0648\u0639 \u0627\u0644\u0645\u0633\u062a\u0646\u062f",
+   "options": "\nPassport / \u062c\u0648\u0627\u0632 \u0627\u0644\u0633\u0641\u0631\nIqama / \u0627\u0644\u0625\u0642\u0627\u0645\u0629\nMedical Insurance Card / \u0628\u0637\u0627\u0642\u0629 \u0627\u0644\u062a\u0623\u0645\u064a\u0646 \u0627\u0644\u0637\u0628\u064a\nWork Permit / \u0631\u062e\u0635\u0629 \u0627\u0644\u0639\u0645\u0644\nCertificate / \u0634\u0647\u0627\u062f\u0629\nOther / \u0623\u062e\u0631\u0649",
+   "reqd": 1
+  },
+  {
+   "default": "Not Held / \u063a\u064a\u0631 \u0645\u062d\u062a\u0641\u0638 \u0628\u0647",
+   "fieldname": "custody_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Custody Status / \u062d\u0627\u0644\u0629 \u0627\u0644\u0639\u0647\u062f\u0629",
+   "options": "Not Held / \u063a\u064a\u0631 \u0645\u062d\u062a\u0641\u0638 \u0628\u0647\nTemporary Custody / \u0639\u0647\u062f\u0629 \u0645\u0624\u0642\u062a\u0629\nReturned / \u0623\u0639\u064a\u062f \u0644\u0644\u0645\u0648\u0638\u0641\nException Under Legal Review / \u0627\u0633\u062a\u062b\u0646\u0627\u0621 \u062a\u062d\u062a \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064a\u0629"
+  },
+  {
+   "fieldname": "custody_section",
+   "fieldtype": "Section Break",
+   "label": "Custody & Return / \u0627\u0644\u0639\u0647\u062f\u0629 \u0648\u0627\u0644\u0625\u0631\u062c\u0627\u0639"
+  },
+  {
+   "default": "0",
+   "fieldname": "original_document_held",
+   "fieldtype": "Check",
+   "label": "Original Document Held / \u0627\u0644\u0623\u0635\u0644 \u0645\u062d\u062a\u0641\u0638 \u0628\u0647"
+  },
+  {
+   "fieldname": "custody_start_date",
+   "fieldtype": "Date",
+   "label": "Custody Start Date / \u062a\u0627\u0631\u064a\u062e \u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u0639\u0647\u062f\u0629"
+  },
+  {
+   "fieldname": "return_due_date",
+   "fieldtype": "Date",
+   "label": "Return Due Date / \u0645\u0647\u0644\u0629 \u0627\u0644\u0625\u0631\u062c\u0627\u0639"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "returned_on",
+   "fieldtype": "Date",
+   "label": "Returned On / \u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0625\u0631\u062c\u0627\u0639"
+  },
+  {
+   "fieldname": "authorized_by",
+   "fieldtype": "Link",
+   "label": "Authorized By / \u0645\u0639\u062a\u0645\u062f \u0645\u0646",
+   "options": "User"
+  },
+  {
+   "default": "Executive Regulations Art.6",
+   "fieldname": "legal_reference",
+   "fieldtype": "Data",
+   "label": "Legal Reference / \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0646\u0638\u0627\u0645\u064a"
+  },
+  {
+   "fieldname": "evidence_attachment",
+   "fieldtype": "Attach",
+   "label": "Evidence / \u0645\u0631\u0641\u0642 \u0627\u0644\u0625\u062b\u0628\u0627\u062a"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes / \u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+  }
+ ],
+ "grid_page_length": 50,
+ "icon": "fa fa-id-card",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-25 23:46:57.339593",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Employee Document Custody Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "employee,employee_name,document_type",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

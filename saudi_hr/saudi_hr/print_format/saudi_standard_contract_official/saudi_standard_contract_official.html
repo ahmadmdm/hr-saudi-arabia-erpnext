@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: Tahoma, Arial, sans-serif; direction: rtl; color: #1f2933; font-size: 12px; line-height: 1.8; }
+.title { text-align: center; border-bottom: 2px solid #1f4e79; padding-bottom: 8px; margin-bottom: 14px; }
+.title h1 { margin: 0; font-size: 21px; color: #1f4e79; }
+.meta, .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+.box { border: 1px solid #d8dee4; padding: 8px; margin: 8px 0; border-radius: 4px; }
+.section { background: #eef5fb; color: #1f4e79; font-weight: bold; padding: 5px 8px; margin-top: 12px; }
+.label { font-weight: bold; }
+.signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 42px; }
+.line { border-top: 1px solid #333; padding-top: 8px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="title">
+  <h1>نموذج عقد عمل دائم / Standard Employment Contract</h1>
+  <div>وفق نماذج العقود الموحدة في اللائحة التنفيذية لنظام العمل</div>
+  <div>رقم العقد: {{ doc.name }}</div>
+</div>
+
+<div class="section">أطراف العقد</div>
+<div class="grid box">
+  <div><span class="label">الطرف الأول:</span> {{ doc.company or "" }}</div>
+  <div><span class="label">الطرف الثاني:</span> {{ doc.employee_name or doc.employee }}</div>
+  <div><span class="label">المسمى الوظيفي:</span> {{ doc.designation or "" }}</div>
+  <div><span class="label">القسم:</span> {{ doc.department or "" }}</div>
+</div>
+
+<div class="section">موضوع العقد ومدته</div>
+<div class="box">
+  يعمل الطرف الثاني لدى الطرف الأول وتحت إدارته أو إشرافه في الوظيفة الموضحة أعلاه، ويباشر الأعمال التي يكلف بها بما يتناسب مع قدراته واحتياجات العمل.
+  يبدأ العقد في {{ frappe.format(doc.start_date, "Date") }}{% if doc.end_date %} وينتهي في {{ frappe.format(doc.end_date, "Date") }}{% endif %}.
+  نوع العقد: {{ doc.contract_type or "Standard / قياسي" }}.
+</div>
+
+<div class="section">فترة التجربة وساعات العمل</div>
+<div class="grid box">
+  <div><span class="label">فترة التجربة:</span> {{ doc.probation_period_days or 0 }} يوم</div>
+  <div><span class="label">نهاية التجربة:</span> {{ frappe.format(doc.probation_end_date, "Date") if doc.probation_end_date else "" }}</div>
+  <div><span class="label">الساعات اليومية:</span> {{ doc.working_hours_per_day or 8 }}</div>
+  <div><span class="label">الراحة الأسبوعية:</span> {{ doc.weekly_rest_day or "" }}</div>
+</div>
+
+<div class="section">الأجر والبدلات</div>
+<div class="grid box">
+  <div><span class="label">الأجر الأساسي:</span> {{ frappe.format(doc.basic_salary or 0, {"fieldtype": "Currency"}) }}</div>
+  <div><span class="label">بدل السكن:</span> {{ frappe.format(doc.housing_allowance or 0, {"fieldtype": "Currency"}) }}</div>
+  <div><span class="label">بدل النقل:</span> {{ frappe.format(doc.transport_allowance or 0, {"fieldtype": "Currency"}) }}</div>
+  <div><span class="label">إجمالي الأجر:</span> {{ frappe.format(doc.total_salary or 0, {"fieldtype": "Currency"}) }}</div>
+</div>
+
+<div class="section">أحكام نظامية</div>
+<div class="box">
+  يلتزم الطرف الأول بدفع الأجر في مواعيده، وتوثيق العقد عبر المنصة المعتمدة متى كان ذلك واجباً، وتحمل رسوم الاستقدام والإقامة ورخصة العمل للعامل غير السعودي.
+  ويخضع العقد لنظام العمل ولائحته التنفيذية والقرارات الصادرة تنفيذاً له فيما لم يرد به نص.
+</div>
+
+<div class="signatures">
+  <div class="line">الطرف الأول<br>{{ doc.company or "" }}</div>
+  <div class="line">الطرف الثاني<br>{{ doc.employee_name or doc.employee }}</div>
+</div>
+</body>
+</html>

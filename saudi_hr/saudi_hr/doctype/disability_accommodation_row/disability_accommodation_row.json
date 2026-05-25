@@ -1,0 +1,95 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-24 21:39:45.136590",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "certificate_reference",
+  "certificate_expiry",
+  "accommodation_section",
+  "accommodation_type",
+  "accommodation_status",
+  "evidence_attachment",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee / \u0627\u0644\u0645\u0648\u0638\u0641",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name / \u0627\u0633\u0645 \u0627\u0644\u0645\u0648\u0638\u0641",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "certificate_reference",
+   "fieldtype": "Data",
+   "label": "Certificate Reference / \u0645\u0631\u062c\u0639 \u0634\u0647\u0627\u062f\u0629 \u0627\u0644\u0625\u0639\u0627\u0642\u0629"
+  },
+  {
+   "fieldname": "certificate_expiry",
+   "fieldtype": "Date",
+   "label": "Certificate Expiry / \u0627\u0646\u062a\u0647\u0627\u0621 \u0627\u0644\u0634\u0647\u0627\u062f\u0629"
+  },
+  {
+   "fieldname": "accommodation_section",
+   "fieldtype": "Section Break",
+   "label": "Accommodation / \u0627\u0644\u062a\u0633\u0647\u064a\u0644\u0627\u062a"
+  },
+  {
+   "fieldname": "accommodation_type",
+   "fieldtype": "Select",
+   "label": "Accommodation Type / \u0646\u0648\u0639 \u0627\u0644\u062a\u0633\u0647\u064a\u0644",
+   "options": "\nWorkspace Adjustment / \u062a\u0647\u064a\u0626\u0629 \u0645\u0643\u0627\u0646 \u0627\u0644\u0639\u0645\u0644\nAssistive Tool / \u0623\u062f\u0627\u0629 \u0645\u0633\u0627\u0639\u062f\u0629\nWorking Hours Adjustment / \u062a\u0639\u062f\u064a\u0644 \u0633\u0627\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644\nJob Duty Adjustment / \u062a\u0639\u062f\u064a\u0644 \u0645\u0647\u0627\u0645 \u0627\u0644\u0648\u0638\u064a\u0641\u0629\nTransportation Support / \u062f\u0639\u0645 \u0627\u0644\u0646\u0642\u0644\nOther / \u0623\u062e\u0631\u0649"
+  },
+  {
+   "default": "Required / \u0645\u0637\u0644\u0648\u0628",
+   "fieldname": "accommodation_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Accommodation Status / \u062d\u0627\u0644\u0629 \u0627\u0644\u062a\u0633\u0647\u064a\u0644",
+   "options": "Required / \u0645\u0637\u0644\u0648\u0628\nProvided / \u0645\u0646\u0641\u0630\nUnder Review / \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629\nNot Required / \u063a\u064a\u0631 \u0645\u0637\u0644\u0648\u0628"
+  },
+  {
+   "fieldname": "evidence_attachment",
+   "fieldtype": "Attach",
+   "label": "Evidence / \u0645\u0631\u0641\u0642 \u0627\u0644\u0625\u062b\u0628\u0627\u062a"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes / \u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-25 23:46:56.187277",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Disability Accommodation Row",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": []
+}
