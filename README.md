@@ -848,8 +848,8 @@ Please follow [Frappe Development Guidelines](https://frappeframework.com/docs/u
 ## 📧 الدعم | Support
 
 - **GitHub Issues:** [github.com/ahmadmdm/hr-saudi-arabia-erpnext/issues](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/issues)
-- **Email:** info@ideaorbit.net
-- **Company:** IdeaOrbit — [ideaorbit.net](https://ideaorbit.net)
+- **Email:** ahmad8@outlook.com
+
 
 ---
 
@@ -865,6 +865,6 @@ See [LICENSE](LICENSE) for details.
 
 **صُنع بـ ❤️ للمملكة العربية السعودية | Made with ❤️ for Saudi Arabia 🇸🇦**
 
-© 2026 [IdeaOrbit](https://ideaorbit.net)
+
 
 </div>
