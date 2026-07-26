@@ -37,6 +37,7 @@
   "gosi_submission_date",
   "column_break_4",
   "gosi_case_number",
+  "medical_examination_done",
   "compensation_amount",
   "status_section",
   "status",
@@ -221,6 +222,13 @@
    "fieldname": "gosi_case_number",
    "fieldtype": "Data",
    "label": "GOSI Case Number / رقم حالة GOSI"
+  },
+  {
+   "default": "0",
+   "fieldname": "medical_examination_done",
+   "fieldtype": "Check",
+   "label": "Medical Examination Done / تم الفحص الطبي",
+   "read_only": 1
   },
   {
    "fieldname": "compensation_amount",

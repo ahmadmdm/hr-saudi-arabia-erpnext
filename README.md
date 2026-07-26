@@ -8,7 +8,7 @@
 
 <br>
 
-<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.4"><img alt="Version 1.16.4" src="https://img.shields.io/badge/version-1.16.4-0F766E?style=for-the-badge"></a>
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.5"><img alt="Version 1.16.5" src="https://img.shields.io/badge/version-1.16.5-0F766E?style=for-the-badge"></a>
 <img alt="Frappe v15" src="https://img.shields.io/badge/Frappe-v15-2563EB?style=for-the-badge">
 <img alt="ERPNext v15" src="https://img.shields.io/badge/ERPNext-v15-7C3AED?style=for-the-badge">
 <img alt="No HRMS dependency" src="https://img.shields.io/badge/HRMS-not%20required-16A34A?style=for-the-badge">
@@ -199,9 +199,9 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 **بيئة التحقق الحالية | Verified Stack**
 
-- Frappe `15.107.2`
-- ERPNext `15.107.0`
-- Saudi HR `1.16.4`
+- Frappe `15.115.4`
+- ERPNext `15.117.0`
+- Saudi HR `1.16.5`
 - Python `3.10`
 - MariaDB `10.6+`
 - Node.js `24.x`
@@ -303,7 +303,7 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 | DocType | النوع | المادة | الوصف |
 |---------|-------|--------|-------|
 | Saudi Sick Leave | الإجازة المرضية | م.117 | 100% ← 75% ← 0% حسب المدة — Tiered pay: 100%/75%/0% |
-| Maternity Paternity Leave | إجازة الأمومة والأبوة | م.151، م.160 | 10 أسابيع للأم، 3 أيام للأب — 10 weeks mother / 3 days father |
+| Maternity Paternity Leave | إجازة الأمومة والأبوة | م.151، م.160 | 12 أسبوعاً (84 يوماً) للأم، 3 أيام للأب — 12 weeks mother / 3 days father |
 | Special Leave | الإجازة الخاصة | م.113 | حج (15 يوم، مرة واحدة بعد سنتين خدمة)، وفاة (5)، زواج (5) — Hajj/Bereavement/Marriage |
 
 #### 🏛️ الامتثال | Compliance
@@ -492,7 +492,11 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.16.4 — ١٧ مايو ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.16.5 — ١٩ يوليو ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**حزمة الإنقاذ النظامي | Legal Accuracy Rescue:** تصحيح الأمومة إلى 84 يوماً، وإعادة بناء أجر الإضافي على الأجر الفعلي للساعة + 50% من الأساسي، وإلزام مرجع الموافقة الكتابية للإجازة التعويضية، وتصحيح مهل التسوية النهائية، وضوابط ساعات وأنماط العمل وتداخل العطل، مع اختبارات حماية للقواعد الحرجة على v15 وv16.
+
+### v1.16.4 — ١٧ مايو ٢٠٢٦
 
 **تحسين العرض العام والتوثيق الاحترافي | Presentation, Docs, and Quality Release:**
 

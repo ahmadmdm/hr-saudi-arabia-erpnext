@@ -1,10 +1,12 @@
 // Copyright (c) 2026, Saudi HR and contributors
 // Maternity Paternity Leave - Client Script
-// نظام العمل م.151: 10 أسابيع (70 يوم) للأمومة، م.160: 3 أيام للأبوة
+// نظام العمل م.151: 12 أسبوعاً (84 يوماً) للأمومة، م.160: 3 أيام للأبوة
 
 const LEAVE_ENTITLEMENTS = {
-    'Maternity / إجازة أمومة': 70,
-    'Paternity / إجازة أبوة': 3,
+    'Maternity / أمومة (84 يوماً)': 84,
+    'Maternity / أمومة (70 يوم)': 84,
+    'Paternity / أبوة (3 أيام)': 3,
+    'Miscarriage after 6 months / إجهاض بعد 6 أشهر (60 يوم)': 60,
 };
 
 frappe.ui.form.on('Maternity Paternity Leave', {
@@ -75,7 +77,7 @@ function _set_pay_note(frm) {
     const lt = frm.doc.leave_type || '';
     let note = '';
     if (lt.includes('Maternity') || lt.includes('أمومة')) {
-        note = 'إجازة أمومة — 10 أسابيع بأجر كامل وفق م.151 نظام العمل / Maternity leave — 10 weeks full pay per Art.151 Labour Law';
+        note = 'إجازة أمومة — 12 أسبوعاً (84 يوماً) بأجر كامل وفق م.151 نظام العمل / Maternity leave — 12 weeks (84 days) full pay per Art.151 Labour Law';
     } else if (lt.includes('Paternity') || lt.includes('أبوة')) {
         note = 'إجازة أبوة — 3 أيام بأجر كامل وفق م.160 نظام العمل / Paternity leave — 3 days full pay per Art.160 Labour Law';
     }

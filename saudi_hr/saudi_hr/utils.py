@@ -3,7 +3,7 @@ utils.py — Helper functions for Saudi HR calculations.
 """
 import frappe
 from frappe import _
-from frappe.utils import cstr, date_diff, flt, getdate
+from frappe.utils import cint, cstr, date_diff, flt, getdate, today
 
 
 def assert_doctype_permissions(doctype: str, permission_types, doc=None):
@@ -187,10 +187,11 @@ def get_eosb_amount(employee: str, termination_reason: str, termination_date: st
 
 def _get_resignation_factor(years: float, termination_reason: str) -> float:
 	"""
-	معامل الاستقالة:
+	معامل الاستقالة وفق المادة (الخامسة والثمانين) من نظام العمل:
 	- استقالة < 2 سنة  → 0
-	- استقالة 2–10 سنوات → 1/3
-	- استقالة > 10 سنوات → 2/3
+	- استقالة 2–5 سنوات → 1/3
+	- استقالة > 5 وأقل من 10 سنوات → 2/3
+	- استقالة 10 سنوات فأكثر → 1.0 (المكافأة كاملة)
 	- إنهاء من صاحب العمل / انتهاء عقد / وفاة → 1.0
 	- فصل تأديبي (م.80) → 0
 	"""
@@ -205,9 +206,11 @@ def get_eosb_factor_and_label(termination_reason: str, years: float) -> tuple[fl
 	if text_matches_tokens(reason, "resignation", "استقالة"):
 		if years < 2:
 			return 0.0, "استقالة < سنتان — لا مكافأة / Resignation < 2 yrs — No EOSB"
-		if years <= 10:
-			return round(1 / 3, 4), "استقالة 2–10 سنوات — ثلث المكافأة / Resignation 2–10 yrs — 1/3 EOSB"
-		return round(2 / 3, 4), "استقالة > 10 سنوات — ثلثا المكافأة / Resignation > 10 yrs — 2/3 EOSB"
+		if years <= 5:
+			return round(1 / 3, 4), "استقالة 2–5 سنوات — ثلث المكافأة / Resignation 2–5 yrs — 1/3 EOSB"
+		if years < 10:
+			return round(2 / 3, 4), "استقالة 5–10 سنوات — ثلثا المكافأة / Resignation 5–10 yrs — 2/3 EOSB"
+		return 1.0, "استقالة 10 سنوات فأكثر — المكافأة كاملة / Resignation 10+ yrs — Full EOSB"
 
 	return 1.0, "مكافأة كاملة / Full EOSB"
 
@@ -252,10 +255,10 @@ def calculate_eosb_components(joining_date, termination_date, last_basic_salary,
 
 	total_days = date_diff(termination, joining)
 	years = total_days / 365.0
-	if years < 1:
-		eosb_years_1_5 = 0.0
-		eosb_years_above_5 = 0.0
-	elif years <= 5:
+	# المادة (84): يستحق العامل مكافأة عن أجزاء السنة بنسبة ما قضاه منها في العمل،
+	# فلا يوجد حد أدنى قدره سنة. أما شرط السنتين فهو خاص بالاستقالة (المادة 85)
+	# ويُطبَّق عبر معامل الاستقالة أدناه.
+	if years <= 5:
 		eosb_years_1_5 = round((monthly_basic / 2) * years, 2)
 		eosb_years_above_5 = 0.0
 	else:
@@ -293,22 +296,167 @@ def calculate_eosb_components(joining_date, termination_date, last_basic_salary,
 	}
 
 
-def get_gosi_rates(nationality: str) -> dict:
+# ---------------------------------------------------------------------------
+# اشتراكات التأمينات الاجتماعية (GOSI)
+#
+# النظام السابق — لمن بدأ اشتراكه قبل 3 يوليو 2024:
+#   المعاشات 9% على كل طرف + ساند 0.75% على كل طرف + الأخطار المهنية 2% على صاحب العمل
+#   => العامل 9.75% وصاحب العمل 11.75%
+#
+# نظام التأمينات الاجتماعية الجديد (مرسوم ملكي م/273) — لمن لا توجد له مدد اشتراك
+# سابقة قبل 3 يوليو 2024: ترتفع نسبة المعاشات من 9% إلى 11% على كل طرف بواقع
+# 0.5% سنوياً اعتباراً من يوليو 2025 وحتى يوليو 2028.
+#
+# غير السعوديين: فرع الأخطار المهنية فقط 2% على صاحب العمل.
+# وعاء الاشتراك = الأجر الأساسي + بدل السكن بحد أقصى 45,000 ريال شهرياً.
+# ---------------------------------------------------------------------------
+GOSI_NEW_SYSTEM_START_DATE = "2024-07-03"
+GOSI_OLD_SYSTEM_PENSION_RATE = 9.0
+GOSI_DEFAULT_SANED_RATE = 0.75
+GOSI_DEFAULT_OCCUPATIONAL_HAZARDS_RATE = 2.0
+
+# تُطبَّق الزيادة على شهر الاشتراك كاملاً، والذكرى النظامية للقانون هي 3 يوليو.
+GOSI_NEW_SYSTEM_PENSION_SCHEDULE = [
+	("2028-07-01", 11.0),
+	("2027-07-01", 10.5),
+	("2026-07-01", 10.0),
+	("2025-07-01", 9.5),
+]
+
+
+def get_gosi_pension_rate(is_new_system: bool, as_on_date=None) -> float:
+	"""نسبة فرع المعاشات على كل طرف في التاريخ المطلوب."""
+	if not is_new_system:
+		return GOSI_OLD_SYSTEM_PENSION_RATE
+
+	reference = getdate(as_on_date or today())
+	for start_date, rate in GOSI_NEW_SYSTEM_PENSION_SCHEDULE:
+		if reference >= getdate(start_date):
+			return rate
+	return GOSI_OLD_SYSTEM_PENSION_RATE
+
+
+def is_gosi_new_system_subscriber(employee: str) -> bool:
+	"""هل يخضع العامل لنظام التأمينات الجديد (لا توجد له مدد اشتراك قبل 3 يوليو 2024)."""
+	if not employee:
+		return False
+
+	first_contribution_date = None
+	if frappe.get_meta("Employee").has_field("gosi_first_contribution_date"):
+		first_contribution_date = frappe.db.get_value("Employee", employee, "gosi_first_contribution_date")
+	# عند غياب تاريخ أول اشتراك يُستخدم تاريخ الالتحاق كتقدير، وقد يخالف الواقع
+	# إذا كانت للعامل مدد اشتراك سابقة لدى صاحب عمل آخر.
+	if not first_contribution_date:
+		first_contribution_date = frappe.db.get_value("Employee", employee, "date_of_joining")
+	if not first_contribution_date:
+		return False
+
+	return getdate(first_contribution_date) >= getdate(GOSI_NEW_SYSTEM_START_DATE)
+
+
+GOSI_SOURCE_ASSUMED = "Assumed from Joining Date / مُقدَّر من تاريخ الالتحاق"
+GOSI_SOURCE_CONFIRMED = "Confirmed from GOSI / مؤكد من التأمينات"
+
+
+@frappe.whitelist()
+def backfill_gosi_first_contribution_dates(dry_run=1, company=None):
 	"""
-	إرجاع معدلات GOSI حسب الجنسية.
+	تعبئة تاريخ أول اشتراك من تاريخ الالتحاق لمن التحق في 3 يوليو 2024 أو بعده.
+
+	التاريخ المُعبَّأ تقدير وليس واقعة مؤكدة: من التحق بعد هذا التاريخ وله مدد
+	اشتراك سابقة لدى صاحب عمل آخر يبقى على النظام السابق، ولا سبيل لمعرفة ذلك
+	إلا من سجل التأمينات. لذلك تُوسم كل قيمة تُكتب هنا بأنها مُقدَّرة.
+
+	لا يُمسّ أي موظف لديه تاريخ مسجّل مسبقاً.
+	"""
+	assert_doctype_permissions("Employee", ("read", "write"))
+	dry_run = cint(dry_run)
+
+	meta = frappe.get_meta("Employee")
+	if not meta.has_field("gosi_first_contribution_date"):
+		frappe.throw(_("Employee is missing the GOSI first contribution date field."))
+
+	filters = {
+		"date_of_joining": (">=", GOSI_NEW_SYSTEM_START_DATE),
+		"gosi_first_contribution_date": ("is", "not set"),
+	}
+	if company:
+		filters["company"] = company
+
+	candidates = frappe.get_all(
+		"Employee",
+		filters=filters,
+		fields=["name", "employee_name", "date_of_joining"],
+		order_by="date_of_joining",
+	)
+
+	updated = []
+	has_source_field = meta.has_field("gosi_subscription_date_source")
+	for row in candidates:
+		if not dry_run:
+			frappe.db.set_value(
+				"Employee",
+				row.name,
+				{
+					"gosi_first_contribution_date": row.date_of_joining,
+					**({"gosi_subscription_date_source": GOSI_SOURCE_ASSUMED} if has_source_field else {}),
+				},
+				update_modified=False,
+			)
+		updated.append(
+			{
+				"employee": row.name,
+				"employee_name": row.employee_name,
+				"assumed_date": str(row.date_of_joining),
+			}
+		)
+
+	# لا يُستدعى commit هنا: طلبات الويب تُثبِّت تلقائياً، ويبقى الاستدعاء من
+	# السكربتات والاختبارات ضمن معاملة واحدة يتحكم بها المستدعي.
+	return {
+		"dry_run": bool(dry_run),
+		"cutover_date": GOSI_NEW_SYSTEM_START_DATE,
+		"count": len(updated),
+		"employees": updated,
+	}
+
+
+def get_gosi_rates(nationality: str, employee: str = None, as_on_date=None) -> dict:
+	"""
+	إرجاع معدلات GOSI حسب الجنسية ونظام الاشتراك المطبَّق على العامل.
 	"""
 	settings = frappe.get_single("Saudi HR Settings")
 
-	if is_saudi_nationality(nationality):
+	if not is_saudi_nationality(nationality):
 		return {
-			"employee_rate": flt(settings.gosi_saudi_employee_rate) or 10.0,
-			"employer_rate": flt(settings.gosi_saudi_employer_rate) or 12.0,
+			"employee_rate": flt(settings.gosi_non_saudi_employee_rate),
+			"employer_rate": flt(settings.gosi_non_saudi_employer_rate) or GOSI_DEFAULT_OCCUPATIONAL_HAZARDS_RATE,
+			"pension_rate": 0.0,
+			"system": "Non-Saudi / غير سعودي",
 		}
-	else:
+
+	# القيمة غير المضبوطة تُعامل كمفعّلة، لأن الجدول الجديد هو الوضع النظامي القائم.
+	new_system_flag = getattr(settings, "gosi_apply_new_system_schedule", None)
+	apply_new_system = 1 if new_system_flag is None else cint(new_system_flag)
+	if apply_new_system and is_gosi_new_system_subscriber(employee):
+		saned = flt(getattr(settings, "gosi_saned_rate", None) or GOSI_DEFAULT_SANED_RATE)
+		hazards = flt(
+			getattr(settings, "gosi_occupational_hazards_rate", None) or GOSI_DEFAULT_OCCUPATIONAL_HAZARDS_RATE
+		)
+		pension = get_gosi_pension_rate(True, as_on_date)
 		return {
-			"employee_rate": flt(settings.gosi_non_saudi_employee_rate) or 0.0,
-			"employer_rate": flt(settings.gosi_non_saudi_employer_rate) or 2.0,
+			"employee_rate": round(pension + saned, 4),
+			"employer_rate": round(pension + saned + hazards, 4),
+			"pension_rate": pension,
+			"system": "New System / نظام التأمينات الجديد",
 		}
+
+	return {
+		"employee_rate": flt(settings.gosi_saudi_employee_rate) or 9.75,
+		"employer_rate": flt(settings.gosi_saudi_employer_rate) or 11.75,
+		"pension_rate": GOSI_OLD_SYSTEM_PENSION_RATE,
+		"system": "Previous System / النظام السابق",
+	}
 
 
 def is_saudi_nationality(nationality: str) -> bool:
@@ -340,8 +488,9 @@ def get_contract_nationality_lookup(employees: list[str]) -> dict[str, str]:
 		order_by="start_date desc, modified desc",
 		limit_page_length=0,
 	):
-		if row.get("nationality") and row.employee not in lookup:
-			lookup[row.employee] = row.nationality
+		employee = row.get("employee")
+		if row.get("nationality") and employee and employee not in lookup:
+			lookup[employee] = row.get("nationality")
 	return lookup
 
 

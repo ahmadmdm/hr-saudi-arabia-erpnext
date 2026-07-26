@@ -7,6 +7,7 @@ from frappe.utils import add_days, getdate
 class EmployeeGrievance(Document):
 
 	def validate(self):
+		self._protect_employee_scope()
 		self._set_response_due_date()
 		self._validate_dates()
 		self._sync_status()
@@ -33,3 +34,14 @@ class EmployeeGrievance(Document):
 			self.status = "Resolved / محلولة"
 		elif self.first_response_date:
 			self.status = "In Review / قيد المراجعة"
+
+	def _protect_employee_scope(self):
+		roles = set(frappe.get_roles())
+		if frappe.session.user == "Administrator" or {"System Manager", "HR Manager", "HR User"}.intersection(roles):
+			return
+		employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
+		if not employee:
+			frappe.throw(_("Your user account is not linked to an active Employee record."), frappe.PermissionError)
+		if self.employee and self.employee != employee:
+			frappe.throw(_("You can create or update only your own grievance record."), frappe.PermissionError)
+		self.employee = employee

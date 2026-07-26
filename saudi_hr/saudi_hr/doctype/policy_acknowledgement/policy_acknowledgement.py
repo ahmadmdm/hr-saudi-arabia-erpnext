@@ -11,6 +11,7 @@ class PolicyAcknowledgement(Document):
 		self._sync_from_policy()
 		self._sync_status()
 		self._prevent_duplicates()
+		self._protect_electronic_evidence()
 
 	def _validate_dates(self):
 		if self.due_date and self.assigned_on and getdate(self.due_date) < getdate(self.assigned_on):
@@ -59,6 +60,25 @@ class PolicyAcknowledgement(Document):
 		)
 		if existing:
 			frappe.throw(_("A policy acknowledgement already exists for this employee and policy version"))
+
+	def _protect_electronic_evidence(self):
+		if self.is_new():
+			return
+		before = self.get_doc_before_save()
+		if not before or not before.get("acknowledgement_fingerprint"):
+			return
+		protected = (
+			"acknowledged_on",
+			"acknowledgement_user",
+			"acknowledgement_consent_text",
+			"acknowledgement_fingerprint",
+			"acknowledgement_ip",
+		)
+		if any(self.get(fieldname) != before.get(fieldname) for fieldname in protected):
+			frappe.throw(
+				_("Electronic acknowledgement evidence cannot be changed after it is recorded."),
+				title=_("Protected Evidence / إثبات محمي"),
+			)
 
 
 def update_policy_acknowledgement_summary(doc, method=None):

@@ -1,0 +1,155 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-25 18:01:49.991285",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "work_code",
+  "work_name_ar",
+  "work_name_en",
+  "column_break_1",
+  "hazard_type",
+  "active",
+  "matching_section",
+  "keywords",
+  "column_break_2",
+  "legal_reference",
+  "source_page",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SAU-JPW-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "work_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Work Code / \u0631\u0645\u0632 \u0627\u0644\u0639\u0645\u0644",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "work_name_ar",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Prohibited Work (Arabic) / \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0645\u062d\u0638\u0648\u0631 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
+   "reqd": 1
+  },
+  {
+   "fieldname": "work_name_en",
+   "fieldtype": "Small Text",
+   "label": "Prohibited Work (English) / \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0645\u062d\u0638\u0648\u0631 \u0628\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hazard_type",
+   "fieldtype": "Select",
+   "label": "Hazard Type / \u0646\u0648\u0639 \u0627\u0644\u062e\u0637\u0631",
+   "options": "\nHealth / \u0635\u062d\u064a\nSafety / \u0627\u0644\u0633\u0644\u0627\u0645\u0629\nMoral / \u0623\u062e\u0644\u0627\u0642\u064a\nPhysical / \u062c\u0633\u062f\u064a\nPsychological / \u0646\u0641\u0633\u064a"
+  },
+  {
+   "default": "1",
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Active / \u0646\u0634\u0637"
+  },
+  {
+   "fieldname": "matching_section",
+   "fieldtype": "Section Break",
+   "label": "Detection Keywords / \u0643\u0644\u0645\u0627\u062a \u0627\u0644\u0631\u0635\u062f"
+  },
+  {
+   "description": "\u0643\u0644\u0645\u0627\u062a \u0645\u0641\u0635\u0648\u0644\u0629 \u0628\u0641\u0648\u0627\u0635\u0644 \u062a\u064f\u0633\u062a\u062e\u062f\u0645 \u0644\u0631\u0635\u062f \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0645\u0633\u0646\u062f \u0644\u0644\u062d\u062f\u062b.",
+   "fieldname": "keywords",
+   "fieldtype": "Small Text",
+   "label": "Keywords / \u0627\u0644\u0643\u0644\u0645\u0627\u062a \u0627\u0644\u062f\u0627\u0644\u0629"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Executive Regulations Art.32 (Labor Law Art.161)",
+   "fieldname": "legal_reference",
+   "fieldtype": "Data",
+   "label": "Legal Reference / \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0646\u0638\u0627\u0645\u064a"
+  },
+  {
+   "fieldname": "source_page",
+   "fieldtype": "Data",
+   "label": "Source Page / \u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u0635\u062f\u0631"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes / \u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+  }
+ ],
+ "grid_page_length": 50,
+ "icon": "fa fa-child",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-26 03:03:05.153035",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Juvenile Prohibited Work",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "work_code,work_name_ar,work_name_en",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "work_name_ar",
+ "track_changes": 1
+}

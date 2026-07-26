@@ -24,6 +24,29 @@
   "night_work_restriction",
   "responsible_user",
   "evidence_attachment",
+  "juvenile_section",
+  "date_of_birth",
+  "age_years",
+  "assigned_work_description",
+  "night_shift_assigned",
+  "column_break_juv",
+  "night_work_exception",
+  "education_exception_applies",
+  "matched_prohibited_work",
+  "education_exception_section",
+  "edu_direct_supervision",
+  "edu_gradual_method",
+  "edu_no_academic_impact",
+  "column_break_edu",
+  "edu_not_hazardous",
+  "edu_authority_approval",
+  "education_exception_valid",
+  "juvenile_result_section",
+  "minimum_age_breach",
+  "prohibited_work_breach",
+  "column_break_juv_result",
+  "night_work_breach",
+  "juvenile_breach_summary",
   "legal_reference",
   "notes"
  ],
@@ -126,7 +149,7 @@
    "label": "Evidence / \u0645\u0631\u0641\u0642 \u0627\u0644\u0625\u062b\u0628\u0627\u062a"
   },
   {
-   "default": "Executive Regulations special employment category controls",
+   "default": "Executive Regulations Art.32-35 (Labor Law Art.161-167)",
    "fieldname": "legal_reference",
    "fieldtype": "Data",
    "label": "Legal Reference / \u0627\u0644\u0645\u0631\u062c\u0639 \u0627\u0644\u0646\u0638\u0627\u0645\u064a"
@@ -135,13 +158,147 @@
    "fieldname": "notes",
    "fieldtype": "Text Editor",
    "label": "Notes / \u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+  },
+  {
+   "depends_on": "eval:doc.category=='Young Worker / \u0639\u0627\u0645\u0644 \u062d\u062f\u062b'",
+   "description": "\u0627\u0644\u0645\u0627\u062f\u0629 (32): \u064a\u062d\u0638\u0631 \u062a\u0634\u063a\u064a\u0644 \u0645\u0646 \u0623\u062a\u0645 \u0627\u0644\u062e\u0627\u0645\u0633\u0629 \u0639\u0634\u0631\u0629 \u0648\u0644\u0645 \u064a\u0628\u0644\u063a \u0627\u0644\u062b\u0627\u0645\u0646\u0629 \u0639\u0634\u0631\u0629 \u0641\u064a \u0627\u0644\u0623\u0639\u0645\u0627\u0644 \u0627\u0644\u062a\u064a \u062a\u0639\u0631\u0636 \u0635\u062d\u062a\u0647 \u0623\u0648 \u0633\u0644\u0627\u0645\u062a\u0647 \u0623\u0648 \u0623\u062e\u0644\u0627\u0642\u0647 \u0644\u0644\u062e\u0637\u0631. \u0627\u0644\u0645\u0627\u062f\u0629 (33): \u0644\u0627 \u064a\u062c\u0648\u0632 \u062a\u0634\u063a\u064a\u0644 \u0645\u0646 \u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u062e\u0627\u0645\u0633\u0629 \u0639\u0634\u0631\u0629. \u0627\u0644\u0645\u0627\u062f\u0629 (34): \u064a\u062d\u0638\u0631 \u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0644\u064a\u0644\u0627\u064b \u0645\u062f\u0629 \u0644\u0627 \u062a\u0642\u0644 \u0639\u0646 \u0627\u062b\u0646\u062a\u064a \u0639\u0634\u0631\u0629 \u0633\u0627\u0639\u0629 \u0645\u062a\u062a\u0627\u0644\u064a\u0629.",
+   "fieldname": "juvenile_section",
+   "fieldtype": "Section Break",
+   "label": "Juvenile Controls / \u0636\u0648\u0627\u0628\u0637 \u062a\u0634\u063a\u064a\u0644 \u0627\u0644\u0623\u062d\u062f\u0627\u062b"
+  },
+  {
+   "fetch_from": "employee.date_of_birth",
+   "fieldname": "date_of_birth",
+   "fieldtype": "Date",
+   "label": "Date of Birth / \u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u064a\u0644\u0627\u062f",
+   "read_only": 1
+  },
+  {
+   "fieldname": "age_years",
+   "fieldtype": "Float",
+   "label": "Age (Years) / \u0627\u0644\u0639\u0645\u0631 \u0628\u0627\u0644\u0633\u0646\u0648\u0627\u062a",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assigned_work_description",
+   "fieldtype": "Small Text",
+   "label": "Assigned Work / \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0645\u0633\u0646\u062f"
+  },
+  {
+   "default": "0",
+   "fieldname": "night_shift_assigned",
+   "fieldtype": "Check",
+   "label": "Night Shift Assigned / \u0645\u0643\u0644\u0641 \u0628\u0639\u0645\u0644 \u0644\u064a\u0644\u064a"
+  },
+  {
+   "fieldname": "column_break_juv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "night_work_exception",
+   "fieldtype": "Select",
+   "label": "Night Work Exception / \u0627\u0633\u062a\u062b\u0646\u0627\u0621 \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0644\u064a\u0644\u064a",
+   "options": "\nNone / \u0644\u0627 \u064a\u0648\u062c\u062f\nFamily-Only Establishment / \u0645\u0646\u0634\u0623\u0629 \u064a\u0642\u062a\u0635\u0631 \u0627\u0644\u0639\u0645\u0644 \u0641\u064a\u0647\u0627 \u0639\u0644\u0649 \u0623\u0641\u0631\u0627\u062f \u0627\u0644\u0623\u0633\u0631\u0629\nVocational School or Training Centre / \u0645\u062f\u0627\u0631\u0633 \u0645\u0647\u0646\u064a\u0629 \u0648\u0645\u0631\u0627\u0643\u0632 \u062a\u062f\u0631\u064a\u0628\nBakery outside 9pm-4am / \u0645\u062e\u0627\u0628\u0632 \u062e\u0627\u0631\u062c \u0627\u0644\u0641\u062a\u0631\u0629 9 \u0645\u0633\u0627\u0621\u064b - 4 \u0635\u0628\u0627\u062d\u0627\u064b\nForce Majeure or Emergency / \u0642\u0648\u0629 \u0642\u0627\u0647\u0631\u0629 \u0623\u0648 \u0637\u0648\u0627\u0631\u0626"
+  },
+  {
+   "default": "0",
+   "fieldname": "education_exception_applies",
+   "fieldtype": "Check",
+   "label": "Education/Training Exception (Art.167) / \u0627\u0633\u062a\u062b\u0646\u0627\u0621 \u0627\u0644\u062a\u0639\u0644\u064a\u0645 \u0648\u0627\u0644\u062a\u062f\u0631\u064a\u0628"
+  },
+  {
+   "fieldname": "matched_prohibited_work",
+   "fieldtype": "Small Text",
+   "label": "Matched Prohibited Work / \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0645\u062d\u0638\u0648\u0631 \u0627\u0644\u0645\u0637\u0627\u0628\u0642",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.category=='Young Worker / \u0639\u0627\u0645\u0644 \u062d\u062f\u062b'",
+   "fieldname": "juvenile_result_section",
+   "fieldtype": "Section Break",
+   "label": "Juvenile Breaches / \u0645\u062e\u0627\u0644\u0641\u0627\u062a \u062a\u0634\u063a\u064a\u0644 \u0627\u0644\u0623\u062d\u062f\u0627\u062b"
+  },
+  {
+   "fieldname": "minimum_age_breach",
+   "fieldtype": "Check",
+   "label": "Below Minimum Age / \u062f\u0648\u0646 \u0627\u0644\u062d\u062f \u0627\u0644\u0623\u062f\u0646\u0649 \u0644\u0644\u0633\u0646",
+   "read_only": 1
+  },
+  {
+   "fieldname": "prohibited_work_breach",
+   "fieldtype": "Check",
+   "label": "Prohibited Work Breach / \u0645\u062e\u0627\u0644\u0641\u0629 \u0639\u0645\u0644 \u0645\u062d\u0638\u0648\u0631",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_juv_result",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "night_work_breach",
+   "fieldtype": "Check",
+   "label": "Night Work Breach / \u0645\u062e\u0627\u0644\u0641\u0629 \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0644\u064a\u0644\u064a",
+   "read_only": 1
+  },
+  {
+   "fieldname": "juvenile_breach_summary",
+   "fieldtype": "Small Text",
+   "label": "Breach Summary / \u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u062e\u0627\u0644\u0641\u0627\u062a",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.category=='Young Worker / \u0639\u0627\u0645\u0644 \u062d\u062f\u062b' && doc.education_exception_applies",
+   "description": "\u0627\u0644\u0645\u0627\u062f\u0629 (35): \u0644\u0627 \u064a\u0633\u0631\u064a \u0627\u0644\u0627\u0633\u062a\u062b\u0646\u0627\u0621 \u0625\u0644\u0627 \u0628\u0627\u0633\u062a\u064a\u0641\u0627\u0621 \u0627\u0644\u0634\u0631\u0648\u0637 \u0627\u0644\u062e\u0645\u0633\u0629 \u0643\u0627\u0645\u0644\u0629\u064b \u0648\u0644\u0645\u0646 \u0623\u062a\u0645 \u0627\u0644\u0631\u0627\u0628\u0639\u0629 \u0639\u0634\u0631\u0629 \u0645\u0646 \u0639\u0645\u0631\u0647.",
+   "fieldname": "education_exception_section",
+   "fieldtype": "Section Break",
+   "label": "Education and Training Exception Conditions / \u0634\u0631\u0648\u0637 \u0627\u0633\u062a\u062b\u0646\u0627\u0621 \u0627\u0644\u062a\u0639\u0644\u064a\u0645 \u0648\u0627\u0644\u062a\u062f\u0631\u064a\u0628"
+  },
+  {
+   "default": "0",
+   "fieldname": "edu_direct_supervision",
+   "fieldtype": "Check",
+   "label": "Direct Supervision by Responsible Body / \u0625\u0634\u0631\u0627\u0641 \u0645\u0628\u0627\u0634\u0631 \u0645\u0646 \u0627\u0644\u062c\u0647\u0629 \u0627\u0644\u0645\u0633\u0624\u0648\u0644\u0629 \u0639\u0646 \u0627\u0644\u0646\u0634\u0627\u0637"
+  },
+  {
+   "default": "0",
+   "fieldname": "edu_gradual_method",
+   "fieldtype": "Check",
+   "label": "Gradual Training Method / \u0627\u0644\u062a\u0639\u0644\u064a\u0645 \u0623\u0648 \u0627\u0644\u062a\u062f\u0631\u064a\u0628 \u0628\u0623\u0633\u0644\u0648\u0628 \u0645\u062a\u062f\u0631\u062c \u0644\u0627 \u064a\u0634\u0643\u0644 \u0635\u0639\u0648\u0628\u0629"
+  },
+  {
+   "default": "0",
+   "fieldname": "edu_no_academic_impact",
+   "fieldtype": "Check",
+   "label": "No Impact on Academic Achievement / \u0644\u0627 \u064a\u0639\u0648\u0642 \u0627\u0644\u062a\u062d\u0635\u064a\u0644 \u0627\u0644\u062f\u0631\u0627\u0633\u064a"
+  },
+  {
+   "fieldname": "column_break_edu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "edu_not_hazardous",
+   "fieldtype": "Check",
+   "label": "Not Hazardous Work (Art.161) / \u0644\u064a\u0633\u062a \u0645\u0646 \u0627\u0644\u0623\u0639\u0645\u0627\u0644 \u0627\u0644\u062e\u0637\u0631\u0629"
+  },
+  {
+   "default": "0",
+   "fieldname": "edu_authority_approval",
+   "fieldtype": "Check",
+   "label": "Ministry and Licensing Authority Approval / \u0645\u0648\u0627\u0641\u0642\u0629 \u0627\u0644\u0648\u0632\u0627\u0631\u0629 \u0648\u0627\u0644\u062c\u0647\u0629 \u0627\u0644\u0645\u0631\u062e\u0650\u0651\u0635\u0629"
+  },
+  {
+   "fieldname": "education_exception_valid",
+   "fieldtype": "Check",
+   "label": "Exception Conditions Met / \u0627\u0644\u0634\u0631\u0648\u0637 \u0645\u0633\u062a\u0648\u0641\u0627\u0629",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "icon": "fa fa-users",
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-25 18:33:18.647692",
+ "modified": "2026-07-26 03:03:02.466312",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "Special Employment Category Control",

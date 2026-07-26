@@ -37,6 +37,7 @@
  "fields": [
   {
    "fieldname": "naming_series",
+   "fieldtype": "Select",
     "depends_on": "eval:doc.leave_type && doc.leave_type.includes('Hajj')",
    "label": "Naming Series",
    "options": "SAU-SL-.YYYY.-.####",

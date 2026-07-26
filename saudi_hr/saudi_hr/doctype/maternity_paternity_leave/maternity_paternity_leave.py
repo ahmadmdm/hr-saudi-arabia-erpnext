@@ -6,11 +6,25 @@ from frappe.utils import add_days, flt
 from saudi_hr.saudi_hr.utils import get_employee_basic_salary
 
 # الأيام المستحقة بحسب نوع الإجازة (م.151 من نظام العمل السعودي)
+MATERNITY_LEAVE_TYPE = "Maternity / أمومة (84 يوماً)"
+LEGACY_MATERNITY_LEAVE_TYPE = "Maternity / أمومة (70 يوم)"
+
 LEAVE_DAYS = {
-	"Maternity / أمومة (70 يوم)": 70,
+	MATERNITY_LEAVE_TYPE: 84,
 	"Paternity / أبوة (3 أيام)": 3,
 	"Miscarriage after 6 months / إجهاض بعد 6 أشهر (60 يوم)": 60,
 }
+
+
+def normalize_leave_type(leave_type):
+	"""Map historical select values to the currently effective entitlement."""
+	if leave_type == LEGACY_MATERNITY_LEAVE_TYPE:
+		return MATERNITY_LEAVE_TYPE
+	return leave_type
+
+
+def get_entitled_days(leave_type):
+	return LEAVE_DAYS.get(normalize_leave_type(leave_type), 0)
 
 
 class MaternityPaternityLeave(Document):
@@ -22,7 +36,8 @@ class MaternityPaternityLeave(Document):
 		self._validate_certificate()
 
 	def _set_entitled_days(self):
-		self.entitled_days = LEAVE_DAYS.get(self.leave_type, 0)
+		self.leave_type = normalize_leave_type(self.leave_type)
+		self.entitled_days = get_entitled_days(self.leave_type)
 		if not self.entitled_days:
 			frappe.throw(
 				_("Unknown leave type. Please select a valid type.<br>"

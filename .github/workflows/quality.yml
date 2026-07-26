@@ -4,14 +4,20 @@ on:
   push:
     branches:
       - version-15
+      - version-16
   pull_request:
     branches:
       - version-15
+      - version-16
 
 jobs:
   quality:
-    name: Dependency and presentation checks
+    name: Cross-version dependency and legal-rule checks (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.14"]
 
     steps:
       - name: Checkout
@@ -20,7 +26,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install base dependencies
         run: |
@@ -38,4 +44,7 @@ jobs:
 
       - name: Validate Saudi HR release contract
         run: python scripts/validate_quality.py
+
+      - name: Compile Python sources
+        run: python -m compileall -q saudi_hr
 

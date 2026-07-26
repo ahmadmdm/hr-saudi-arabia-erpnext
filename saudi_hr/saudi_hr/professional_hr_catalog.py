@@ -2,11 +2,12 @@ import frappe
 from frappe import _
 
 
-CATALOG_VERSION = "2026-05-08-component-parent-routes"
+CATALOG_VERSION = "2026-07-22-enterprise-operations"
 
 
 CATEGORIES = [
 	{"id": "daily", "title": "Daily Command", "title_ar": "قيادة اليوم", "tone": "Operations"},
+	{"id": "enterprise", "title": "Enterprise Operations", "title_ar": "التشغيل المؤسسي", "tone": "Enterprise"},
 	{"id": "setup", "title": "Setup and Governance", "title_ar": "الإعداد والحوكمة", "tone": "Foundation"},
 	{"id": "workflow", "title": "Workflow Control", "title_ar": "إدارة سير الموافقات", "tone": "Control"},
 	{"id": "recruitment", "title": "Recruitment", "title_ar": "الاستقطاب", "tone": "Talent"},
@@ -22,6 +23,11 @@ CATEGORIES = [
 
 
 FEATURES = [
+	{"id": "saudi-enterprise-center", "category": "enterprise", "title": "Saudi Enterprise Operations Center", "title_ar": "مركز العمليات المؤسسي السعودي", "summary": "Operate government exchange, self-service, wage protection, evidence, analytics, legal releases, and production readiness from one governed ledger.", "summary_ar": "تشغيل التبادل الحكومي والخدمة الذاتية وحماية الأجور والأدلة والتحليلات والتحديثات النظامية وجاهزية الإنتاج من سجل محكوم واحد.", "target_type": "Page", "target": "saudi-enterprise-center", "priority": "Primary"},
+	{"id": "saudi-self-service", "category": "enterprise", "title": "Saudi Employee and Manager Self-Service", "title_ar": "بوابة الخدمة الذاتية للموظف والمدير", "summary": "Arabic-first personal requests, electronic policy acknowledgement, payroll visibility, and manager approvals.", "summary_ar": "طلبات شخصية عربية وإقرار إلكتروني بالسياسات وعرض الرواتب وموافقات المدير.", "target_type": "Page", "target": "saudi-self-service", "priority": "Primary"},
+	{"id": "saudi-hr-legal-guide", "category": "enterprise", "title": "Grounded Saudi HR Legal Guide", "title_ar": "الدليل النظامي الموثّق للموارد البشرية", "summary": "Search effective Saudi HR rules with PDF page citations, controls, and safe guided drafts.", "summary_ar": "بحث القواعد السعودية الفعالة مع توثيق صفحة اللائحة وضوابط التشغيل ومسودات آمنة.", "target_type": "Page", "target": "saudi-hr-legal-guide", "priority": "Primary"},
+	{"id": "saudi-government-integration", "category": "enterprise", "title": "Saudi Government Integration", "title_ar": "ملفات التكامل الحكومي", "summary": "Configure governed Qiwa, GOSI, Mudad, and Muqeem file or approved API profiles without exposing credentials.", "summary_ar": "إعداد ملفات قوى والتأمينات ومُدد ومقيم بتبادل ملفات أو واجهة معتمدة دون كشف الاعتمادات.", "target_type": "DocType", "target": "Saudi Government Integration", "priority": "Primary"},
+	{"id": "saudi-government-transaction", "category": "enterprise", "title": "Saudi Government Transaction", "title_ar": "سجل معاملات الجهات الحكومية", "summary": "Review provider exports, fingerprints, outcomes, and private evidence files in an auditable ledger.", "summary_ar": "مراجعة عمليات التصدير والبصمات والنتائج وملفات الإثبات الخاصة في سجل قابل للتدقيق.", "target_type": "DocType", "target": "Saudi Government Transaction", "allow_entry": False, "route_target_type": "DocType", "route_target": "Saudi Government Transaction", "action_label": "Open Transactions"},
 	{"id": "mobile-attendance", "category": "daily", "title": "Mobile Attendance", "title_ar": "الحضور الجوال", "summary": "GPS attendance with lightweight challenge-based voice verification.", "summary_ar": "تسجيل حضور وانصراف بالجوال مع تحقق صوتي خفيف بالتحدي.", "target_type": "URL", "target": "/mobile-attendance", "priority": "Primary"},
 	{"id": "attendance-action-hub", "category": "daily", "title": "Attendance Action Hub", "title_ar": "مركز إجراءات الحضور", "summary": "Daily attendance command page for exceptions, follow-up, and action routing.", "summary_ar": "صفحة قيادة يومية لمعالجة الاستثناءات والمتابعة وتوجيه الإجراءات.", "target_type": "Page", "target": "attendance-action-hub", "priority": "Primary"},
 	{"id": "team-attendance-review", "category": "daily", "title": "Team Attendance Review", "title_ar": "مراجعة حضور الفريق", "summary": "Team-level report for attendance control and manager follow-up.", "summary_ar": "تقرير على مستوى الفريق لضبط الحضور ومتابعة المدراء.", "target_type": "Report", "target": "Team Attendance Review", "priority": "Primary"},
@@ -78,6 +84,7 @@ FEATURES = [
 	{"id": "labor-dispute", "category": "compliance", "title": "Labor Dispute", "title_ar": "نزاع عمالي", "summary": "Track labor disputes, milestones, and settlement actions.", "summary_ar": "متابعة النزاعات العمالية ومراحلها وإجراءات التسوية.", "target_type": "DocType", "target": "Labor Dispute"},
 	{"id": "labor-inspection", "category": "compliance", "title": "Labor Inspection", "title_ar": "تفتيش العمل", "summary": "Record labor inspections, findings, and corrective actions.", "summary_ar": "تسجيل زيارات التفتيش والملاحظات والإجراءات التصحيحية.", "target_type": "DocType", "target": "Labor Inspection"},
 	{"id": "hr-compliance-action-log", "category": "compliance", "title": "HR Compliance Action Log", "title_ar": "سجل إجراءات الامتثال", "summary": "Central log for HR compliance actions and closure evidence.", "summary_ar": "سجل مركزي لإجراءات الامتثال وأدلة الإغلاق.", "target_type": "DocType", "target": "HR Compliance Action Log"},
+	{"id": "saudi-compliance-command-center", "category": "compliance", "title": "Saudi HR Command Center", "title_ar": "مركز قيادة الموارد البشرية السعودية", "summary": "Prioritize legal risks, deadlines, owners, evidence, and guided employee journeys from one operating page.", "summary_ar": "رتّب المخاطر النظامية والمواعيد والمسؤوليات والأدلة ورحلات الموظفين الموجّهة من صفحة تشغيل واحدة.", "target_type": "Page", "target": "saudi-compliance-command-center", "priority": "Primary"},
 	{"id": "termination-notice", "category": "exit", "title": "Termination Notice", "title_ar": "إشعار إنهاء الخدمة", "summary": "Issue and track termination notices with required dates and reasons.", "summary_ar": "إصدار ومتابعة إشعارات إنهاء الخدمة والتواريخ والأسباب.", "target_type": "DocType", "target": "Termination Notice"},
 	{"id": "exit-clearance", "category": "exit", "title": "Exit Clearance", "title_ar": "إخلاء الطرف", "summary": "Coordinate clearance items before final settlement.", "summary_ar": "تنسيق بنود إخلاء الطرف قبل التسوية النهائية.", "target_type": "DocType", "target": "Exit Clearance", "priority": "Primary"},
 	{"id": "exit-interview", "category": "exit", "title": "Exit Interview", "title_ar": "مقابلة الخروج", "summary": "Capture exit interview feedback and retention signals.", "summary_ar": "توثيق مقابلات الخروج ومؤشرات الاحتفاظ والتحسين.", "target_type": "DocType", "target": "Exit Interview"},

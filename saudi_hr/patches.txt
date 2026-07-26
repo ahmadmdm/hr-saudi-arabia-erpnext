@@ -1,1 +1,2 @@
 saudi_hr.patches.reload_annual_leave_workflow
+saudi_hr.patches.update_gosi_rates_2024_social_insurance_law

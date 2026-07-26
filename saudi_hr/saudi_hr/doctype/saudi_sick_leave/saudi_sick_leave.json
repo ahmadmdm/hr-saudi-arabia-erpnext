@@ -21,9 +21,14 @@
   "hospital_name",
   "medical_certificate_attached",
   "cumulative_section",
+  "benefit_cycle_start",
+  "benefit_cycle_end",
   "sick_days_this_year_before",
   "sick_days_this_year_after",
   "column_break_3",
+  "full_pay_days",
+  "partial_pay_days",
+  "unpaid_days",
   "pay_rate",
   "pay_label",
   "daily_salary",
@@ -31,6 +36,8 @@
   "alert_section",
   "alert_30_days",
   "alert_90_days",
+  "cycle_boundary_review_required",
+  "cycle_boundary_note",
   "amended_from"
  ],
  "fields": [
@@ -127,21 +134,51 @@
    "label": "Cumulative Sick Days / الأيام التراكمية للمرض"
   },
   {
-   "description": "Total sick days before this leave in the current Hijri year",
+   "fieldname": "benefit_cycle_start",
+   "fieldtype": "Date",
+   "label": "Benefit Cycle Start / بداية دورة الاستحقاق",
+   "read_only": 1
+  },
+  {
+   "fieldname": "benefit_cycle_end",
+   "fieldtype": "Date",
+   "label": "Benefit Cycle End / نهاية دورة الاستحقاق",
+   "read_only": 1
+  },
+  {
+   "description": "Approved sick days before this leave in the one-year cycle beginning with the first sick leave / الأيام المعتمدة قبل هذه الإجازة ضمن دورة سنة تبدأ من أول إجازة مرضية",
    "fieldname": "sick_days_this_year_before",
    "fieldtype": "Int",
-   "label": "Sick Days This Year (Before) / أيام مرض السنة (قبل)",
+   "label": "Cycle Sick Days (Before) / أيام الدورة (قبل)",
    "read_only": 1
   },
   {
    "fieldname": "sick_days_this_year_after",
    "fieldtype": "Int",
-   "label": "Sick Days This Year (After) / أيام مرض السنة (بعد)",
+   "label": "Cycle Sick Days (After) / أيام الدورة (بعد)",
    "read_only": 1
   },
   {
    "fieldname": "column_break_3",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "full_pay_days",
+   "fieldtype": "Float",
+   "label": "Full-Pay Days / أيام بأجر كامل",
+   "read_only": 1
+  },
+  {
+   "fieldname": "partial_pay_days",
+   "fieldtype": "Float",
+   "label": "75% Pay Days / أيام بأجر 75%",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unpaid_days",
+   "fieldtype": "Float",
+   "label": "Unpaid Days / أيام دون أجر",
+   "read_only": 1
   },
   {
    "fieldname": "pay_rate",
@@ -182,7 +219,20 @@
   {
    "fieldname": "alert_90_days",
    "fieldtype": "Check",
-   "label": "🚨 Exceeded 90 days — unpaid / no-pay zone. Termination possible per Art. 117 / تجاوز 90 يوم",
+   "label": "Entered unpaid tier after 90 cumulative days / دخل شريحة دون أجر بعد 90 يوماً",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cycle_boundary_review_required",
+   "fieldtype": "Check",
+   "label": "Cycle-Boundary Review Required / يلزم مراجعة تجاوز نهاية الدورة",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.cycle_boundary_review_required",
+   "fieldname": "cycle_boundary_note",
+   "fieldtype": "Small Text",
+   "label": "Cycle Review Note / ملاحظة مراجعة الدورة",
    "read_only": 1
   },
   {

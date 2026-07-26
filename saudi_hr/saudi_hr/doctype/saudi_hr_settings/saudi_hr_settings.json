@@ -5,12 +5,24 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "enterprise_branding_section",
+  "organization_name_ar",
+  "organization_name_en",
+  "portal_welcome_ar",
+  "column_break_enterprise_branding",
+  "brand_primary_color",
+  "support_email",
+  "enable_employee_self_service",
+  "enable_manager_self_service",
   "gosi_section",
   "gosi_saudi_employee_rate",
   "gosi_saudi_employer_rate",
+  "gosi_apply_new_system_schedule",
   "column_break_gosi",
   "gosi_non_saudi_employee_rate",
   "gosi_non_saudi_employer_rate",
+  "gosi_saned_rate",
+  "gosi_occupational_hazards_rate",
   "leave_section",
   "annual_leave_years_threshold",
   "annual_leave_before_threshold",
@@ -55,23 +67,82 @@
  ],
  "fields": [
   {
+   "fieldname": "enterprise_branding_section",
+   "fieldtype": "Section Break",
+   "label": "Enterprise Experience / تجربة المنشأة"
+  },
+  {
+   "default": "الموارد البشرية السعودية",
+   "fieldname": "organization_name_ar",
+   "fieldtype": "Data",
+   "label": "Arabic Product Name / الاسم العربي للمنتج",
+   "reqd": 1
+  },
+  {
+   "default": "Saudi HR",
+   "fieldname": "organization_name_en",
+   "fieldtype": "Data",
+   "label": "English Product Name / الاسم الإنجليزي للمنتج"
+  },
+  {
+   "default": "كل ما تحتاجه للعمل والحقوق والطلبات في مسار واضح وآمن.",
+   "fieldname": "portal_welcome_ar",
+   "fieldtype": "Small Text",
+   "label": "Portal Welcome / ترحيب البوابة"
+  },
+  {
+   "fieldname": "column_break_enterprise_branding",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "#0B5D4B",
+   "fieldname": "brand_primary_color",
+   "fieldtype": "Color",
+   "label": "Primary Color / اللون الأساسي"
+  },
+  {
+   "fieldname": "support_email",
+   "fieldtype": "Data",
+   "label": "HR Support Email / بريد دعم الموارد البشرية",
+   "options": "Email"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_employee_self_service",
+   "fieldtype": "Check",
+   "label": "Enable Employee Self-Service / تفعيل الخدمة الذاتية للموظف"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_manager_self_service",
+   "fieldtype": "Check",
+   "label": "Enable Manager Self-Service / تفعيل الخدمة الذاتية للمدير"
+  },
+  {
    "fieldname": "gosi_section",
    "fieldtype": "Section Break",
    "label": "GOSI Rates / معدلات التأمينات الاجتماعية"
   },
   {
-   "default": "10",
-   "description": "9% pension + 1% unemployment = 10% total",
+   "default": "9.75",
+   "description": "النظام السابق (اشتراك قبل 3 يوليو 2024): 9% معاشات + 0.75% ساند = 9.75%",
    "fieldname": "gosi_saudi_employee_rate",
    "fieldtype": "Percent",
-   "label": "Saudi Employee Rate % / نسبة موظف سعودي"
+   "label": "Saudi Employee Rate % (Previous System) / نسبة موظف سعودي — النظام السابق"
   },
   {
-   "default": "12",
-   "description": "9% pension + 2% hazard + 1% unemployment = 12% total",
+   "default": "11.75",
+   "description": "النظام السابق (اشتراك قبل 3 يوليو 2024): 9% معاشات + 2% أخطار مهنية + 0.75% ساند = 11.75%",
    "fieldname": "gosi_saudi_employer_rate",
    "fieldtype": "Percent",
-   "label": "Saudi Employer Rate % / نسبة صاحب عمل سعودي"
+   "label": "Saudi Employer Rate % (Previous System) / نسبة صاحب عمل سعودي — النظام السابق"
+  },
+  {
+   "default": "1",
+   "description": "تطبيق جدول نظام التأمينات الجديد (م/273) على من بدأ اشتراكه في 3 يوليو 2024 أو بعده: ترتفع نسبة المعاشات من 9% إلى 11% على كل طرف بواقع 0.5% سنوياً من يوليو 2025 حتى يوليو 2028.",
+   "fieldname": "gosi_apply_new_system_schedule",
+   "fieldtype": "Check",
+   "label": "Apply New System Schedule / تطبيق جدول النظام الجديد"
   },
   {
    "fieldname": "column_break_gosi",
@@ -90,6 +161,20 @@
    "fieldname": "gosi_non_saudi_employer_rate",
    "fieldtype": "Percent",
    "label": "Non-Saudi Employer Rate % / نسبة صاحب عمل غير سعودي"
+  },
+  {
+   "default": "0.75",
+   "description": "التأمين ضد التعطل عن العمل (ساند) — على كل من العامل وصاحب العمل. يُستخدم في احتساب نسب النظام الجديد.",
+   "fieldname": "gosi_saned_rate",
+   "fieldtype": "Percent",
+   "label": "SANED Rate % / نسبة ساند"
+  },
+  {
+   "default": "2",
+   "description": "فرع الأخطار المهنية — على صاحب العمل وحده. يُستخدم في احتساب نسب النظام الجديد.",
+   "fieldname": "gosi_occupational_hazards_rate",
+   "fieldtype": "Percent",
+   "label": "Occupational Hazards Rate % / نسبة الأخطار المهنية"
   },
   {
    "fieldname": "leave_section",

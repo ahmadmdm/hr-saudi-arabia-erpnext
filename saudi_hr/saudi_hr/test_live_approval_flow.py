@@ -20,6 +20,7 @@ class TestLiveApprovalFlow(FrappeTestCase):
 		frappe.set_user("Administrator")
 
 		self._ensure_user(self.manager_email, "Department Approver")
+		self._ensure_user(self.submitter_email, "Employee Self Service")
 		self._ensure_user(self.hr_email, "HR Manager")
 		self._ensure_user(self.finance_email, "Accounts Manager")
 		self.company = frappe.get_all("Company", pluck="name", limit_page_length=1)[0]
@@ -98,7 +99,7 @@ class TestLiveApprovalFlow(FrappeTestCase):
 					"doctype": "User",
 					"email": email,
 					"first_name": email.split("@", 1)[0],
-					"new_password": "password",
+					"new_password": "N7!xP4@qR9#vT2$k",
 					"send_welcome_email": 0,
 				}
 			).insert(ignore_permissions=True)

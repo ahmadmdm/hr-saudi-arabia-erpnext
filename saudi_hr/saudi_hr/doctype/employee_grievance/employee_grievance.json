@@ -79,7 +79,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status / الحالة",
-   "options": "Open / مفتوح\nIn Review / قيد المراجعة\nResolved / محلولة\nClosed / مغلقة"
+   "options": "Open / مفتوح\nIn Review / قيد المراجعة\nResolved / محلولة\nClosed / مغلقة",
+   "permlevel": 1
   },
   {
     "description": "Register how the grievance was received, its type, and the assigned owner.",
@@ -122,7 +123,8 @@
    "fieldname": "assigned_to",
    "fieldtype": "Link",
    "label": "Assigned To / محال إلى",
-   "options": "User"
+   "options": "User",
+   "permlevel": 1
   },
   {
     "description": "Track due dates, first response, and final resolution timing.",
@@ -133,17 +135,20 @@
   {
    "fieldname": "response_due_date",
    "fieldtype": "Date",
-   "label": "Response Due Date / مهلة الرد"
+   "label": "Response Due Date / مهلة الرد",
+   "permlevel": 1
   },
   {
    "fieldname": "first_response_date",
    "fieldtype": "Date",
-   "label": "First Response Date / تاريخ أول رد"
+   "label": "First Response Date / تاريخ أول رد",
+   "permlevel": 1
   },
   {
    "fieldname": "resolution_date",
    "fieldtype": "Date",
-   "label": "Resolution Date / تاريخ الحل"
+   "label": "Resolution Date / تاريخ الحل",
+   "permlevel": 1
   },
   {
     "description": "Summarize the grievance facts, requested remedy, and resolution outcome.",
@@ -165,12 +170,14 @@
   {
    "fieldname": "investigation_notes",
    "fieldtype": "Text Editor",
-   "label": "Review Notes / ملاحظات المراجعة"
+   "label": "Review Notes / ملاحظات المراجعة",
+   "permlevel": 1
   },
   {
    "fieldname": "resolution_summary",
    "fieldtype": "Text Editor",
-   "label": "Resolution Summary / ملخص الحل"
+   "label": "Resolution Summary / ملخص الحل",
+   "permlevel": 1
   }
  ],
  "icon": "fa fa-commenting",
@@ -201,7 +208,13 @@
     "report": 1,
    "role": "HR User",
    "write": 1
-  }
+  },
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "report": 1, "export": 1, "share": 1},
+  {"role": "HR Manager", "permlevel": 1, "read": 1, "write": 1},
+  {"role": "HR User", "permlevel": 1, "read": 1, "write": 1},
+  {"role": "System Manager", "permlevel": 1, "read": 1, "write": 1},
+  {"role": "Employee", "read": 1, "write": 1, "create": 1, "print": 1},
+  {"role": "Employee Self Service", "read": 1, "write": 1, "create": 1, "print": 1}
  ],
  "search_fields": "employee,employee_name,grievance_type",
  "sort_field": "grievance_date",

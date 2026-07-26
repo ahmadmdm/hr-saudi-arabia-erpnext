@@ -14,6 +14,8 @@ class SaudiDailyAttendance(Document):
 
 	def _calculate_working_hours(self):
 		if self.in_time and self.out_time:
+			if get_datetime(self.out_time) <= get_datetime(self.in_time):
+				frappe.throw(_("Out Time must be after In Time."))
 			self.working_hours = round(
 				time_diff_in_hours(get_datetime(self.out_time), get_datetime(self.in_time)), 2
 			)

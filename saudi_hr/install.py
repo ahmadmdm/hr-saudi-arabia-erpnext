@@ -21,6 +21,8 @@ def after_install():
 	create_workflow_states()
 	sync_workflow_configs()
 	sync_compliance_controls()
+	sync_legal_rule_catalog()
+	sync_enterprise_defaults()
 	ensure_department_approver_role()
 	sync_department_approver_role_assignments()
 	sync_department_approver_company_permissions()
@@ -28,6 +30,7 @@ def after_install():
 	sync_notification_configs()
 	create_default_saudi_shift_type()
 	create_default_settings()
+	sync_desktop_workspace_icon()
 	frappe.db.commit()
 
 
@@ -36,6 +39,8 @@ def after_migrate():
 	create_workflow_states()
 	sync_workflow_configs()
 	sync_compliance_controls()
+	sync_legal_rule_catalog()
+	sync_enterprise_defaults()
 	ensure_department_approver_role()
 	sync_department_approver_role_assignments()
 	sync_department_approver_company_permissions()
@@ -45,6 +50,68 @@ def after_migrate():
 	migrate_legacy_shift_data()
 	migrate_legacy_annual_leave()
 	migrate_legacy_employee_loans()
+	sync_desktop_workspace_icon()
+
+
+def sync_desktop_workspace_icon():
+	"""Keep the Saudi HR desktop icon routed through the available Workspace model."""
+	if not frappe.db.exists("DocType", "Desktop Icon") or not frappe.db.exists("Workspace", "Saudi HR"):
+		return
+
+	meta = frappe.get_meta("Desktop Icon")
+	lookup_filters = {"label": "Saudi HR"}
+	if meta.has_field("icon_type"):
+		lookup_filters["icon_type"] = "Link"
+	if meta.has_field("link_type"):
+		lookup_filters["link_type"] = "Workspace Sidebar"
+	icon_name = frappe.db.exists("Desktop Icon", lookup_filters)
+	if not icon_name:
+		icon_name = frappe.db.exists("Desktop Icon", "Saudi HR")
+
+	requested_values = {
+		"label": "Saudi HR",
+		"icon_type": "App",
+		"link_type": "Workspace Sidebar",
+		"link": "/desk/saudi-hr",
+		"link_to": "Saudi HR",
+		"icon": "users",
+		"logo_url": "/assets/saudi_hr/images/logo.svg",
+		"app": "saudi_hr",
+		"parent_icon": None,
+		"hidden": 0,
+		"standard": 1,
+		"restrict_removal": 1,
+	}
+	values = {fieldname: value for fieldname, value in requested_values.items() if meta.has_field(fieldname)}
+
+	if icon_name:
+		icon = frappe.get_doc("Desktop Icon", icon_name)
+		icon.update(values)
+		icon.save(ignore_permissions=True)
+	else:
+		icon = frappe.get_doc({"doctype": "Desktop Icon", **values})
+		icon.insert(ignore_permissions=True)
+
+	duplicate_filters = {"label": "Saudi HR"}
+	if meta.has_field("icon_type"):
+		duplicate_filters["icon_type"] = "App"
+	for name in frappe.get_all("Desktop Icon", filters=duplicate_filters, pluck="name"):
+		if name == icon.name:
+			continue
+		duplicate_values = {
+			fieldname: value
+			for fieldname, value in {"hidden": 1, "link": "/desk/saudi-hr"}.items()
+			if meta.has_field(fieldname)
+		}
+		if duplicate_values:
+			frappe.db.set_value(
+				"Desktop Icon",
+				name,
+				duplicate_values,
+				update_modified=False,
+			)
+
+	frappe.clear_cache()
 
 
 def ensure_department_approver_role():
@@ -159,6 +226,20 @@ def sync_compliance_controls():
 	from saudi_hr.saudi_hr.compliance_controls import sync_compliance_controls as sync_controls
 
 	sync_controls()
+
+
+def sync_legal_rule_catalog():
+	"""Publish the versioned legal catalog when a company is available."""
+	from saudi_hr.saudi_hr.legal_rule_catalog import sync_legal_rule_catalog as sync_catalog
+
+	return sync_catalog()
+
+
+def sync_enterprise_defaults():
+	"""Publish safe file-exchange profiles after the enterprise DocTypes exist."""
+	from saudi_hr.saudi_hr.enterprise_operations import sync_enterprise_defaults as sync_defaults
+
+	return sync_defaults()
 
 
 # ─── Workflow States ──────────────────────────────────────────────────────────
@@ -443,10 +524,13 @@ def create_default_settings():
 
 	settings = frappe.get_doc({
 		"doctype": "Saudi HR Settings",
-		"gosi_saudi_employee_rate": 10.0,
-		"gosi_saudi_employer_rate": 12.0,
+		"gosi_saudi_employee_rate": 9.75,
+		"gosi_saudi_employer_rate": 11.75,
 		"gosi_non_saudi_employee_rate": 0.0,
 		"gosi_non_saudi_employer_rate": 2.0,
+		"gosi_apply_new_system_schedule": 1,
+		"gosi_saned_rate": 0.75,
+		"gosi_occupational_hazards_rate": 2.0,
 		"annual_leave_years_threshold": 5,
 		"annual_leave_before_threshold": 21,
 		"annual_leave_after_threshold": 30,
