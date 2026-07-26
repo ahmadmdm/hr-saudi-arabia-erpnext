@@ -33,4 +33,54 @@
 		},
 		true
 	);
+
+	const ARABIC_AUTOCOMPLETE_STATUS = {
+		"Begin typing for results.": "ابدأ الكتابة لعرض النتائج.",
+		"No results found": "لم يتم العثور على نتائج.",
+	};
+
+	function localize_autocomplete_status(root) {
+		(root || document).querySelectorAll(".tooltip-content").forEach(function (tooltip) {
+			if ((tooltip.textContent || "").trim() === "undefined") {
+				tooltip.textContent = "";
+				tooltip.setAttribute("aria-hidden", "true");
+			}
+		});
+		if (document.documentElement.lang !== "ar") {
+			return;
+		}
+		(root || document).querySelectorAll(".awesomplete [role='status']").forEach(function (status) {
+			const text = (status.textContent || "").trim();
+			if (ARABIC_AUTOCOMPLETE_STATUS[text]) {
+				status.textContent = ARABIC_AUTOCOMPLETE_STATUS[text];
+			} else if (/^Type \d+ or more characters for results\.$/.test(text)) {
+				const count = text.match(/\d+/)[0];
+				status.textContent = `اكتب ${count} أحرف أو أكثر لعرض النتائج.`;
+			} else if (/^\d+ results found$/.test(text)) {
+				const count = text.match(/\d+/)[0];
+				status.textContent = `تم العثور على ${count} نتيجة.`;
+			}
+		});
+	}
+
+	function initialize_arabic_accessibility() {
+		localize_autocomplete_status(document);
+		let localization_scheduled = false;
+		new MutationObserver(function () {
+			if (localization_scheduled) {
+				return;
+			}
+			localization_scheduled = true;
+			window.requestAnimationFrame(function () {
+				localization_scheduled = false;
+				localize_autocomplete_status(document);
+			});
+		}).observe(document.body, { childList: true, subtree: true, characterData: true });
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initialize_arabic_accessibility);
+	} else {
+		initialize_arabic_accessibility();
+	}
 })();

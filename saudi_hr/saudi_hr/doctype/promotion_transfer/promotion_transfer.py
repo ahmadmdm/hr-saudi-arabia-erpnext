@@ -9,11 +9,12 @@ class PromotionTransfer(Document):
 		if not self.status:
 			self.status = "Draft / مسودة"
 
-		if self.new_designation and self.current_designation and self.movement_type == "Promotion / ترقية":
+		movement_code = (self.movement_type or "").split("/", 1)[0].strip()
+		if self.new_designation and self.current_designation and movement_code == "Promotion":
 			if self.new_designation == self.current_designation:
 				frappe.throw("New designation must differ from current designation for promotions.")
 
-		if self.new_department and self.current_department and self.movement_type == "Department Transfer / نقل قسم":
+		if self.new_department and self.current_department and movement_code == "Department Transfer":
 			if self.new_department == self.current_department:
 				frappe.throw("New department must differ from current department for transfers.")
 

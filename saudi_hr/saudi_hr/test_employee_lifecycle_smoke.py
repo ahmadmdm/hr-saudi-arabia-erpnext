@@ -12,6 +12,8 @@ class TestEmployeeLifecycleSmoke(FrappeTestCase):
 		suffix = frappe.generate_hash(length=8).lower()
 		self.manager_email = f"saudi.lifecycle.manager.{suffix}@example.com"
 		self.employee_email = f"saudi.lifecycle.employee.{suffix}@example.com"
+		self._ensure_test_user(self.manager_email)
+		self._ensure_test_user(self.employee_email)
 		self.manager = make_employee(self.manager_email, company=self.company)
 		self.employee = make_employee(self.employee_email, company=self.company)
 		frappe.get_doc("User", self.manager_email).add_roles("Department Approver")
@@ -24,6 +26,19 @@ class TestEmployeeLifecycleSmoke(FrappeTestCase):
 		if frappe.db.has_column("Employee", "expense_approver"):
 			employee.expense_approver = self.manager_email
 		employee.save(ignore_permissions=True)
+
+	def _ensure_test_user(self, email):
+		if frappe.db.exists("User", email):
+			return frappe.get_doc("User", email)
+		return frappe.get_doc(
+			{
+				"doctype": "User",
+				"email": email,
+				"first_name": email.split("@", 1)[0],
+				"new_password": "N7!xP4@qR9#vT2$k",
+				"send_welcome_email": 0,
+			}
+		).insert(ignore_permissions=True)
 
 	def tearDown(self):
 		frappe.set_user("Administrator")

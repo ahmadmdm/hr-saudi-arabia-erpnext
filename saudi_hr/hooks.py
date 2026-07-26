@@ -108,6 +108,12 @@ doc_events = {
 	"Training Disclosure Register": {
 		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
 	},
+	"First Aid Cabinet Register": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
+	"Remote Work Site Compliance": {
+		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
+	},
 	"Disciplinary Procedure": {
 		"validate": "saudi_hr.saudi_hr.compliance_controls.validate_compliance_doc",
 	},
@@ -128,6 +134,7 @@ doctype_js = {
 
 app_include_js = [
 	"/assets/saudi_hr/js/desk_shortcuts.js",
+	"/assets/saudi_hr/js/desk_polish_20260722.js?v=20260722-2",
 ]
 
 # ─── Custom Fields on Employee ──────────────────────────────────────────────────
@@ -157,6 +164,8 @@ permission_query_conditions = {
 	"Maternity Paternity Leave": "saudi_hr.saudi_hr.permissions.get_maternity_paternity_leave_query",
 	"Special Leave": "saudi_hr.saudi_hr.permissions.get_special_leave_query",
 	"Attendance Location": "saudi_hr.saudi_hr.permissions.get_attendance_location_query",
+	"Policy Acknowledgement": "saudi_hr.saudi_hr.permissions.get_policy_acknowledgement_query",
+	"Employee Grievance": "saudi_hr.saudi_hr.permissions.get_employee_grievance_query",
 }
 
 has_permission = {
@@ -170,6 +179,8 @@ has_permission = {
 	"Maternity Paternity Leave": "saudi_hr.saudi_hr.permissions.has_maternity_paternity_leave_permission",
 	"Special Leave": "saudi_hr.saudi_hr.permissions.has_special_leave_permission",
 	"Attendance Location": "saudi_hr.saudi_hr.permissions.has_attendance_location_permission",
+	"Policy Acknowledgement": "saudi_hr.saudi_hr.permissions.has_policy_acknowledgement_permission",
+	"Employee Grievance": "saudi_hr.saudi_hr.permissions.has_employee_grievance_permission",
 }
 
 after_install = "saudi_hr.install.after_install"

@@ -13,10 +13,10 @@ class SalaryAdjustment(Document):
 		if not self.status:
 			self.status = "Draft / مسودة"
 
-		if self.proposed_basic_salary and self.current_basic_salary < 0:
+		if self.current_basic_salary < 0:
 			frappe.throw("Current basic salary cannot be negative.")
 
-		if self.proposed_basic_salary and self.proposed_basic_salary < 0:
+		if self.proposed_basic_salary < 0:
 			frappe.throw("Proposed basic salary cannot be negative.")
 
 		self.adjustment_amount = round(self.proposed_basic_salary - self.current_basic_salary, 2)

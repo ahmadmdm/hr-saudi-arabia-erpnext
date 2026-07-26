@@ -2,7 +2,9 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, add_months, cint, flt, getdate, today
+from frappe.utils import add_days, add_months, cint, date_diff, flt, getdate, today
+
+from saudi_hr.saudi_hr.utils import get_employee_nationality, is_saudi_nationality
 
 
 HR_PERMISSIONS = [
@@ -91,8 +93,8 @@ def field(fieldname, fieldtype, label=None, **kwargs):
 	return docfield
 
 
-def section(fieldname, label, description=None):
-	docfield = field(fieldname, "Section Break", label)
+def section(fieldname, label, description=None, **kwargs):
+	docfield = field(fieldname, "Section Break", label, **kwargs)
 	if description:
 		docfield["description"] = description
 	return docfield
@@ -341,6 +343,7 @@ COMPLIANCE_DOCTYPES = [
 			field("status", "Select", "Status / الحالة", options="Open / مفتوح\nIn Progress / قيد التنفيذ\nSettled / تمت التسوية\nOverdue / متأخر\nLegal Review / مراجعة قانونية\nCancelled / ملغى", default="Open / مفتوح", in_list_view=1),
 			section("sla_section", "Settlement Deadlines / مهَل التسوية"),
 			field("last_working_day", "Date", "Last Working Day / آخر يوم عمل", reqd=1),
+			field("termination_initiated_by", "Select", "Termination Initiated By / جهة إنهاء العلاقة", reqd=1, options="Employer / صاحب العمل\nEmployee / الموظف\nNeeds Review / يحتاج مراجعة", default="Needs Review / يحتاج مراجعة"),
 			field("settlement_due_date", "Date", "Settlement Due Date / مهلة المخالصة", reqd=1, in_list_view=1),
 			column("column_break_2"),
 			field("document_return_due_date", "Date", "Document Return Due Date / مهلة إعادة المستندات"),
@@ -352,6 +355,13 @@ COMPLIANCE_DOCTYPES = [
 			field("settlement_paid_on", "Date", "Settlement Paid On / تاريخ دفع المخالصة"),
 			column("column_break_3"),
 			field("documents_returned_on", "Date", "Documents Returned On / تاريخ إعادة المستندات"),
+			section("compensatory_leave_exit_section", "Unused Compensatory Leave / رصيد الإجازة التعويضية", "Unused compensatory leave is paid at the worker's actual hourly wage when employment ends / يعوض رصيد الإجازة التعويضية غير المستخدم وفق أجر الساعة الفعلي عند انتهاء العلاقة"),
+			field("unused_compensatory_leave_hours", "Float", "Unused Leave Hours / ساعات التعويض غير المستخدمة"),
+			field("actual_hourly_wage_for_leave", "Currency", "Actual Hourly Wage / أجر الساعة الفعلي"),
+			field("compensatory_leave_payout_amount", "Currency", "Leave Payout Amount / مبلغ تعويض الإجازة", read_only=1),
+			column("compensatory_leave_exit_column"),
+			field("compensatory_leave_payout_evidence", "Attach", "Leave Payout Evidence / إثبات دفع تعويض الإجازة"),
+			field("compensatory_leave_review_required", "Check", "Leave Balance Review Required / يلزم مراجعة رصيد التعويض", default=0, read_only=1),
 			field("legal_review_required", "Check", "Legal Review Required / يحتاج مراجعة قانونية", default=1),
 			field("risk_level", "Select", "Risk Level / مستوى المخاطر", options="\nLow / منخفض\nMedium / متوسط\nHigh / مرتفع\nCritical / حرج", default="High / مرتفع"),
 			field("evidence_attachment", "Attach", "Evidence / مرفق الإثبات"),
@@ -372,7 +382,7 @@ COMPLIANCE_DOCTYPES = [
 			field("company", "Link", "Company / الشركة", options="Company", fetch_from="employee.company", in_list_view=1),
 			field("contract", "Link", "Saudi Employment Contract / عقد العمل", options="Saudi Employment Contract"),
 			field("arrangement_type", "Select", "Arrangement Type / نوع الترتيب", reqd=1, in_list_view=1, options="\nFlexible Work / العمل المرن\nPart-time Work / العمل لبعض الوقت\nRemote Work / العمل عن بعد\nTemporary Work / العمل المؤقت\nCasual Work / العمل العرضي\nSeasonal Work / العمل الموسمي"),
-			field("status", "Select", "Status / الحالة", options="Draft / مسودة\nActive / نشط\nNeeds Conversion / يحتاج تحويل\nExpired / منتهي\nClosed / مغلق\nCancelled / ملغى", default="Draft / مسودة", in_list_view=1),
+			field("status", "Select", "Status / الحالة", options="Draft / مسودة\nActive / نشط\nNeeds Review / يحتاج مراجعة\nNeeds Conversion / يحتاج تحويل\nExpired / منتهي\nClosed / مغلق\nCancelled / ملغى", default="Draft / مسودة", in_list_view=1),
 			section("period_section", "Period & Limits / المدة والحدود"),
 			field("start_date", "Date", "Start Date / تاريخ البداية", reqd=1),
 			field("end_date", "Date", "End Date / تاريخ النهاية"),
@@ -382,6 +392,21 @@ COMPLIANCE_DOCTYPES = [
 			field("conversion_required", "Check", "Conversion Required / يتطلب تحويل", read_only=1),
 			field("daily_hours_limit", "Float", "Daily Hours Limit / حد الساعات اليومي"),
 			field("weekly_hours_limit", "Float", "Weekly Hours Limit / حد الساعات الأسبوعي"),
+			field("monthly_hours", "Float", "Monthly Hours / الساعات الشهرية"),
+			field("flexible_overtime_threshold", "Float", "Flexible Overtime Threshold / حد بدء الإضافي للمرن", default=95, read_only=1),
+			field("flexible_monthly_maximum", "Float", "Flexible Monthly Maximum / الحد الشهري الأعلى للمرن", default=160, read_only=1),
+			field("flexible_overtime_hours", "Float", "Flexible Overtime Hours / ساعات إضافي العمل المرن", read_only=1),
+			field("flexible_overtime_at_base_rate", "Check", "Overtime at Base Hourly Rate / الإضافي بأجر الساعة الأساسي", default=1, read_only=1, description="Hours above 95 are paid at the base hourly rate unless otherwise agreed / الساعات فوق 95 تدفع بأجر الساعة الأساسي ما لم يتفق على خلاف ذلك"),
+			field("flexible_nitaqat_credit", "Float", "Nitaqat Credit / رصيد نطاقات", read_only=1, description="One Nitaqat point is earned at 160 hours / تحتسب نقطة واحدة في نطاقات عند إكمال 160 ساعة"),
+			section("flexible_entitlements_section", "Flexible Work Entitlements / استحقاقات العمل المرن", "Flexible-work statutory exclusions and contract controls / الاستثناءات النظامية وضوابط عقد العمل المرن"),
+			field("paid_leave_entitled", "Check", "Paid Leave Entitled / يستحق إجازة مدفوعة", default=0, read_only=1),
+			field("eosb_entitled", "Check", "EOSB Entitled / يستحق مكافأة نهاية الخدمة", default=0, read_only=1),
+			field("probation_applicable", "Check", "Probation Applies / تخضع لفترة التجربة", default=0, read_only=1),
+			field("flexible_contract_max_end_date", "Date", "Maximum Contract End Date / أقصى تاريخ لنهاية العقد", read_only=1),
+			field("is_renewal_or_extension", "Check", "Renewal or Extension / تجديد أو تمديد", default=0),
+			field("renewal_requires_worker_consent", "Check", "Worker Consent Required / موافقة العامل مطلوبة", default=0, read_only=1),
+			field("worker_renewal_consent_reference", "Small Text", "Worker Renewal Consent / موافقة العامل على التجديد", depends_on="eval:doc.is_renewal_or_extension", description="Renewal or extension requires the worker's approval / يتطلب التجديد أو التمديد موافقة العامل"),
+			field("regular_contract_conversion_required", "Check", "Regular Contract Conversion Required / يلزم التحويل إلى عقد عادي", default=0, read_only=1),
 			section("portal_section", "Portal Evidence / إثبات المنصة"),
 			field("saudi_only_applicable", "Check", "Saudi-only Rule Applies / ينطبق شرط السعودي", default=0),
 			field("platform_reference", "Data", "Platform Reference / مرجع المنصة"),
@@ -405,15 +430,34 @@ COMPLIANCE_DOCTYPES = [
 			field("company", "Link", "Company / الشركة", options="Company", fetch_from="employee.company", in_list_view=1),
 			field("check_date", "Date", "Check Date / تاريخ الفحص", reqd=1, in_list_view=1),
 			field("week_start_date", "Date", "Week Start / بداية الأسبوع"),
+			section("category_section", "Work Category / فئة العمل", "المادة (23): تحدد ساعات العمل الفعلية للفئات المستثناة من المادتين (98) و(101) من النظام."),
+			field("work_category", "Select", "Work Category / فئة العمل", in_list_view=1, default="Standard / عمل اعتيادي", options="Standard / عمل اعتيادي\nSenior Management / مناصب عالية ذات مسؤولية\nPreparatory or Complementary / أعمال تجهيزية أو تكميلية\nIntermittent by Necessity / عمل متقطع بالضرورة\nGuarding / عمال الحراسة\nCleaning / عمال النظافة"),
+			field("is_civil_or_industrial_security", "Check", "Civil or Industrial Security / حراسة أمنية مدنية أو صناعية", default=0, depends_on="eval:doc.work_category=='Guarding / عمال الحراسة'"),
+			column("column_break_cat"),
+			field("is_ramadan", "Check", "Ramadan Period / خلال شهر رمضان", default=0),
+			field("worker_is_muslim", "Check", "Muslim Worker / عامل مسلم", default=1),
+			field("prayer_time_enabled", "Check", "Prayer Times Enabled / تمكين أداء الصلوات في أوقاتها", default=1),
 			section("hours_section", "Hours / الساعات"),
 			field("actual_daily_hours", "Float", "Actual Daily Hours / ساعات اليوم الفعلية"),
 			field("actual_weekly_hours", "Float", "Actual Weekly Hours / ساعات الأسبوع الفعلية"),
+			field("continuous_rest_hours", "Float", "Continuous Rest per 24h / الراحة المتواصلة خلال 24 ساعة", depends_on="eval:doc.work_category=='Intermittent by Necessity / عمل متقطع بالضرورة'"),
+			field("max_consecutive_hours", "Float", "Max Consecutive Hours / أطول فترة عمل متوالية", depends_on="eval:doc.work_category=='Cleaning / عمال النظافة'"),
 			column("column_break_2"),
-			field("overtime_hours", "Float", "Overtime Hours / ساعات العمل الإضافي"),
-			field("status", "Select", "Status / الحالة", options="Compliant / ممتثل\nDaily Limit Exceeded / تجاوز الحد اليومي\nWeekly Limit Exceeded / تجاوز الحد الأسبوعي\nException Approved / استثناء معتمد\nNeeds Review / يحتاج مراجعة", default="Needs Review / يحتاج مراجعة", in_list_view=1),
+			field("standard_daily_hours", "Float", "Daily Hours Limit / الحد اليومي للساعات", default=8, read_only=1),
+			field("standard_weekly_hours", "Float", "Weekly Hours Limit / الحد الأسبوعي للساعات", default=48, read_only=1),
+			field("overtime_hours", "Float", "Overtime Hours / ساعات العمل الإضافي", read_only=1),
+			section("preparatory_section", "Preparatory and Complementary Work / الأعمال التجهيزية والتكميلية", "المادة (23/6): لا يتجاوز مجموعها ثلاثين دقيقة تضاف إلى ساعات العمل، بحد أقصى خمس عشرة دقيقة لكل منهما."),
+			field("preparatory_minutes", "Float", "Preparatory Minutes / دقائق الأعمال التجهيزية"),
+			field("complementary_minutes", "Float", "Complementary Minutes / دقائق الأعمال التكميلية"),
+			column("column_break_prep"),
+			field("total_added_minutes", "Float", "Total Added Minutes / مجموع الدقائق المضافة", read_only=1),
+			section("result_section", "Result / النتيجة"),
+			field("status", "Select", "Status / الحالة", options="Compliant / ممتثل\nDaily Limit Exceeded / تجاوز الحد اليومي\nWeekly Limit Exceeded / تجاوز الحد الأسبوعي\nCategory Control Breach / مخالفة ضوابط الفئة\nExempt Category / فئة مستثناة\nException Approved / استثناء معتمد\nNeeds Review / يحتاج مراجعة", default="Needs Review / يحتاج مراجعة", in_list_view=1),
+			field("breach_summary", "Small Text", "Breach Summary / ملخص المخالفات", read_only=1),
+			column("column_break_result"),
 			field("approval_reference", "Link", "Approval Reference / مرجع الاعتماد", options="Overtime Request"),
 			field("exception_reason", "Small Text", "Exception Reason / سبب الاستثناء"),
-			field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations working-hours controls"),
+			field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations Art.23 (Labor Law Art.108)"),
 			field("notes", "Text Editor", "Notes / ملاحظات"),
 		],
 		autoname="naming_series:",
@@ -702,7 +746,30 @@ COMPLIANCE_DOCTYPES.extend(
 				field("night_work_restriction", "Check", "Night Work Restriction / قيد العمل الليلي", default=0),
 				field("responsible_user", "Link", "Responsible User / المسؤول", options="User"),
 				field("evidence_attachment", "Attach", "Evidence / مرفق الإثبات"),
-				field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations special employment category controls"),
+				section("juvenile_section", "Juvenile Controls / ضوابط تشغيل الأحداث", "المادة (32): يحظر تشغيل من أتم الخامسة عشرة ولم يبلغ الثامنة عشرة في الأعمال التي تعرض صحته أو سلامته أو أخلاقه للخطر. المادة (33): لا يجوز تشغيل من لم يتم الخامسة عشرة. المادة (34): يحظر التشغيل ليلاً مدة لا تقل عن اثنتي عشرة ساعة متتالية.", depends_on="eval:doc.category=='Young Worker / عامل حدث'"),
+				field("date_of_birth", "Date", "Date of Birth / تاريخ الميلاد", fetch_from="employee.date_of_birth", read_only=1),
+				field("age_years", "Float", "Age (Years) / العمر بالسنوات", read_only=1),
+				field("assigned_work_description", "Small Text", "Assigned Work / العمل المسند"),
+				field("night_shift_assigned", "Check", "Night Shift Assigned / مكلف بعمل ليلي", default=0),
+				column("column_break_juv"),
+				field("night_work_exception", "Select", "Night Work Exception / استثناء العمل الليلي", options="\nNone / لا يوجد\nFamily-Only Establishment / منشأة يقتصر العمل فيها على أفراد الأسرة\nVocational School or Training Centre / مدارس مهنية ومراكز تدريب\nBakery outside 9pm-4am / مخابز خارج الفترة 9 مساءً - 4 صباحاً\nForce Majeure or Emergency / قوة قاهرة أو طوارئ"),
+				field("education_exception_applies", "Check", "Education/Training Exception (Art.167) / استثناء التعليم والتدريب", default=0),
+				field("matched_prohibited_work", "Small Text", "Matched Prohibited Work / العمل المحظور المطابق", read_only=1),
+				section("education_exception_section", "Education and Training Exception Conditions / شروط استثناء التعليم والتدريب", "المادة (35): لا يسري الاستثناء إلا باستيفاء الشروط الخمسة كاملةً ولمن أتم الرابعة عشرة من عمره.", depends_on="eval:doc.category=='Young Worker / عامل حدث' && doc.education_exception_applies"),
+				field("edu_direct_supervision", "Check", "Direct Supervision by Responsible Body / إشراف مباشر من الجهة المسؤولة عن النشاط", default=0),
+				field("edu_gradual_method", "Check", "Gradual Training Method / التعليم أو التدريب بأسلوب متدرج لا يشكل صعوبة", default=0),
+				field("edu_no_academic_impact", "Check", "No Impact on Academic Achievement / لا يعوق التحصيل الدراسي", default=0),
+				column("column_break_edu"),
+				field("edu_not_hazardous", "Check", "Not Hazardous Work (Art.161) / ليست من الأعمال الخطرة", default=0),
+				field("edu_authority_approval", "Check", "Ministry and Licensing Authority Approval / موافقة الوزارة والجهة المرخِّصة", default=0),
+				field("education_exception_valid", "Check", "Exception Conditions Met / الشروط مستوفاة", read_only=1),
+				section("juvenile_result_section", "Juvenile Breaches / مخالفات تشغيل الأحداث", depends_on="eval:doc.category=='Young Worker / عامل حدث'"),
+				field("minimum_age_breach", "Check", "Below Minimum Age / دون الحد الأدنى للسن", read_only=1),
+				field("prohibited_work_breach", "Check", "Prohibited Work Breach / مخالفة عمل محظور", read_only=1),
+				column("column_break_juv_result"),
+				field("night_work_breach", "Check", "Night Work Breach / مخالفة العمل الليلي", read_only=1),
+				field("juvenile_breach_summary", "Small Text", "Breach Summary / ملخص المخالفات", read_only=1),
+				field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations Art.32-35 (Labor Law Art.161-167)"),
 				field("notes", "Text Editor", "Notes / ملاحظات"),
 			],
 			autoname="naming_series:",
@@ -753,6 +820,11 @@ COMPLIANCE_DOCTYPES.extend(
 				column("column_break_2"),
 				field("platform_reference", "Data", "Platform Reference / مرجع المنصة"),
 				field("linked_work_permit", "Link", "Work Permit/Iqama / رخصة العمل والإقامة", options="Work Permit Iqama"),
+				section("restricted_profession_section", "Restricted Occupation Check / فحص المهن المقصورة", "المادة (11): لا يجوز توظيف غير السعودي في المهن المقصورة على السعوديين، ولا إسناد مهامها إليه بأي مسمى وظيفي آخر."),
+				field("target_profession", "Data", "Target Profession / المهنة المستهدفة"),
+				field("matched_saudi_only_profession", "Data", "Matched Restricted Profession / المهنة المقصورة المطابقة", read_only=1),
+				column("column_break_4"),
+				field("restricted_profession_breach", "Check", "Restricted Occupation Breach / مخالفة مهنة مقصورة", read_only=1, in_list_view=1),
 				field("evidence_attachment", "Attach", "Evidence / مرفق الإثبات"),
 				field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations non-Saudi work authorization controls"),
 				field("notes", "Text Editor", "Notes / ملاحظات"),
@@ -792,7 +864,182 @@ COMPLIANCE_DOCTYPES.extend(
 )
 
 
+# ---------------------------------------------------------------------------
+# المادة (11): المهن المقصورة على السعوديين
+# المادة (29): خزانة الإسعافات الطبية
+# المادة (30): الأماكن البعيدة عن العمران
+# ---------------------------------------------------------------------------
+COMPLIANCE_DOCTYPES.extend(
+	[
+		make_doctype(
+			"Saudi Only Profession",
+			[
+				field("naming_series", "Select", "Naming Series", options="SAU-SOP-.YYYY.-.####", reqd=1),
+				field("profession_code", "Data", "Profession Code / رمز المهنة", reqd=1, unique=1, in_list_view=1),
+				field("profession_name_ar", "Data", "Profession (Arabic) / المهنة بالعربية", reqd=1, in_list_view=1),
+				field("profession_name_en", "Data", "Profession (English) / المهنة بالإنجليزية", in_list_view=1),
+				column("column_break_1"),
+				field("profession_group", "Select", "Group / المجموعة", options="\nHuman Resources / الموارد البشرية\nReception and Front Office / الاستقبال\nAdministrative Support / الدعم الإداري\nSecurity and Guarding / الأمن والحراسة\nOther Restricted / مهن مقصورة أخرى"),
+				field("active", "Check", "Active / نشط", default=1, in_list_view=1),
+				section("control_section", "Controls / الضوابط"),
+				field("blocks_expat_assignment", "Check", "Blocks Non-Saudi Assignment / يمنع إسناد غير السعودي", default=1),
+				field("includes_indirect_assignment", "Check", "Covers Indirect Assignment / يشمل الإسناد غير المباشر", default=1),
+				column("column_break_2"),
+				field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations Art.11 (Labor Law Art.36)"),
+				field("source_page", "Data", "Source Page / صفحة المصدر"),
+				field("notes", "Text Editor", "Notes / ملاحظات"),
+			],
+			autoname="naming_series:",
+			title_field="profession_name_ar",
+			search_fields="profession_code,profession_name_ar,profession_name_en",
+			icon="fa fa-id-badge",
+		),
+		make_child_doctype(
+			"First Aid Cabinet Item",
+			[
+				field("item_name", "Data", "Item / الصنف", reqd=1, in_list_view=1),
+				field("required_quantity", "Float", "Required Qty / الكمية المطلوبة", reqd=1, in_list_view=1),
+				field("unit", "Data", "Unit / الوحدة", in_list_view=1),
+				column("column_break_1"),
+				field("available_quantity", "Float", "Available Qty / الكمية المتوفرة", in_list_view=1),
+				field("shortage_quantity", "Float", "Shortage / النقص", read_only=1, in_list_view=1),
+				field("expiry_date", "Date", "Earliest Expiry / أقرب تاريخ انتهاء"),
+				field("status", "Select", "Status / الحالة", options="Missing / ناقص\nSufficient / مكتمل\nExpired / منتهي\nNeeds Restock / يحتاج تعويض", default="Missing / ناقص", read_only=1, in_list_view=1),
+				field("notes", "Small Text", "Notes / ملاحظات"),
+			],
+		),
+		make_doctype(
+			"First Aid Cabinet Register",
+			[
+				field("naming_series", "Select", "Naming Series", options="SAU-FAC-.YYYY.-.####", reqd=1),
+				field("company", "Link", "Company / الشركة", options="Company", reqd=1, in_list_view=1),
+				field("cabinet_location", "Data", "Cabinet Location / موقع الخزانة", reqd=1, in_list_view=1),
+				field("work_site", "Data", "Work Site / موقع العمل"),
+				column("column_break_1"),
+				field("responsible_user", "Link", "Responsible Person / المسؤول عن الإسعافات", options="User", reqd=1),
+				field("responsible_qualified", "Check", "Responsible Person Trained / المسؤول مؤهل", default=0),
+				field("inspection_date", "Date", "Inspection Date / تاريخ الفحص", reqd=1, in_list_view=1, default="Today"),
+				field("next_inspection_date", "Date", "Next Inspection / الفحص القادم"),
+				section("conditions_section", "Storage and Signage / الحفظ والإعلان"),
+				field("storage_conditions_met", "Check", "Healthy Storage and Temperature / ظروف حفظ صحية ودرجة حرارة مناسبة", default=0),
+				field("red_crescent_marked", "Check", "Marked with Red Crescent on White / معلّمة بهلال أحمر على خلفية بيضاء", default=0),
+				column("column_break_2"),
+				field("location_signage_posted", "Check", "Location Signage Posted / إعلانات ظاهرة تدل على مكان الخزانة", default=0),
+				field("responsible_name_posted", "Check", "Responsible Name Posted / اسم المسؤول معلن", default=0),
+				section("items_section", "Cabinet Contents / محتويات الخزانة"),
+				field("items", "Table", "Items / الأصناف", options="First Aid Cabinet Item"),
+				section("result_section", "Result / النتيجة"),
+				field("total_shortage_items", "Int", "Items Short / أصناف ناقصة", read_only=1, in_list_view=1),
+				field("compliance_score", "Percent", "Compliance / نسبة الاكتمال", read_only=1),
+				column("column_break_3"),
+				field("status", "Select", "Status / الحالة", options="Draft / مسودة\nCompliant / ممتثل\nRestock Required / يحتاج تعويض\nNon-Compliant / غير ممتثل", default="Draft / مسودة", read_only=1, in_list_view=1),
+				field("evidence_attachment", "Attach", "Evidence / مرفق الإثبات"),
+				field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations Art.29 (Labor Law Art.142)"),
+				field("notes", "Text Editor", "Notes / ملاحظات"),
+			],
+			autoname="naming_series:",
+			title_field="cabinet_location",
+			search_fields="company,cabinet_location,status",
+			icon="fa fa-medkit",
+		),
+		make_doctype(
+			"Remote Work Site Compliance",
+			[
+				field("naming_series", "Select", "Naming Series", options="SAU-RWS-.YYYY.-.####", reqd=1),
+				field("company", "Link", "Company / الشركة", options="Company", reqd=1, in_list_view=1),
+				field("site_name", "Data", "Site Name / اسم الموقع", reqd=1, in_list_view=1),
+				field("assessment_date", "Date", "Assessment Date / تاريخ التقييم", reqd=1, default="Today"),
+				column("column_break_1"),
+				field("workers_count", "Int", "Workers on Site / عدد العمال بالموقع"),
+				field("responsible_user", "Link", "Responsible User / المسؤول", options="User"),
+				section("classification_section", "Remote Classification / تصنيف البعد عن العمران", "المادة (30): يزيد على 50 كم بطريق معبد أو 25 كم بطريق غير معبد، أو تجمع سكاني تنقصه المرافق والخدمات."),
+				field("road_type", "Select", "Road Type / نوع الطريق", options="\nPaved / معبد\nUnpaved / غير معبد", in_list_view=1),
+				field("distance_km", "Float", "Distance from Urban Scope (km) / المسافة عن النطاق العمراني"),
+				column("column_break_2"),
+				field("lacks_facilities_settlement", "Check", "Settlement Lacking Facilities / تجمع سكاني تنقصه المرافق", default=0),
+				field("is_remote_area", "Check", "Classified Remote / مصنّف بعيداً عن العمران", read_only=1, in_list_view=1),
+				section("obligations_section", "Employer Obligations / التزامات صاحب العمل", "تُقدَّم على نفقة صاحب العمل وفق ما يحدده الوزير — المادة (146) من النظام."),
+				field("shops_provided", "Check", "Shops at Fair Prices / حوانيت بأسعار معتدلة", default=0),
+				field("recreation_provided", "Check", "Recreation and Sports Facilities / وسائل ترفيه وملاعب رياضية", default=0),
+				field("medical_care_provided", "Check", "Medical Care for Workers and Families / ترتيبات طبية للعمال وأسرهم", default=0),
+				column("column_break_3"),
+				field("schools_provided", "Check", "Schools for Workers' Children / مدارس لأولاد العمال", default=0),
+				field("mosques_provided", "Check", "Mosques or Prayer Rooms / مساجد أو مصليات", default=0),
+				field("literacy_programs_provided", "Check", "Literacy Programs / برامج محو الأمية", default=0),
+				section("result_section", "Result / النتيجة"),
+				field("obligations_met", "Int", "Obligations Met / الالتزامات المستوفاة", read_only=1, in_list_view=1),
+				field("compliance_score", "Percent", "Compliance / نسبة الامتثال", read_only=1),
+				column("column_break_4"),
+				field("status", "Select", "Status / الحالة", options="Draft / مسودة\nNot Applicable / غير منطبق\nCompliant / ممتثل\nPartially Compliant / ممتثل جزئياً\nNon-Compliant / غير ممتثل", default="Draft / مسودة", read_only=1, in_list_view=1),
+				field("evidence_attachment", "Attach", "Evidence / مرفق الإثبات"),
+				field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations Art.30 (Labor Law Art.146)"),
+				field("notes", "Text Editor", "Notes / ملاحظات"),
+			],
+			autoname="naming_series:",
+			title_field="site_name",
+			search_fields="company,site_name,status",
+			icon="fa fa-map-marker",
+		),
+	]
+)
+
+
+# ---------------------------------------------------------------------------
+# المادة (32): الأعمال المحظورة على الأحداث
+# ---------------------------------------------------------------------------
+COMPLIANCE_DOCTYPES.extend(
+	[
+		make_doctype(
+			"Juvenile Prohibited Work",
+			[
+				field("naming_series", "Select", "Naming Series", options="SAU-JPW-.YYYY.-.####", reqd=1),
+				field("work_code", "Data", "Work Code / رمز العمل", reqd=1, unique=1, in_list_view=1),
+				field("work_name_ar", "Small Text", "Prohibited Work (Arabic) / العمل المحظور بالعربية", reqd=1, in_list_view=1),
+				field("work_name_en", "Small Text", "Prohibited Work (English) / العمل المحظور بالإنجليزية"),
+				column("column_break_1"),
+				field("hazard_type", "Select", "Hazard Type / نوع الخطر", options="\nHealth / صحي\nSafety / السلامة\nMoral / أخلاقي\nPhysical / جسدي\nPsychological / نفسي"),
+				field("active", "Check", "Active / نشط", default=1, in_list_view=1),
+				section("matching_section", "Detection Keywords / كلمات الرصد"),
+				field("keywords", "Small Text", "Keywords / الكلمات الدالة", description="كلمات مفصولة بفواصل تُستخدم لرصد العمل المسند للحدث."),
+				column("column_break_2"),
+				field("legal_reference", "Data", "Legal Reference / المرجع النظامي", default="Executive Regulations Art.32 (Labor Law Art.161)"),
+				field("source_page", "Data", "Source Page / صفحة المصدر"),
+				field("notes", "Text Editor", "Notes / ملاحظات"),
+			],
+			autoname="naming_series:",
+			title_field="work_name_ar",
+			search_fields="work_code,work_name_ar,work_name_en",
+			icon="fa fa-child",
+		),
+	]
+)
+
+
 CUSTOM_FIELDS = {
+	"Employee": [
+		{
+			"fieldname": "gosi_first_contribution_date",
+			"fieldtype": "Date",
+			"label": "GOSI First Contribution Date / تاريخ أول اشتراك في التأمينات",
+			"insert_after": "date_of_joining",
+			"description": (
+				"تاريخ أول مدة اشتراك للعامل في التأمينات الاجتماعية أو التقاعد المدني. "
+				"من بدأ اشتراكه قبل 3 يوليو 2024 يبقى على النظام السابق، ومن بدأ في هذا التاريخ أو بعده يخضع لنظام التأمينات الجديد. "
+				"إذا تُرك فارغاً يُستخدم تاريخ الالتحاق بالعمل كتقدير."
+			),
+		},
+		{
+			"fieldname": "gosi_subscription_date_source",
+			"fieldtype": "Select",
+			"label": "Subscription Date Source / مصدر تاريخ الاشتراك",
+			"insert_after": "gosi_first_contribution_date",
+			"options": "\nAssumed from Joining Date / مُقدَّر من تاريخ الالتحاق\nConfirmed from GOSI / مؤكد من التأمينات",
+			"description": (
+				"القيمة المُقدَّرة تعني أن التاريخ مأخوذ من تاريخ الالتحاق بالعمل ولم يُطابَق بسجل التأمينات، "
+				"وقد تكون خاطئة إذا كانت للعامل مدد اشتراك سابقة لدى صاحب عمل آخر."
+			),
+		},
+	],
 	"End of Service Benefit": [
 		{
 			"fieldname": "wage_basis_section",
@@ -940,6 +1187,7 @@ WORKSPACE_COMPLIANCE_GROUPS = [
 		"id": "saudi_hr_card_regulation_records",
 		"label": "لوائح وسجلات الامتثال",
 		"links": [
+			("Saudi HR Command Center", "saudi-compliance-command-center", "Page"),
 			("Work Regulation", "Work Regulation", "DocType"),
 			("Disciplinary Violation Catalog", "Disciplinary Violation Catalog", "DocType"),
 			("Disability Accommodation Catalog", "Disability Accommodation Catalog", "DocType"),
@@ -975,6 +1223,7 @@ WORKSPACE_COMPLIANCE_GROUPS = [
 			("Working Time Compliance Check", "Working Time Compliance Check", "DocType"),
 			("Holiday Leave Overlap Rule", "Holiday Leave Overlap Rule", "DocType"),
 			("Special Employment Category Control", "Special Employment Category Control", "DocType"),
+			("Juvenile Prohibited Work", "Juvenile Prohibited Work", "DocType"),
 		],
 	},
 	{
@@ -982,9 +1231,18 @@ WORKSPACE_COMPLIANCE_GROUPS = [
 		"label": "السلامة والتفتيش والغرامات",
 		"links": [
 			("Safety Inspection and Risk Control", "Safety Inspection and Risk Control", "DocType"),
+			("First Aid Cabinet Register", "First Aid Cabinet Register", "DocType"),
 			("Inspection Fine SLA", "Inspection Fine SLA", "DocType"),
 			("Labor Inspection", "Labor Inspection", "DocType"),
 			("Work Injury", "Work Injury", "DocType"),
+		],
+	},
+	{
+		"id": "saudi_hr_card_site_and_occupation",
+		"label": "مواقع العمل والمهن المقصورة",
+		"links": [
+			("Remote Work Site Compliance", "Remote Work Site Compliance", "DocType"),
+			("Saudi Only Profession", "Saudi Only Profession", "DocType"),
 		],
 	},
 ]
@@ -1004,6 +1262,10 @@ WORKSPACE_REPORT_LINKS = [
 
 WORKSPACE_EXIT_LINK = ("Final Settlement SLA", "Final Settlement SLA", "DocType")
 VALID_WORKSPACE_LINK_TYPES = {"DocType", "Page", "Report"}
+WORKSPACE_SUBTITLE = (
+	'<span class="h6 text-muted">مساحة عمل احترافية لإدارة عمليات اليوم، ودورة الموظف، '
+	'والحضور، والرواتب، والامتثال السعودي.</span>'
+)
 
 DISCIPLINARY_CATALOG_DEFAULTS = [
 	("ATT-001", "Attendance / مواعيد العمل", "Late up to 15 minutes without disruption / التأخر حتى 15 دقيقة دون تعطيل", "Written warning / إنذار كتابي", "5% daily wage", "10% daily wage", "20% daily wage", 40),
@@ -1081,7 +1343,45 @@ def sync_compliance_controls():
 		sync_doctype(doctype_def)
 	sync_custom_fields()
 	ensure_compliance_default_rows()
+	ensure_gosi_settings_defaults()
 	sync_compliance_workspace()
+
+
+def ensure_gosi_settings_defaults():
+	"""ضبط إعدادات التأمينات بعد اكتمال مزامنة الحقول.
+
+	لا يكفي تنفيذ هذا في patch: حقول الإعدادات الجديدة تُنشأ في مرحلة مزامنة
+	الـDocTypes التي تلي تنفيذ الترقيات في دورة migrate، فأي قيمة تُكتب قبل
+	وجود الحقل تُهمل بصمت. لذلك يُضبط هنا حيث تكون الحقول موجودة فعلاً.
+	"""
+	if not frappe.db.exists("DocType", "Saudi HR Settings"):
+		return
+	if not frappe.get_meta("Saudi HR Settings").has_field("gosi_saned_rate"):
+		return
+
+	settings = frappe.get_single("Saudi HR Settings")
+	changed = False
+
+	# تصحيح نسب ما قبل تخفيض اشتراك ساند من 1% إلى 0.75%
+	if flt(settings.gosi_saudi_employee_rate) == 10.0:
+		settings.gosi_saudi_employee_rate = 9.75
+		changed = True
+	if flt(settings.gosi_saudi_employer_rate) == 12.0:
+		settings.gosi_saudi_employer_rate = 11.75
+		changed = True
+
+	# ساند غير مضبوط يعني أن إعدادات النظام الجديد لم تُهيَّأ بعد، فتُضبط مرة واحدة
+	# ولا تُلمس بعدها حتى لا تُلغى اختيارات المستخدم.
+	if not flt(settings.get("gosi_saned_rate")):
+		settings.gosi_saned_rate = 0.75
+		settings.gosi_occupational_hazards_rate = flt(settings.get("gosi_occupational_hazards_rate")) or 2.0
+		settings.gosi_apply_new_system_schedule = 1
+		changed = True
+
+	if changed:
+		settings.flags.ignore_permissions = True
+		settings.flags.ignore_validate = True
+		settings.save()
 
 
 def sync_compliance_workspace():
@@ -1108,6 +1408,11 @@ def _get_workspace_content(workspace):
 
 
 def _sync_workspace_content_cards(content):
+	for row in content:
+		if isinstance(row, dict) and row.get("id") == "saudi_hr_subtitle":
+			row.setdefault("data", {})["text"] = WORKSPACE_SUBTITLE
+			break
+
 	existing_ids = {row.get("id") for row in content if isinstance(row, dict)}
 	insert_at = _find_content_index(content, "saudi_hr_card_compliance_legal")
 	if insert_at is None:
@@ -1281,6 +1586,13 @@ def update_doctype(doc, doctype_def):
 			doc.append("fields", field_def)
 
 	if doctype_def.get("field_order"):
+		# ترتيب الحقول في Frappe مصدره idx في جدول الحقول، لا الحقل field_order،
+		# لذا تُعاد الفهرسة هنا حتى تظهر الحقول الجديدة في مواضعها المعلنة لا في نهاية النموذج.
+		declared_order = {fieldname: index for index, fieldname in enumerate(doctype_def["field_order"])}
+		trailing = len(declared_order)
+		doc.fields.sort(key=lambda row: declared_order.get(row.fieldname, trailing))
+		for index, row in enumerate(doc.fields, start=1):
+			row.idx = index
 		doc.field_order = doctype_def["field_order"]
 
 	if doctype_def.get("permissions") is not None:
@@ -1321,9 +1633,541 @@ def sync_custom_fields():
 				frappe.get_doc(values).insert(ignore_permissions=True)
 
 
+SAUDI_ONLY_PROFESSION_DEFAULTS = [
+	("SOP-01", "كبير إداريي موارد بشرية", "Human Resources Senior Administrator", "Human Resources / الموارد البشرية"),
+	("SOP-02", "مدير شؤون موظفين", "Personnel Affairs Manager", "Human Resources / الموارد البشرية"),
+	("SOP-03", "مدير شؤون عمل وعمال", "Labor and Workers Affairs Manager", "Human Resources / الموارد البشرية"),
+	("SOP-04", "مدير علاقات أفراد", "Personnel Relations Manager", "Human Resources / الموارد البشرية"),
+	("SOP-05", "اختصاصي شؤون أفراد", "Personnel Affairs Specialist", "Human Resources / الموارد البشرية"),
+	("SOP-06", "كاتب شؤون أفراد", "Personnel Affairs Clerk", "Human Resources / الموارد البشرية"),
+	("SOP-07", "كاتب توظيف", "Recruitment Clerk", "Human Resources / الموارد البشرية"),
+	("SOP-08", "كاتب شؤون موظفين", "Employee Affairs Clerk", "Human Resources / الموارد البشرية"),
+	("SOP-09", "كاتب دوام", "Timekeeping Clerk", "Administrative Support / الدعم الإداري"),
+	("SOP-10", "كاتب استقبال عام", "General Receptionist", "Reception and Front Office / الاستقبال"),
+	("SOP-11", "كاتب استقبال فندقي", "Hotel Receptionist", "Reception and Front Office / الاستقبال"),
+	("SOP-12", "كاتب استقبال مرضى", "Patient Receptionist", "Reception and Front Office / الاستقبال"),
+	("SOP-13", "كاتب شكاوى", "Complaints Clerk", "Administrative Support / الدعم الإداري"),
+	("SOP-14", "أمين صندوق", "Cashier", "Administrative Support / الدعم الإداري"),
+	("SOP-15", "حارس أمن خاص", "Private Security Guard", "Security and Guarding / الأمن والحراسة"),
+	("SOP-16", "معقب", "Government Transactions Agent (Mu'aqqib)", "Administrative Support / الدعم الإداري"),
+	("SOP-17", "ناسخ أو مصلّح مفاتيح", "Key Cutter or Repairer", "Other Restricted / مهن مقصورة أخرى"),
+	("SOP-18", "مخلّص جمركي", "Customs Clearance Agent", "Other Restricted / مهن مقصورة أخرى"),
+]
+
+
+# المادة (29): محتويات خزانة الإسعافات الطبية والحد الأدنى للكميات
+FIRST_AID_CABINET_ITEMS = [
+	("شاش حروق / Burn gauze", 50, "قطعة / piece"),
+	("ضمادات إسفنجية / Sponge dressings", 10, "قطع / pieces"),
+	("قطع شاش للتنظيف / Cleaning gauze pieces", 50, "قطعة / piece"),
+	("قطع شاش معقم 10×10 / Sterile gauze 10x10", 50, "قطعة / piece"),
+	("قطع شاش 5×5 / Gauze 5x5", 50, "قطعة / piece"),
+	("أربطة شاش 5×5 / Gauze bandages 5x5", 10, "أربطة / bandages"),
+	("تورنيكيت / Tourniquet", 1, "قطعة / piece"),
+	("أربطة ضاغطة مقاسات مختلفة / Compression bandages, assorted sizes", 10, "أربطة / bandages"),
+	("مسحات طبية / Medical swabs", 100, "قطعة / piece"),
+	("لفات بلاستر / Plaster rolls", 5, "لفات / rolls"),
+	("قطع بلاستر معقمة / Sterile plaster strips", 20, "قطعة / piece"),
+	("قفازات معقمة / Sterile gloves", 20, "قفاز / glove"),
+	("كمامات للفم / Face masks", 10, "كمامات / masks"),
+	("محلول لغسيل العين / Eye wash solution", 1, "عبوة / pack"),
+	("نقالة مريض قابلة للطي / Foldable patient stretcher", 1, "قطعة / piece"),
+	("محلول مطهر للجروح / Wound antiseptic solution", 1, "عبوة / pack"),
+	("طقم ممرات هوائية / Airway set", 1, "طقم / set"),
+	("جبائر للفخذ والساق والساعد / Splints for thigh, leg and forearm", 1, "طقم / set"),
+	("لوح صلب لإصابات العمود الفقري / Spinal board", 1, "قطعة / piece"),
+	("طقم جبائر عنقية لإصابات الرقبة / Cervical collar set", 1, "طقم / set"),
+	("مقص بالحجم المناسب / Scissors, suitable size", 2, "قطعة / piece"),
+	("بطانية حجم كبير / Large blanket", 1, "قطعة / piece"),
+	("ملقط بالحجم المناسب / Forceps, suitable size", 2, "قطعة / piece"),
+]
+
+
+# المادة (32): الأعمال التي يحظر تشغيل الحدث فيها
+JUVENILE_PROHIBITED_WORK_DEFAULTS = [
+	(
+		"JPW-01",
+		"العمل في المناجم، أو المحاجر، أو استخراج المواد المعدنية من تحت الأرض",
+		"Work in mines, quarries, or underground extraction of mineral materials",
+		"Safety / السلامة",
+		"منجم,مناجم,محجر,محاجر,تعدين,استخراج المواد المعدنية,تحت الأرض,mine,mining,quarry,underground,mineral extraction",
+	),
+	(
+		"JPW-02",
+		"الصناعات ذات المخاطر الصحية",
+		"Industries involving health hazards",
+		"Health / صحي",
+		"مخاطر صحية,مواد كيميائية,كيماويات,إشعاع,أسبستوس,رصاص,مبيدات,أبخرة سامة,health hazard,chemical,radiation,asbestos,lead,pesticide,toxic",
+	),
+	(
+		"JPW-03",
+		"الأعمال الشاقة",
+		"Arduous work",
+		"Physical / جسدي",
+		"أعمال شاقة,عمل شاق,رفع أحمال,حمل أثقال,مجهود بدني شديد,arduous,heavy lifting,strenuous,hard labour,hard labor",
+	),
+	(
+		"JPW-04",
+		"الأعمال التي قد تعرض الحدث لمخاطر جسدية بسبب العمل على الآلات ذات المخاطر العالية مثل آلات القطع الحادة",
+		"Work exposing the juvenile to physical risk from high-risk machinery such as sharp cutting machines",
+		"Physical / جسدي",
+		"آلات القطع,قطع حاد,منشار,مقصلة,مخرطة,آلات ذات مخاطر عالية,معدات ثقيلة,cutting machine,saw,lathe,press machine,high-risk machinery",
+	),
+	(
+		"JPW-05",
+		"أي عمل قد يؤدي مكان وظروف أدائه إلى تعريض الحدث للمشكلات الأخلاقية، والنفسية، والجسدية",
+		"Any work whose place or conditions may expose the juvenile to moral, psychological, or physical harm",
+		"Moral / أخلاقي",
+		"ملاهي,أماكن ترفيه ليلية,بيئة غير أخلاقية,ضغط نفسي,عمل منفرد ليلاً,nightclub,gambling,morally hazardous,psychological harm",
+	),
+]
+
+
+# المادة (23): حدود ساعات العمل الفعلية لفئات المادة (108) من النظام
+SPECIAL_WORKING_HOURS_LIMITS = {
+	"Standard / عمل اعتيادي": {"daily": 8, "ramadan_daily": 6},
+	"Preparatory or Complementary / أعمال تجهيزية أو تكميلية": {"daily": 8, "ramadan_daily": 6},
+	"Intermittent by Necessity / عمل متقطع بالضرورة": {"daily": 10, "ramadan_daily": 8},
+	"Guarding / عمال الحراسة": {"daily": 12, "ramadan_daily": 10},
+	"Cleaning / عمال النظافة": {"daily": 12, "ramadan_daily": 10},
+}
+
+EXEMPT_WORK_CATEGORY = "Senior Management / مناصب عالية ذات مسؤولية"
+PREPARATORY_CATEGORY = "Preparatory or Complementary / أعمال تجهيزية أو تكميلية"
+INTERMITTENT_CATEGORY = "Intermittent by Necessity / عمل متقطع بالضرورة"
+GUARDING_CATEGORY = "Guarding / عمال الحراسة"
+CLEANING_CATEGORY = "Cleaning / عمال النظافة"
+
+MAX_PREPARATORY_MINUTES = 15
+MAX_COMPLEMENTARY_MINUTES = 15
+MAX_ADDED_MINUTES = 30
+MIN_INTERMITTENT_REST_HOURS = 10
+MAX_CLEANING_CONSECUTIVE_HOURS = 6
+JUVENILE_MINIMUM_AGE = 15
+JUVENILE_MAXIMUM_AGE = 18
+JUVENILE_EDUCATION_EXCEPTION_MIN_AGE = 14
+
+# المادة (35): شروط استثناء التعليم والتدريب الواردة في المادة (167) من النظام
+EDUCATION_EXCEPTION_CONDITIONS = [
+	("edu_direct_supervision", "إشراف مباشر من الجهة المسؤولة عن النشاط"),
+	("edu_gradual_method", "أن يكون التعليم أو التدريب بأسلوب متدرج لا يشكل صعوبة على المتدرب"),
+	("edu_no_academic_impact", "ألا يعوق التعليم والتدريب التحصيل الدراسي"),
+	("edu_not_hazardous", "ألا تكون من الأعمال الخطرة المنصوص عليها في المادة (161) من النظام"),
+	("edu_authority_approval", "موافقة الوزارة والجهة المرخِّصة للنشاط"),
+]
+
+
+def get_missing_education_exception_conditions(doc):
+	"""الشروط غير المستوفاة لاستثناء التعليم والتدريب — المادة (35)."""
+	return [label for fieldname, label in EDUCATION_EXCEPTION_CONDITIONS if not cint(doc.get(fieldname))]
+
+
 def ensure_compliance_default_rows():
 	ensure_disciplinary_violation_catalog()
 	ensure_disability_accommodation_catalog()
+	ensure_saudi_only_professions()
+	ensure_juvenile_prohibited_work()
+
+
+def ensure_juvenile_prohibited_work():
+	if not frappe.db.exists("DocType", "Juvenile Prohibited Work"):
+		return
+
+	for code, name_ar, name_en, hazard_type, keywords in JUVENILE_PROHIBITED_WORK_DEFAULTS:
+		if frappe.db.exists("Juvenile Prohibited Work", {"work_code": code}):
+			continue
+		frappe.get_doc(
+			{
+				"doctype": "Juvenile Prohibited Work",
+				"naming_series": "SAU-JPW-.YYYY.-.####",
+				"work_code": code,
+				"work_name_ar": name_ar,
+				"work_name_en": name_en,
+				"hazard_type": hazard_type,
+				"keywords": keywords,
+				"active": 1,
+				"legal_reference": "Executive Regulations Art.32 (Labor Law Art.161)",
+				"source_page": "23",
+			}
+		).insert(ignore_permissions=True)
+
+
+def match_juvenile_prohibited_work(description):
+	"""ترجع اسم العمل المحظور على الأحداث المطابق للوصف، أو None — المادة (32)."""
+	text = (description or "").strip().lower()
+	if not text or not frappe.db.exists("DocType", "Juvenile Prohibited Work"):
+		return None
+
+	for row in frappe.get_all(
+		"Juvenile Prohibited Work",
+		filters={"active": 1},
+		fields=["work_name_ar", "keywords"],
+		order_by="work_code",
+	):
+		for keyword in (row.keywords or "").split(","):
+			keyword = keyword.strip().lower()
+			if keyword and keyword in text:
+				return row.work_name_ar
+	return None
+
+
+def get_special_working_hours_limits(work_category, is_ramadan=0, worker_is_muslim=1):
+	"""حدود الساعات اليومية والأسبوعية وفق المادة (23). ترجع None للفئة المستثناة."""
+	if work_category == EXEMPT_WORK_CATEGORY:
+		return None
+
+	limits = SPECIAL_WORKING_HOURS_LIMITS.get(work_category)
+	if not limits:
+		limits = SPECIAL_WORKING_HOURS_LIMITS["Standard / عمل اعتيادي"]
+
+	ramadan = cint(is_ramadan)
+	muslim = cint(worker_is_muslim)
+	# التخفيض اليومي في رمضان مقرر للعمال المسلمين
+	daily = limits["ramadan_daily"] if (ramadan and muslim) else limits["daily"]
+	weekly = 36 if (ramadan and muslim) else 48
+	return {"daily": daily, "weekly": weekly}
+
+
+def evaluate_special_working_hours(doc):
+	"""تطبيق ضوابط المادة (23) على فحص امتثال ساعات العمل."""
+	category = doc.work_category or "Standard / عمل اعتيادي"
+	breaches = []
+
+	limits = get_special_working_hours_limits(category, doc.is_ramadan, doc.worker_is_muslim)
+
+	prep = flt(doc.preparatory_minutes)
+	comp = flt(doc.complementary_minutes)
+	doc.total_added_minutes = round(prep + comp, 2)
+
+	if category == PREPARATORY_CATEGORY or prep or comp:
+		if prep > MAX_PREPARATORY_MINUTES:
+			breaches.append(f"الأعمال التجهيزية {prep:g} دقيقة تتجاوز {MAX_PREPARATORY_MINUTES} دقيقة")
+		if comp > MAX_COMPLEMENTARY_MINUTES:
+			breaches.append(f"الأعمال التكميلية {comp:g} دقيقة تتجاوز {MAX_COMPLEMENTARY_MINUTES} دقيقة")
+		if doc.total_added_minutes > MAX_ADDED_MINUTES:
+			breaches.append(f"مجموع الوقت المضاف {doc.total_added_minutes:g} دقيقة يتجاوز {MAX_ADDED_MINUTES} دقيقة")
+
+	if category == GUARDING_CATEGORY and cint(doc.is_civil_or_industrial_security):
+		breaches.append("الحراسات الأمنية المدنية والصناعية لا تدخل في تعريف عمال الحراسة بالمادة (23/4)")
+
+	if category == CLEANING_CATEGORY and flt(doc.max_consecutive_hours) > MAX_CLEANING_CONSECUTIVE_HOURS:
+		breaches.append(
+			f"عمل النظافة المتوالي {flt(doc.max_consecutive_hours):g} ساعة يتجاوز {MAX_CLEANING_CONSECUTIVE_HOURS} ساعات المقررة بالمادة (23/5)"
+		)
+
+	if category == INTERMITTENT_CATEGORY and flt(doc.continuous_rest_hours) < MIN_INTERMITTENT_REST_HOURS:
+		breaches.append(
+			f"الراحة المتواصلة {flt(doc.continuous_rest_hours):g} ساعة أقل من {MIN_INTERMITTENT_REST_HOURS} ساعات خلال كل 24 ساعة"
+		)
+
+	if category in {INTERMITTENT_CATEGORY, GUARDING_CATEGORY, CLEANING_CATEGORY} and not cint(doc.prayer_time_enabled):
+		breaches.append("يجب تمكين العمال من أداء الصلوات في أوقاتها")
+
+	if limits is None:
+		doc.standard_daily_hours = 0
+		doc.standard_weekly_hours = 0
+		doc.overtime_hours = 0
+		doc.breach_summary = "\n".join(breaches) or None
+		doc.status = "Category Control Breach / مخالفة ضوابط الفئة" if breaches else "Exempt Category / فئة مستثناة"
+		return
+
+	doc.standard_daily_hours = limits["daily"]
+	doc.standard_weekly_hours = limits["weekly"]
+
+	daily_excess = max(0, flt(doc.actual_daily_hours) - limits["daily"])
+	weekly_excess = max(0, flt(doc.actual_weekly_hours) - limits["weekly"])
+	# ما زاد على الحد يحتسب عملاً إضافياً — المادة (23/7) و(23/8)
+	doc.overtime_hours = round(max(daily_excess, weekly_excess), 2)
+
+	doc.breach_summary = "\n".join(breaches) or None
+
+	if breaches:
+		doc.status = "Category Control Breach / مخالفة ضوابط الفئة"
+	elif category == "Standard / عمل اعتيادي":
+		# العمل الاعتيادي يظل خاضعاً لضوابط المادتين (98) و(106) بسقفها المطلق
+		doc.status = evaluate_working_time_status(
+			doc.actual_daily_hours,
+			doc.actual_weekly_hours,
+			limits["daily"],
+			limits["weekly"],
+			doc.approval_reference,
+		)
+	elif doc.approval_reference:
+		doc.status = "Exception Approved / استثناء معتمد"
+	elif daily_excess:
+		doc.status = "Daily Limit Exceeded / تجاوز الحد اليومي"
+	elif weekly_excess:
+		doc.status = "Weekly Limit Exceeded / تجاوز الحد الأسبوعي"
+	else:
+		doc.status = "Compliant / ممتثل"
+
+
+def calculate_juvenile_age(date_of_birth, reference_date=None):
+	if not date_of_birth:
+		return None
+	birth = getdate(date_of_birth)
+	reference = getdate(reference_date or today())
+	return round(date_diff(reference, birth) / 365.25, 2)
+
+
+def evaluate_juvenile_controls(doc):
+	"""ضوابط تشغيل الأحداث — المواد (32) و(33) و(34) من اللائحة."""
+	doc.minimum_age_breach = 0
+	doc.prohibited_work_breach = 0
+	doc.night_work_breach = 0
+	doc.matched_prohibited_work = None
+	doc.juvenile_breach_summary = None
+
+	if doc.category != "Young Worker / عامل حدث":
+		doc.age_years = None
+		return
+
+	age = calculate_juvenile_age(doc.date_of_birth)
+	doc.age_years = age
+	breaches = []
+
+	if age is None:
+		doc.juvenile_breach_summary = "تاريخ ميلاد الحدث غير مسجل — يتعذر تطبيق ضوابط المواد (32) و(33) و(34)."
+		doc.status = "Needs Review / يحتاج مراجعة"
+		return
+
+	matched = match_juvenile_prohibited_work(doc.assigned_work_description) if age < JUVENILE_MAXIMUM_AGE else None
+
+	# شرط «ألا تكون من الأعمال الخطرة» لا يمكن أن يستوفى وقد طابق العمل دليل المحظورات
+	if matched and cint(doc.get("edu_not_hazardous")):
+		doc.edu_not_hazardous = 0
+
+	missing_conditions = get_missing_education_exception_conditions(doc)
+	doc.education_exception_valid = (
+		1
+		if cint(doc.education_exception_applies)
+		and not missing_conditions
+		and age >= JUVENILE_EDUCATION_EXCEPTION_MIN_AGE
+		else 0
+	)
+
+	if cint(doc.education_exception_applies):
+		if age < JUVENILE_EDUCATION_EXCEPTION_MIN_AGE:
+			breaches.append(
+				f"استثناء التعليم والتدريب لا يسري على من لم يبلغ الرابعة عشرة — العمر {age:g} سنة (المادة 167)"
+			)
+		elif missing_conditions:
+			breaches.append(
+				"استثناء التعليم والتدريب غير مستوفٍ لشروط المادة (35): " + "؛ ".join(missing_conditions)
+			)
+
+	if age < JUVENILE_MINIMUM_AGE and not cint(doc.education_exception_valid):
+		doc.minimum_age_breach = 1
+		breaches.append(
+			f"العمر {age:g} سنة دون الخامسة عشرة — لا يجوز التشغيل ولا دخول أماكن العمل (المادة 33)"
+		)
+
+	if age < JUVENILE_MAXIMUM_AGE:
+		if matched:
+			doc.matched_prohibited_work = matched
+			doc.prohibited_work_breach = 1
+			breaches.append(f"العمل المسند يقع ضمن الأعمال المحظورة على الأحداث: {matched} (المادة 32)")
+
+		doc.night_work_restriction = 1
+		if cint(doc.night_shift_assigned) and doc.night_work_exception in (
+			None,
+			"",
+			"None / لا يوجد",
+		):
+			doc.night_work_breach = 1
+			breaches.append(
+				"تشغيل ليلي دون استثناء نظامي — يحظر التشغيل مدة لا تقل عن اثنتي عشرة ساعة متتالية ليلاً (المادة 34)"
+			)
+
+		if not doc.daily_hours_limit:
+			doc.daily_hours_limit = 6
+
+	doc.juvenile_breach_summary = "\n".join(breaches) or None
+	if breaches:
+		doc.status = "Restriction Breach / مخالفة قيد"
+	elif doc.status in {"Draft / مسودة", "Needs Review / يحتاج مراجعة"}:
+		doc.status = "Compliant / ممتثل"
+
+
+def ensure_saudi_only_professions():
+	if not frappe.db.exists("DocType", "Saudi Only Profession"):
+		return
+
+	for code, name_ar, name_en, group in SAUDI_ONLY_PROFESSION_DEFAULTS:
+		if frappe.db.exists("Saudi Only Profession", {"profession_code": code}):
+			continue
+		frappe.get_doc(
+			{
+				"doctype": "Saudi Only Profession",
+				"naming_series": "SAU-SOP-.YYYY.-.####",
+				"profession_code": code,
+				"profession_name_ar": name_ar,
+				"profession_name_en": name_en,
+				"profession_group": group,
+				"active": 1,
+				"blocks_expat_assignment": 1,
+				"includes_indirect_assignment": 1,
+				"legal_reference": "Executive Regulations Art.11 (Labor Law Art.36)",
+				"source_page": "6",
+			}
+		).insert(ignore_permissions=True)
+
+
+def match_saudi_only_profession(designation):
+	"""ترجع اسم المهنة المقصورة على السعوديين المطابقة، أو None — المادة (11)."""
+	title = (designation or "").strip().lower()
+	if not title or not frappe.db.exists("DocType", "Saudi Only Profession"):
+		return None
+
+	for row in frappe.get_all(
+		"Saudi Only Profession",
+		filters={"active": 1, "blocks_expat_assignment": 1},
+		fields=["profession_name_ar", "profession_name_en"],
+	):
+		for candidate in (row.profession_name_ar, row.profession_name_en):
+			if candidate and candidate.strip().lower() in title:
+				return row.profession_name_ar or candidate
+	return None
+
+
+def is_saudi_only_profession(designation):
+	"""ترجع True إذا كانت المهنة مقصورة على السعوديين وفق المادة (11)."""
+	return match_saudi_only_profession(designation) is not None
+
+
+def flag_saudi_only_profession(doc):
+	"""رصد إسناد مهنة مقصورة على السعوديين لعامل غير سعودي — المادة (11)."""
+	doc.matched_saudi_only_profession = None
+	doc.restricted_profession_breach = 0
+
+	designation = doc.get("target_profession")
+	if not designation and doc.get("employee"):
+		designation = frappe.db.get_value("Employee", doc.employee, "designation")
+	if not designation:
+		return
+
+	matched = match_saudi_only_profession(designation)
+	if not matched:
+		return
+
+	doc.matched_saudi_only_profession = matched
+	if doc.get("employee") and is_saudi_nationality(get_employee_nationality(doc.employee)):
+		return
+
+	doc.restricted_profession_breach = 1
+	frappe.msgprint(
+		_(
+			"Profession <b>{0}</b> is restricted to Saudi nationals under Executive Regulations Art.11, "
+			"so it cannot be assigned to a non-Saudi worker under any job title.<br>"
+			"المهنة <b>{0}</b> مقصورة على السعوديين بموجب المادة (11) من اللائحة التنفيذية، "
+			"ولا يجوز إسنادها لعامل غير سعودي تحت أي مسمى وظيفي."
+		).format(matched),
+		title=_("Restricted Occupation / مهنة مقصورة"),
+		indicator="red",
+	)
+
+
+def load_standard_first_aid_items(doc):
+	"""تعبئة الجدول بالحد الأدنى النظامي لمحتويات خزانة الإسعافات — المادة (29)."""
+	for item_name, quantity, unit in FIRST_AID_CABINET_ITEMS:
+		doc.append(
+			"items",
+			{
+				"item_name": item_name,
+				"required_quantity": quantity,
+				"unit": unit,
+				"available_quantity": 0,
+				"status": "Missing / ناقص",
+			},
+		)
+
+
+def calculate_first_aid_cabinet(doc):
+	"""حساب النقص في خزانة الإسعافات ونسبة الاكتمال — المادة (29)."""
+	if not doc.get("items"):
+		load_standard_first_aid_items(doc)
+
+	shortage_items = 0
+	for row in doc.get("items") or []:
+		required = flt(row.required_quantity)
+		available = flt(row.available_quantity)
+		row.shortage_quantity = max(0, round(required - available, 2))
+		expired = bool(row.expiry_date) and getdate(row.expiry_date) < getdate(today())
+		if expired:
+			row.status = "Expired / منتهي"
+		elif available <= 0:
+			row.status = "Missing / ناقص"
+		elif row.shortage_quantity > 0:
+			row.status = "Needs Restock / يحتاج تعويض"
+		else:
+			row.status = "Sufficient / مكتمل"
+		if row.status != "Sufficient / مكتمل":
+			shortage_items += 1
+
+	total_rows = len(doc.get("items") or [])
+	doc.total_shortage_items = shortage_items
+
+	condition_flags = [
+		cint(doc.storage_conditions_met),
+		cint(doc.red_crescent_marked),
+		cint(doc.location_signage_posted),
+		cint(doc.responsible_name_posted),
+	]
+	compliant_units = (total_rows - shortage_items) + sum(condition_flags)
+	total_units = total_rows + len(condition_flags)
+	doc.compliance_score = round((compliant_units / total_units) * 100, 2) if total_units else 0
+
+	if not total_rows:
+		doc.status = "Draft / مسودة"
+	elif shortage_items == 0 and all(condition_flags):
+		doc.status = "Compliant / ممتثل"
+	elif shortage_items:
+		doc.status = "Restock Required / يحتاج تعويض"
+	else:
+		doc.status = "Non-Compliant / غير ممتثل"
+
+
+REMOTE_SITE_OBLIGATION_FIELDS = [
+	"shops_provided",
+	"recreation_provided",
+	"medical_care_provided",
+	"schools_provided",
+	"mosques_provided",
+	"literacy_programs_provided",
+]
+
+
+def classify_remote_area(road_type, distance_km, lacks_facilities_settlement):
+	"""المادة (30): >50 كم بطريق معبد أو >25 كم بطريق غير معبد أو تجمع تنقصه المرافق."""
+	if cint(lacks_facilities_settlement):
+		return True
+	distance = flt(distance_km)
+	if road_type == "Paved / معبد":
+		return distance > 50
+	if road_type == "Unpaved / غير معبد":
+		return distance > 25
+	return False
+
+
+def calculate_remote_work_site(doc):
+	"""تصنيف الموقع وحساب نسبة استيفاء التزامات المادة (146) من النظام."""
+	doc.is_remote_area = 1 if classify_remote_area(
+		doc.road_type, doc.distance_km, doc.lacks_facilities_settlement
+	) else 0
+
+	met = sum(cint(doc.get(fieldname)) for fieldname in REMOTE_SITE_OBLIGATION_FIELDS)
+	doc.obligations_met = met
+	total = len(REMOTE_SITE_OBLIGATION_FIELDS)
+	doc.compliance_score = round((met / total) * 100, 2)
+
+	if not doc.is_remote_area:
+		doc.status = "Not Applicable / غير منطبق"
+	elif met == total:
+		doc.status = "Compliant / ممتثل"
+	elif met:
+		doc.status = "Partially Compliant / ممتثل جزئياً"
+	else:
+		doc.status = "Non-Compliant / غير ممتثل"
 
 
 def ensure_disciplinary_violation_catalog():
@@ -1392,16 +2236,75 @@ def calculate_disability_ratio(doc):
 		doc.status = "Below Required Ratio / أقل من النسبة المطلوبة"
 
 
+def get_final_settlement_days(termination_initiated_by):
+	return 7 if termination_initiated_by == "Employer / صاحب العمل" else 14
+
+
+def derive_termination_initiator(termination_reason):
+	reason = termination_reason or ""
+	if "Resignation by Employee" in reason or "استقالة الموظف" in reason:
+		return "Employee / الموظف"
+	if "Termination by Employer" in reason or "Dismissal Without Notice" in reason or "صاحب العمل" in reason or "فصل فوري" in reason:
+		return "Employer / صاحب العمل"
+	return "Needs Review / يحتاج مراجعة"
+
+
+def calculate_compensatory_leave_exit_payout(unused_hours, actual_hourly_wage):
+	hours = max(0, flt(unused_hours))
+	rate = max(0, flt(actual_hourly_wage))
+	return round(hours * rate, 2)
+
+
 def calculate_final_settlement_dates(doc):
-	if doc.last_working_day and not doc.settlement_due_date:
-		doc.settlement_due_date = add_days(doc.last_working_day, 14)
-	if doc.last_working_day and not doc.document_return_due_date:
-		doc.document_return_due_date = add_days(doc.last_working_day, 7)
+	doc.termination_initiated_by = doc.termination_initiated_by or "Needs Review / يحتاج مراجعة"
+	if doc.last_working_day:
+		applicable_days = get_final_settlement_days(doc.termination_initiated_by)
+		doc.settlement_due_date = add_days(
+			doc.last_working_day,
+			applicable_days,
+		)
+		doc.document_return_due_date = add_days(doc.last_working_day, applicable_days)
+	if doc.termination_initiated_by == "Needs Review / يحتاج مراجعة":
+		doc.legal_review_required = 1
+
+	unused_hours = flt(doc.unused_compensatory_leave_hours)
+	doc.compensatory_leave_payout_amount = calculate_compensatory_leave_exit_payout(
+		unused_hours,
+		doc.actual_hourly_wage_for_leave,
+	)
+	doc.compensatory_leave_review_required = cint(
+		unused_hours > 0 and flt(doc.actual_hourly_wage_for_leave) <= 0
+	)
+	if doc.compensatory_leave_review_required:
+		doc.legal_review_required = 1
+	if (
+		doc.status == "Settled / تمت التسوية"
+		and unused_hours > 0
+		and not doc.compensatory_leave_payout_evidence
+	):
+		frappe.throw(
+			_("Attach evidence of paying the unused compensatory-leave balance before closing the settlement.<br>"
+			  "أرفق إثبات دفع رصيد الإجازة التعويضية غير المستخدم قبل إغلاق التسوية."),
+			title=_("Payout Evidence Required / إثبات الدفع مطلوب"),
+		)
 
 	if doc.status in {"Settled / تمت التسوية", "Cancelled / ملغى"}:
 		return
 	if doc.settlement_due_date and getdate(doc.settlement_due_date) < getdate(today()):
 		doc.status = "Overdue / متأخر"
+
+
+def calculate_flexible_work_limits(monthly_hours):
+	hours = max(0, flt(monthly_hours))
+	return {
+		"overtime_hours": round(max(0, hours - 95), 2),
+		"maximum_exceeded": hours > 160,
+		"nitaqat_credit": 1 if hours >= 160 else 0,
+		"paid_leave_entitled": False,
+		"eosb_entitled": False,
+		"probation_applicable": False,
+		"overtime_at_base_hourly_rate": True,
+	}
 
 
 def calculate_work_arrangement_dates(doc):
@@ -1414,14 +2317,66 @@ def calculate_work_arrangement_dates(doc):
 		if doc.conversion_required and doc.status not in {"Closed / مغلق", "Cancelled / ملغى"}:
 			doc.status = "Needs Conversion / يحتاج تحويل"
 
+	if doc.arrangement_type == "Flexible Work / العمل المرن":
+		doc.saudi_only_applicable = 1
+		doc.compensatory_leave_allowed = 0
+		doc.flexible_overtime_threshold = 95
+		doc.flexible_monthly_maximum = 160
+		limits = calculate_flexible_work_limits(doc.monthly_hours)
+		doc.flexible_overtime_hours = limits["overtime_hours"]
+		doc.flexible_nitaqat_credit = limits["nitaqat_credit"]
+		doc.paid_leave_entitled = cint(limits["paid_leave_entitled"])
+		doc.eosb_entitled = cint(limits["eosb_entitled"])
+		doc.probation_applicable = cint(limits["probation_applicable"])
+		doc.flexible_overtime_at_base_rate = cint(limits["overtime_at_base_hourly_rate"])
+		doc.flexible_contract_max_end_date = add_months(doc.start_date, 12) if doc.start_date else None
+		duration_exceeded = bool(
+			doc.end_date
+			and doc.flexible_contract_max_end_date
+			and getdate(doc.end_date) > getdate(doc.flexible_contract_max_end_date)
+		)
+		doc.regular_contract_conversion_required = cint(duration_exceeded)
+		doc.renewal_requires_worker_consent = cint(doc.is_renewal_or_extension)
+		nationality = get_employee_nationality(doc.employee)
+		requires_review = (
+			(not is_saudi_nationality(nationality))
+			or limits["maximum_exceeded"]
+			or duration_exceeded
+			or (doc.is_renewal_or_extension and not (doc.worker_renewal_consent_reference or "").strip())
+			or (doc.status == "Active / نشط" and not doc.platform_reference)
+		)
+		if requires_review and doc.status not in {"Closed / مغلق", "Cancelled / ملغى"}:
+			doc.status = "Needs Review / يحتاج مراجعة"
+
+
+def evaluate_working_time_status(actual_daily_hours, actual_weekly_hours, standard_daily_hours=8, standard_weekly_hours=48, approval_reference=None):
+	daily = flt(actual_daily_hours)
+	weekly = flt(actual_weekly_hours)
+	if daily > 10:
+		return "Daily Limit Exceeded / تجاوز الحد اليومي"
+	if weekly > 60:
+		return "Weekly Limit Exceeded / تجاوز الحد الأسبوعي"
+	if daily > flt(standard_daily_hours or 8) or weekly > flt(standard_weekly_hours or 48):
+		return "Exception Approved / استثناء معتمد" if approval_reference else "Needs Review / يحتاج مراجعة"
+	return "Compliant / ممتثل"
+
 
 def calculate_working_time_status(doc):
-	if flt(doc.actual_daily_hours) > 10:
-		doc.status = "Daily Limit Exceeded / تجاوز الحد اليومي"
-	elif flt(doc.actual_weekly_hours) > 60:
-		doc.status = "Weekly Limit Exceeded / تجاوز الحد الأسبوعي"
-	elif doc.status == "Needs Review / يحتاج مراجعة":
-		doc.status = "Compliant / ممتثل"
+	evaluate_special_working_hours(doc)
+
+
+def get_holiday_overlap_action(overlap_type):
+	return {
+		"Weekly Rest / راحة أسبوعية": "Compensate Rest Day / تعويض يوم راحة",
+		"Annual Leave / إجازة سنوية": "Extend Leave / تمديد الإجازة",
+		"Sick Leave / إجازة مرضية": "Apply Sick Leave Pay Rule / تطبيق أجر المرضية",
+	}.get(overlap_type, "Legal Review / مراجعة قانونية")
+
+
+def calculate_holiday_overlap_action(doc):
+	doc.required_action = get_holiday_overlap_action(doc.overlap_type)
+	if doc.required_action == "Legal Review / مراجعة قانونية" and doc.status == "Open / مفتوح":
+		doc.status = "Legal Review / مراجعة قانونية"
 
 
 def calculate_statutory_record_counts(doc):
@@ -1547,6 +2502,8 @@ def validate_compliance_doc(doc, method=None):
 		calculate_work_arrangement_dates(doc)
 	elif doc.doctype == "Working Time Compliance Check":
 		calculate_working_time_status(doc)
+	elif doc.doctype == "Holiday Leave Overlap Rule":
+		calculate_holiday_overlap_action(doc)
 	elif doc.doctype == "Statutory HR Records Register":
 		calculate_statutory_record_counts(doc)
 	elif doc.doctype == "Inspection Fine SLA":
@@ -1561,6 +2518,14 @@ def validate_compliance_doc(doc, method=None):
 		calculate_provider_complaint_status(doc)
 	elif doc.doctype == "Training Agreement":
 		calculate_training_agreement_status(doc)
+	elif doc.doctype == "First Aid Cabinet Register":
+		calculate_first_aid_cabinet(doc)
+	elif doc.doctype == "Remote Work Site Compliance":
+		calculate_remote_work_site(doc)
+	elif doc.doctype == "Expat Work Authorization Control":
+		flag_saudi_only_profession(doc)
+	elif doc.doctype == "Special Employment Category Control":
+		evaluate_juvenile_controls(doc)
 
 
 def create_final_settlement_from_termination(doc, method=None):
@@ -1569,8 +2534,13 @@ def create_final_settlement_from_termination(doc, method=None):
 	if frappe.db.exists("Final Settlement SLA", {"termination_notice": doc.name}):
 		return
 
-	settlement_due = add_days(doc.notice_end_date, 14) if doc.notice_end_date else None
-	document_due = add_days(doc.notice_end_date, 7) if doc.notice_end_date else None
+	termination_initiated_by = derive_termination_initiator(doc.termination_reason)
+	applicable_days = get_final_settlement_days(termination_initiated_by)
+	settlement_due = add_days(
+		doc.notice_end_date,
+		applicable_days,
+	) if doc.notice_end_date else None
+	document_due = add_days(doc.notice_end_date, applicable_days) if doc.notice_end_date else None
 	frappe.get_doc(
 		{
 			"doctype": "Final Settlement SLA",
@@ -1578,11 +2548,12 @@ def create_final_settlement_from_termination(doc, method=None):
 			"employee": doc.employee,
 			"company": doc.company,
 			"last_working_day": doc.notice_end_date,
+			"termination_initiated_by": termination_initiated_by,
 			"settlement_due_date": settlement_due,
 			"document_return_due_date": document_due,
 			"status": "Open / مفتوح",
 			"risk_level": "High / مرتفع",
-			"legal_review_required": 1,
+			"legal_review_required": cint(termination_initiated_by == "Needs Review / يحتاج مراجعة"),
 			"notes": _("Auto-created from approved Termination Notice {0}.").format(doc.name),
 		}
 	).insert(ignore_permissions=True)

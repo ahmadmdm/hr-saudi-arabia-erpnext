@@ -21,15 +21,7 @@ frappe.ui.form.on('Saudi Sick Leave', {
                 frm.set_value('employee_name', emp.employee_name);
                 frm.set_value('company', emp.company);
                 frm.set_value('department', emp.department);
-                // Fetch cumulative sick days this year
-                frappe.call({
-                    method: 'saudi_hr.saudi_hr.doctype.saudi_sick_leave.saudi_sick_leave.get_sick_days_this_year',
-                    args: { employee: frm.doc.employee, exclude_doc: frm.doc.name || '' },
-                    callback(s) {
-                        frm.set_value('sick_days_this_year_before', flt(s.message) || 0);
-                        _calc_pay(frm);
-                    }
-                });
+                _refresh_cycle(frm);
                 // Fetch daily salary
                 frappe.call({
                     method: 'saudi_hr.saudi_hr.doctype.saudi_sick_leave.saudi_sick_leave.get_daily_salary',
@@ -43,7 +35,7 @@ frappe.ui.form.on('Saudi Sick Leave', {
         });
     },
 
-    from_date(frm) { _calc_days(frm); },
+    from_date(frm) { _calc_days(frm); _refresh_cycle(frm); },
     to_date(frm)   { _calc_days(frm); },
 
     total_days(frm)                  { _calc_pay(frm); },
@@ -61,6 +53,42 @@ function _calc_days(frm) {
     }
     const days = frappe.datetime.get_day_diff(frm.doc.to_date, frm.doc.from_date) + 1;
     frm.set_value('total_days', days);
+    _set_cycle_boundary_review(frm);
+}
+
+function _refresh_cycle(frm) {
+    if (!frm.doc.employee || !frm.doc.from_date) return;
+    frappe.call({
+        method: 'saudi_hr.saudi_hr.doctype.saudi_sick_leave.saudi_sick_leave.get_sick_leave_cycle',
+        args: {
+            employee: frm.doc.employee,
+            from_date: frm.doc.from_date,
+            exclude_doc: frm.doc.name || ''
+        },
+        callback(r) {
+            const cycle = r.message || {};
+            frm.set_value('benefit_cycle_start', cycle.cycle_start || frm.doc.from_date);
+            frm.set_value('benefit_cycle_end', cycle.cycle_end || null);
+            frm.set_value('sick_days_this_year_before', flt(cycle.used_days));
+            _set_cycle_boundary_review(frm);
+            _calc_pay(frm);
+        }
+    });
+}
+
+function _set_cycle_boundary_review(frm) {
+    const crosses = Boolean(
+        frm.doc.to_date &&
+        frm.doc.benefit_cycle_end &&
+        frappe.datetime.get_day_diff(frm.doc.to_date, frm.doc.benefit_cycle_end) > 0
+    );
+    frm.set_value('cycle_boundary_review_required', crosses ? 1 : 0);
+    frm.set_value(
+        'cycle_boundary_note',
+        crosses
+            ? __('تتجاوز الإجازة نهاية دورة الاستحقاق الحالية؛ راجع توزيع الأيام بين الدورتين. / The request crosses the benefit-cycle boundary; review allocation across both cycles.')
+            : ''
+    );
 }
 
 function _calc_pay(frm) {
@@ -72,39 +100,33 @@ function _calc_pay(frm) {
     frm.set_value('sick_days_this_year_after', after);
 
     // م.117: أيام الفئة الأولى (1-30 بأجر كامل)، الثانية (31-90 بـ75%)، الثالثة (91-120 بلا أجر)
-    let pay = 0;
-    let rate_label = '';
-    let alert_30 = 0, alert_90 = 0;
-
-    if (after <= 30) {
-        pay = daily * total;
-        rate_label = 'أجر كامل (م.117) / Full Pay (Art.117)';
-    } else if (before >= 90) {
-        pay = 0;
-        rate_label = 'بدون أجر (م.117) / No Pay (Art.117)';
-        alert_90 = 1;
-    } else {
-        // تقسيم مختلط
-        const full_days = Math.max(0, 30 - before);
-        const half_days = Math.max(0, Math.min(60, after - 30) - Math.max(0, before - 30));
-        const no_days   = Math.max(0, after - 90);
-        pay = daily * full_days + daily * 0.75 * half_days;
-        if (full_days && half_days)       rate_label = 'أجر كامل + 75% (م.117) / Full + 75% (Art.117)';
-        else if (half_days)               rate_label = '75% من الأجر (م.117) / 75% Pay (Art.117)';
-        else if (no_days === total)       { rate_label = 'بدون أجر (م.117) / No Pay (Art.117)'; alert_90 = 1; }
-        if (after > 30)  alert_30 = 1;
-        if (after >= 90) alert_90 = 1;
-    }
+    const full_days = Math.min(total, Math.max(0, 30 - before));
+    const remaining = Math.max(0, total - full_days);
+    const partial_consumed = Math.max(0, Math.min(60, before - 30));
+    const partial_days = Math.min(remaining, Math.max(0, 60 - partial_consumed));
+    const no_days = Math.max(0, remaining - partial_days);
+    const pay = daily * full_days + daily * 0.75 * partial_days;
+    const effective_rate = total && daily ? (pay / (daily * total)) * 100 : 0;
+    const alert_30 = after > 30 ? 1 : 0;
+    const alert_90 = after > 90 ? 1 : 0;
+    let rate_label = 'شرائح نظامية مختلطة / Mixed Statutory Tiers';
+    if (full_days === total) rate_label = 'أجر كامل (م.117) / Full Pay (Art.117)';
+    else if (partial_days === total) rate_label = '75% من الأجر (م.117) / 75% Pay (Art.117)';
+    else if (no_days === total) rate_label = 'بدون أجر (م.117) / No Pay (Art.117)';
 
     frm.set_value('leave_pay_amount', flt(pay.toFixed(2)));
+    frm.set_value('full_pay_days', full_days);
+    frm.set_value('partial_pay_days', partial_days);
+    frm.set_value('unpaid_days', no_days);
+    frm.set_value('pay_rate', flt(effective_rate.toFixed(2)));
     frm.set_value('pay_label', rate_label);
     frm.set_value('alert_30_days', alert_30);
     frm.set_value('alert_90_days', alert_90);
 
     if (alert_90) {
         frappe.show_alert({
-            message: __('تحذير: الموظف تجاوز 90 يوم إجازة مرضية — المرحلة الثالثة بدون أجر / Warning: Employee exceeded 90 sick days — No pay phase'),
-            indicator: 'red'
+            message: __('دخل الموظف شريحة دون أجر بعد 90 يوماً تراكمياً؛ استمر في متابعة استحقاق 120 يوماً ولا تبدأ الإنهاء تلقائياً. / The employee entered the unpaid tier; continue tracking the 120-day entitlement and do not terminate automatically.'),
+            indicator: 'orange'
         });
     } else if (alert_30) {
         frappe.show_alert({

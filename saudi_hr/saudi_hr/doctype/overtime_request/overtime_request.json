@@ -19,11 +19,26 @@
   "column_break_2",
   "normal_hours",
   "overtime_hours",
-  "overtime_rate",
+  "compensation_method",
+  "written_consent_reference",
+  "compensatory_leave_factor",
+  "compensatory_leave_hours",
+  "compensatory_leave_days",
+  "compensatory_leave_use_by",
+  "compensatory_leave_exception_reference",
+  "annual_limits_section",
+  "annual_overtime_hours",
+  "annual_limit_consent_reference",
+  "annual_compensatory_leave_days",
   "salary_section",
   "monthly_basic",
-  "hourly_rate",
+  "monthly_actual_wage",
   "column_break_3",
+  "basic_hourly_rate",
+  "actual_hourly_rate",
+  "overtime_premium_hourly",
+  "hourly_rate",
+  "overtime_rate",
   "overtime_amount",
   "approval_section",
   "approval_status",
@@ -120,11 +135,85 @@
    "reqd": 1
   },
   {
+   "default": "Cash Payment / بدل نقدي",
+   "fieldname": "compensation_method",
+   "fieldtype": "Select",
+   "label": "Compensation Method / طريقة التعويض",
+   "options": "Cash Payment / بدل نقدي\nCompensatory Leave / إجازة تعويضية",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية'",
+   "description": "Reference to the employee's written consent / مرجع موافقة الموظف الكتابية",
+   "fieldname": "written_consent_reference",
+   "fieldtype": "Small Text",
+   "label": "Written Consent Reference / مرجع الموافقة الكتابية",
+   "mandatory_depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية'"
+  },
+  {
+   "depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية'",
    "default": "1.5",
-   "description": "Saudi Labor Law Art. 107 — 150% of hourly rate / م.107 — 150% من الأجر الساعي",
-   "fieldname": "overtime_rate",
+   "description": "Minimum 1.5 paid leave hours for each overtime hour / الحد الأدنى 1.5 ساعة إجازة مدفوعة لكل ساعة إضافية",
+   "fieldname": "compensatory_leave_factor",
    "fieldtype": "Float",
-   "label": "Overtime Rate / معدل العمل الإضافي",
+   "label": "Compensatory Leave Factor / معامل الإجازة التعويضية",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية'",
+   "fieldname": "compensatory_leave_hours",
+   "fieldtype": "Float",
+   "label": "Compensatory Leave Hours / ساعات الإجازة التعويضية",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية'",
+   "fieldname": "compensatory_leave_days",
+   "fieldtype": "Float",
+   "label": "Compensatory Leave Days / أيام الإجازة التعويضية",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية'",
+   "description": "Ordinary use deadline: 60 days from the overtime date / المهلة المعتادة للاستخدام: 60 يوماً من تاريخ العمل الإضافي",
+   "fieldname": "compensatory_leave_use_by",
+   "fieldtype": "Date",
+   "label": "Use By / تستخدم قبل",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية' && doc.annual_compensatory_leave_days>30",
+   "description": "Required when the parties agree to exceed 30 compensatory-leave days in a year / مطلوب عند اتفاق الطرفين على تجاوز 30 يوماً في السنة",
+   "fieldname": "compensatory_leave_exception_reference",
+   "fieldtype": "Small Text",
+   "label": "Compensatory Leave Exception Agreement / اتفاق استثناء الإجازة التعويضية"
+  },
+  {
+   "description": "Annual overtime and compensatory-leave controls from the Executive Regulations / ضوابط العمل الإضافي والإجازة التعويضية السنوية",
+   "fieldname": "annual_limits_section",
+   "fieldtype": "Section Break",
+   "label": "Annual Legal Limits / الحدود النظامية السنوية"
+  },
+  {
+   "description": "Annual overtime including this request; ordinary limit is 720 hours / مجموع الإضافي السنوي شاملاً هذا الطلب؛ الحد المعتاد 720 ساعة",
+   "fieldname": "annual_overtime_hours",
+   "fieldtype": "Float",
+   "label": "Annual Overtime Hours / ساعات الإضافي السنوية",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.annual_overtime_hours>720",
+   "description": "Worker consent is required to exceed 720 overtime hours in a year / موافقة العامل مطلوبة لتجاوز 720 ساعة إضافية في السنة",
+   "fieldname": "annual_limit_consent_reference",
+   "fieldtype": "Small Text",
+   "label": "Annual Limit Consent / موافقة تجاوز الحد السنوي"
+  },
+  {
+   "depends_on": "eval:doc.compensation_method=='Compensatory Leave / إجازة تعويضية'",
+   "description": "Annual compensatory leave including this request; ordinary cap is 30 days / مجموع الإجازة التعويضية السنوية شاملاً هذا الطلب؛ السقف المعتاد 30 يوماً",
+   "fieldname": "annual_compensatory_leave_days",
+   "fieldtype": "Float",
+   "label": "Annual Compensatory Leave Days / أيام الإجازة التعويضية السنوية",
    "read_only": 1
   },
   {
@@ -139,15 +228,50 @@
    "read_only": 1
   },
   {
-   "description": "Monthly Basic ÷ 240 working hours",
-   "fieldname": "hourly_rate",
+   "description": "Total wage from the active Saudi Employment Contract / الأجر الإجمالي من عقد العمل السعودي النشط",
+   "fieldname": "monthly_actual_wage",
    "fieldtype": "Currency",
-   "label": "Hourly Rate / الأجر الساعي",
+   "label": "Monthly Actual Wage / الأجر الفعلي الشهري",
    "read_only": 1
   },
   {
    "fieldname": "column_break_3",
    "fieldtype": "Column Break"
+  },
+  {
+   "description": "Monthly basic wage ÷ 240",
+   "fieldname": "basic_hourly_rate",
+   "fieldtype": "Currency",
+   "label": "Basic Hourly Rate / أجر الساعة الأساسي",
+   "read_only": 1
+  },
+  {
+   "description": "Monthly actual wage ÷ 240",
+   "fieldname": "actual_hourly_rate",
+   "fieldtype": "Currency",
+   "label": "Actual Hourly Rate / أجر الساعة الفعلي",
+   "read_only": 1
+  },
+  {
+   "description": "50% of the basic hourly rate / 50% من أجر الساعة الأساسي",
+   "fieldname": "overtime_premium_hourly",
+   "fieldtype": "Currency",
+   "label": "Hourly Overtime Premium / علاوة الساعة الإضافية",
+   "read_only": 1
+  },
+  {
+   "description": "Actual hourly rate + 50% of basic hourly rate / أجر الساعة الفعلي + 50% من الأساسي",
+   "fieldname": "hourly_rate",
+   "fieldtype": "Currency",
+   "label": "Payable Overtime Hour / أجر ساعة الإضافي المستحق",
+   "read_only": 1
+  },
+  {
+   "description": "Compatibility ratio only; the amount is calculated from the wage components above / نسبة توافق فقط",
+   "fieldname": "overtime_rate",
+   "fieldtype": "Float",
+   "label": "Equivalent Basic Rate / النسبة المكافئة للأساسي",
+   "read_only": 1
   },
   {
    "fieldname": "overtime_amount",

@@ -1,13 +1,14 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt
+from frappe.utils import cint, flt, getdate
 
 from saudi_hr.saudi_hr.utils import (
 	assert_doctype_permissions,
 	get_contract_nationality_lookup,
 	get_employee_basic_salary as get_current_basic_salary,
 	get_employee_nationality,
+	get_gosi_rates,
 	is_saudi_nationality,
 )
 
@@ -20,23 +21,66 @@ class GOSIContribution(Document):
 	def validate(self):
 		self._set_nationality()
 		self._apply_gosi_rates()
+		self._cap_contribution_base()
 		self._calculate_contributions()
 		self._set_period_label()
-		self._cap_contribution_base()
 
 	def _set_nationality(self):
 		if not self.nationality:
 			self.nationality = get_employee_nationality(self.employee) or ""
+		if not self.nationality:
+			# بدون الجنسية تُطبَّق نسبة غير السعوديين (2%) على السعوديين خطأً،
+			# وهو فرق جوهري في الاشتراك، فلا يُسمح بالحفظ دون تحديدها.
+			frappe.throw(
+				_(
+					"Nationality could not be determined for this employee, and GOSI contributions "
+					"cannot be calculated without it. Record the nationality on the active Saudi "
+					"Employment Contract first.<br>"
+					"تعذّر تحديد جنسية الموظف، ولا يمكن احتساب اشتراك التأمينات بدونها. "
+					"سجّل الجنسية في عقد العمل السعودي النشط أولاً."
+				),
+				title=_("Nationality Required / الجنسية مطلوبة"),
+			)
 
 	def _apply_gosi_rates(self):
-		"""تحديد معدلات GOSI بحسب الجنسية."""
-		settings = frappe.get_single("Saudi HR Settings")
-		if is_saudi_nationality(self.nationality):
-			self.employee_contribution_rate = flt(settings.gosi_saudi_employee_rate) or 10.0
-			self.employer_contribution_rate = flt(settings.gosi_saudi_employer_rate) or 12.0
-		else:
-			self.employee_contribution_rate = flt(settings.gosi_non_saudi_employee_rate) or 0.0
-			self.employer_contribution_rate = flt(settings.gosi_non_saudi_employer_rate) or 2.0
+		"""تحديد معدلات GOSI بحسب الجنسية ونظام الاشتراك المطبَّق على العامل."""
+		rates = get_gosi_rates(self.nationality, employee=self.employee, as_on_date=self._contribution_date())
+		self.employee_contribution_rate = rates["employee_rate"]
+		self.employer_contribution_rate = rates["employer_rate"]
+		if self.meta.has_field("gosi_system"):
+			self.gosi_system = rates["system"]
+		self._apply_branch_breakdown(rates)
+
+	def _contribution_date(self):
+		"""أول يوم من شهر الاشتراك، لأن نسبة المعاشات تُطبَّق على الشهر كاملاً."""
+		months = [
+			"January", "February", "March", "April", "May", "June",
+			"July", "August", "September", "October", "November", "December",
+		]
+		try:
+			month_index = months.index(self.month) + 1
+			return getdate(f"{cint(self.year)}-{month_index:02d}-01")
+		except (ValueError, TypeError):
+			return None
+
+	def _apply_branch_breakdown(self, rates):
+		"""تفصيل الاشتراك على فروعه حتى لا تبقى نسب الجدول ثابتة ومخالفة للمحتسب."""
+		pension = flt(rates.get("pension_rate"))
+		if not is_saudi_nationality(self.nationality):
+			self.saudi_employee_pension_rate = 0
+			self.saudi_employee_unemployment_rate = 0
+			self.saudi_employer_pension_rate = 0
+			self.saudi_employer_unemployment_rate = 0
+			self.saudi_employer_hazard_rate = flt(self.employer_contribution_rate)
+			return
+
+		hazards = max(0, flt(self.employer_contribution_rate) - flt(self.employee_contribution_rate))
+		saned = max(0, flt(self.employee_contribution_rate) - pension)
+		self.saudi_employee_pension_rate = pension
+		self.saudi_employee_unemployment_rate = saned
+		self.saudi_employer_pension_rate = pension
+		self.saudi_employer_unemployment_rate = saned
+		self.saudi_employer_hazard_rate = hazards
 
 	def _cap_contribution_base(self):
 		"""وعاء الاشتراك لا يتجاوز 45,000 ريال."""

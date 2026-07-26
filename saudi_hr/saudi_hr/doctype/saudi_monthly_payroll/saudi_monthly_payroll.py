@@ -12,7 +12,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.styles import Alignment, Font, PatternFill
 
 from saudi_hr.saudi_hr.doctype.employee_loan.employee_loan import apply_payroll_loan_deductions, get_due_loan_deduction, revert_payroll_loan_deductions
-from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_positive_basic_salary, calculate_prorated_sick_leave_deduction, get_employee_salary_components, get_gosi_rates, text_matches_tokens
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_positive_basic_salary, calculate_prorated_sick_leave_deduction, get_contract_nationality_lookup, get_employee_nationality, get_employee_salary_components, get_gosi_rates, text_matches_tokens
 
 GOSI_MAX_BASE = 45000.0
 PREFERRED_SOURCE_WORKBOOK_SHEETS = ("كشف الرواتب طباعة", "كشف الرواتب", "كشف المصدر")
@@ -269,6 +269,10 @@ def fetch_employees(doc_name: str):
 
 	loan_map = {emp_name: get_due_loan_deduction(emp_name, month_num, int(doc.year)) for emp_name in emp_names}
 
+	# الجنسية مصدرها عقد العمل السعودي عندما لا يحمل سجل الموظف حقل الجنسية،
+	# وبدونها تُحتسب نسبة غير السعوديين خطأً على السعوديين.
+	nationality_map = get_contract_nationality_lookup(emp_names)
+
 	# مسح الجدول الحالي
 	doc.set("employees", [])
 	warnings = []
@@ -289,7 +293,12 @@ def fetch_employees(doc_name: str):
 		other = flt(contract["other_allowances"]) if contract else 0.0
 		gross = round(basic + housing + transport + other, 2)
 
-		gosi_rate = flt(get_gosi_rates(emp.get("nationality") or "").get("employee_rate"))
+		nationality = emp.get("nationality") or nationality_map.get(emp["name"]) or ""
+		if not nationality:
+			warnings.append(_get_unknown_nationality_warning(emp.get("employee_name") or emp["name"]))
+		gosi_rate = flt(
+			get_gosi_rates(nationality, employee=emp["name"], as_on_date=month_start).get("employee_rate")
+		)
 		gosi_base = min(basic, GOSI_MAX_BASE)
 		gosi_deduction = round(gosi_base * gosi_rate / 100, 2)
 
@@ -1349,12 +1358,19 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 	gross = round(basic + housing + transport + other, 2)
 
 	# اقتطاع GOSI للموظف
-	gosi_rate = flt(get_gosi_rates(emp.get("nationality") or "").get("employee_rate"))
+	nationality = emp.get("nationality") or get_employee_nationality(emp["name"]) or ""
+	month_num = _month_name_to_num(month)
+	gosi_rate = flt(
+		get_gosi_rates(
+			nationality,
+			employee=emp["name"],
+			as_on_date=f"{int(year)}-{month_num:02d}-01",
+		).get("employee_rate")
+	)
 	gosi_base = min(basic, GOSI_MAX_BASE)
 	gosi_deduction = round(gosi_base * gosi_rate / 100, 2)
 
 	# خصم الإجازة المرضية (إن وجدت في الشهر الحالي)
-	month_num = _month_name_to_num(month)
 	month_start = f"{year}-{month_num:02d}-01"
 	import calendar
 	last_day = calendar.monthrange(int(year), month_num)[1]
@@ -2614,6 +2630,15 @@ def _get_employee_fetch_fields() -> list[str]:
 	if frappe.get_meta("Employee").has_field("nationality"):
 		fields.append("nationality")
 	return fields
+
+
+def _get_unknown_nationality_warning(employee_label: str) -> str:
+	return _(
+		"Nationality for {0} could not be determined, so the non-Saudi GOSI rate was applied. "
+		"Record the nationality on the active Saudi Employment Contract and recalculate. / "
+		"تعذّر تحديد جنسية {0}، فطُبّقت نسبة التأمينات لغير السعوديين. "
+		"سجّل الجنسية في عقد العمل السعودي النشط ثم أعد الاحتساب."
+	).format(employee_label)
 
 
 def _get_zero_basic_salary_skip_warning(employee_label: str) -> str:

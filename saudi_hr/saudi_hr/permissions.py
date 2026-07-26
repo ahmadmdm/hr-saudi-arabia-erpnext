@@ -241,3 +241,19 @@ def get_attendance_location_query(user=None):
 
 def has_attendance_location_permission(doc, user=None, permission_type=None):
 	return _branch_permission(doc, user)
+
+
+def get_policy_acknowledgement_query(user=None):
+	return _employee_query("Policy Acknowledgement", user)
+
+
+def has_policy_acknowledgement_permission(doc, user=None, permission_type=None):
+	return _employee_permission(doc, user)
+
+
+def get_employee_grievance_query(user=None):
+	return _employee_query("Employee Grievance", user)
+
+
+def has_employee_grievance_permission(doc, user=None, permission_type=None):
+	return _employee_permission(doc, user)

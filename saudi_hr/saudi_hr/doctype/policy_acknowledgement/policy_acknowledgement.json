@@ -27,6 +27,10 @@
   "column_break_3",
   "acknowledgement_channel",
   "acknowledged_on",
+  "acknowledgement_user",
+  "acknowledgement_consent_text",
+  "acknowledgement_fingerprint",
+  "acknowledgement_ip",
   "evidence_attachment",
   "acknowledgement_notes",
   "amended_from"
@@ -53,6 +57,10 @@
   {"fieldname": "column_break_3", "fieldtype": "Column Break"},
   {"fieldname": "acknowledgement_channel", "fieldtype": "Select", "label": "Acknowledgement Channel / قناة الإقرار", "options": "Portal / البوابة\nEmail / البريد الإلكتروني\nManual / يدوي\nEmployee File / ملف الموظف"},
   {"fieldname": "acknowledged_on", "fieldtype": "Datetime", "label": "Acknowledged On / تاريخ الإقرار"},
+  {"fieldname": "acknowledgement_user", "fieldtype": "Link", "label": "Acknowledged By / أقر بواسطة", "options": "User", "read_only": 1},
+  {"fieldname": "acknowledgement_consent_text", "fieldtype": "Small Text", "label": "Consent Text / نص الموافقة", "read_only": 1},
+  {"fieldname": "acknowledgement_fingerprint", "fieldtype": "Data", "label": "Evidence Fingerprint / بصمة الإثبات", "read_only": 1},
+  {"fieldname": "acknowledgement_ip", "fieldtype": "Data", "label": "Acknowledgement IP / عنوان الاتصال", "permlevel": 1, "read_only": 1},
   {"fieldname": "evidence_attachment", "fieldtype": "Attach", "label": "Evidence Attachment / مرفق الإثبات"},
   {"fieldname": "acknowledgement_notes", "fieldtype": "Small Text", "label": "Notes / ملاحظات"},
   {"fieldname": "amended_from", "fieldtype": "Link", "label": "Amended From", "options": "Policy Acknowledgement", "no_copy": 1, "print_hide": 1, "read_only": 1}
@@ -68,6 +76,9 @@
  "permissions": [
   {"role": "HR Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "report": 1, "export": 1, "share": 1},
   {"role": "HR User", "read": 1, "write": 1, "create": 1, "print": 1, "email": 1, "report": 1, "export": 1}
+  ,{"role": "System Manager", "permlevel": 1, "read": 1}
+  ,{"role": "Employee", "read": 1, "print": 1}
+  ,{"role": "Employee Self Service", "read": 1, "print": 1}
  ],
  "search_fields": "policy_title,employee,employee_name,policy_version",
  "sort_field": "modified",

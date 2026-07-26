@@ -85,7 +85,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Leave Type / نوع الإجازة",
-   "options": "Maternity / أمومة (70 يوم)\nPaternity / أبوة (3 أيام)\nMiscarriage after 6 months / إجهاض بعد 6 أشهر (60 يوم)",
+   "options": "Maternity / أمومة (84 يوماً)\nPaternity / أبوة (3 أيام)\nMiscarriage after 6 months / إجهاض بعد 6 أشهر (60 يوم)",
    "reqd": 1
   },
   {

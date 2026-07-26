@@ -2,17 +2,17 @@
 
 # Saudi HR for ERPNext
 
-## نظام موارد بشرية سعودي مستقل لبيئات ERPNext v15
+## نظام موارد بشرية سعودي مستقل لبيئات ERPNext v16
 
 **تشغيل يومي، امتثال سعودي، رواتب، حضور، عقود، وموافقات في تجربة واحدة مصممة للمنشآت داخل المملكة.**
 
 <br>
 
-<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.4"><img alt="Version 1.16.4" src="https://img.shields.io/badge/version-1.16.4-0F766E?style=for-the-badge"></a>
-<img alt="Frappe v15" src="https://img.shields.io/badge/Frappe-v15-2563EB?style=for-the-badge">
-<img alt="ERPNext v15" src="https://img.shields.io/badge/ERPNext-v15-7C3AED?style=for-the-badge">
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.5-v16"><img alt="Version 1.16.5" src="https://img.shields.io/badge/version-1.16.5-0F766E?style=for-the-badge"></a>
+<img alt="Frappe v16" src="https://img.shields.io/badge/Frappe-v16-2563EB?style=for-the-badge">
+<img alt="ERPNext v16" src="https://img.shields.io/badge/ERPNext-v16-7C3AED?style=for-the-badge">
 <img alt="No HRMS dependency" src="https://img.shields.io/badge/HRMS-not%20required-16A34A?style=for-the-badge">
-<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/actions/workflows/quality.yml"><img alt="Quality checks" src="https://img.shields.io/github/actions/workflow/status/ahmadmdm/hr-saudi-arabia-erpnext/quality.yml?branch=version-15&label=quality&style=for-the-badge"></a>
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/actions/workflows/quality.yml"><img alt="Quality checks" src="https://img.shields.io/github/actions/workflow/status/ahmadmdm/hr-saudi-arabia-erpnext/quality.yml?branch=version-16&label=quality&style=for-the-badge"></a>
 <a href="LICENSE"><img alt="GPL 3.0" src="https://img.shields.io/badge/license-GPL--3.0-EA580C?style=for-the-badge"></a>
 
 <br><br>
@@ -178,7 +178,7 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 | الدليل | Guide | متى تستخدمه؟ |
 |--------|-------|--------------|
-| [التثبيت](docs/installation.md) | Installation | تثبيت التطبيق على bench جديد أو موقع ERPNext v15 |
+| [التثبيت](docs/installation.md) | Installation | تثبيت التطبيق على bench جديد أو موقع ERPNext v16 |
 | [النقل والتشغيل](docs/deployment.md) | Deployment | نقل التطبيق إلى نظام آخر والتحقق بعد الترقية |
 | [فصل HRMS](docs/hrms-decoupling.md) | HRMS Decoupling | إثبات أن التطبيق لا يحتاج HRMS ومعرفة البدائل السعودية داخله |
 | [الجولة المرئية](docs/visual-tour.md) | Visual Tour | استعراض الصور، GIF، وصورة Social Preview |
@@ -192,16 +192,16 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 | المكوّن | Component | الإصدار الأدنى | Min Version |
 |---------|-----------|----------------|-------------|
 | Python | Python | ≥ 3.10 | ≥ 3.10 |
-| Frappe Framework | Frappe Framework | ≥ 15.0.0 | ≥ 15.0.0 |
-| ERPNext | ERPNext | ≥ 15.0.0 | ≥ 15.0.0 |
+| Frappe Framework | Frappe Framework | ≥ 16.0.0 | ≥ 16.0.0 |
+| ERPNext | ERPNext | ≥ 16.0.0 | ≥ 16.0.0 |
 | MariaDB | MariaDB | ≥ 10.6 | ≥ 10.6 |
 | Node.js | Node.js | ≥ 18 | ≥ 18 |
 
 **بيئة التحقق الحالية | Verified Stack**
 
-- Frappe `15.107.2`
-- ERPNext `15.107.0`
-- Saudi HR `1.16.4`
+- Frappe `16.27.1`
+- ERPNext `16.28.0`
+- Saudi HR `1.16.5`
 - Python `3.10`
 - MariaDB `10.6+`
 - Node.js `24.x`
@@ -213,7 +213,7 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 ```bash
 # 1. احصل على التطبيق | Get the app
-bench get-app --branch version-15 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
+bench get-app --branch version-16 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 
 # 2. ثبّت على الموقع | Install on your site
 bench --site <your-site-name> install-app saudi_hr
@@ -246,7 +246,7 @@ bench --site <your-site-name> run-tests --app saudi_hr --skip-test-records
 
 ```bash
 # 1. داخل بيئة bench الجديدة | Inside the new bench environment
-bench get-app --branch version-15 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
+bench get-app --branch version-16 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 
 # 2. ثبّت التطبيق على الموقع | Install the app on the target site
 bench --site <your-site-name> install-app saudi_hr
@@ -303,7 +303,7 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 | DocType | النوع | المادة | الوصف |
 |---------|-------|--------|-------|
 | Saudi Sick Leave | الإجازة المرضية | م.117 | 100% ← 75% ← 0% حسب المدة — Tiered pay: 100%/75%/0% |
-| Maternity Paternity Leave | إجازة الأمومة والأبوة | م.151، م.160 | 10 أسابيع للأم، 3 أيام للأب — 10 weeks mother / 3 days father |
+| Maternity Paternity Leave | إجازة الأمومة والأبوة | م.151، م.160 | 12 أسبوعاً (84 يوماً) للأم، 3 أيام للأب — 12 weeks mother / 3 days father |
 | Special Leave | الإجازة الخاصة | م.113 | حج (15 يوم، مرة واحدة بعد سنتين خدمة)، وفاة (5)، زواج (5) — Hajj/Bereavement/Marriage |
 
 #### 🏛️ الامتثال | Compliance
@@ -492,7 +492,11 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.16.4 — ١٧ مايو ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.16.5 — ١٩ يوليو ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**حزمة الإنقاذ النظامي | Legal Accuracy Rescue:** تصحيح الأمومة إلى 84 يوماً، وإعادة بناء أجر الإضافي على الأجر الفعلي للساعة + 50% من الأساسي، وإلزام مرجع الموافقة الكتابية للإجازة التعويضية، وتصحيح مهل التسوية النهائية، وضوابط ساعات وأنماط العمل وتداخل العطل، مع اختبارات حماية للقواعد الحرجة على v15 وv16.
+
+### v1.16.4 — ١٧ مايو ٢٠٢٦
 
 **تحسين العرض العام والتوثيق الاحترافي | Presentation, Docs, and Quality Release:**
 
@@ -520,11 +524,11 @@ saudi_hr/
 | Visual Assets | أصول الصور | إضافة لقطات `professional-hr-hub`، مساحة العمل، مراجعة الحضور، أرصدة الإجازات، والشجرة التنظيمية |
 | Release Version | رقم الإصدار | رفع نسخة التطبيق إلى `1.16.3` وتجهيز وسم Git للإصدار |
 | Independence Statement | استقلالية التطبيق | توثيق أوضح أن التطبيق مستقل عن HRMS ويعمل فوق `frappe` و`erpnext` فقط |
-| Transfer Readiness | جاهزية النقل | توضيح أوامر التثبيت على الفرع `version-15` لتقليل أخطاء النقل بين البيئات |
+| Transfer Readiness | جاهزية النقل | توضيح أوامر التثبيت على الفرع `version-16` لتقليل أخطاء النقل بين البيئات |
 
 > **تعليق الإصدار | Release Note:** هذا الإصدار يركز على جاهزية النشر الخارجي: README أصبح واجهة عرض احترافية للتطبيق، الصور المرفقة مأخوذة من اختبار بصري فعلي، ورقم النسخة يثبت حالة التطبيق بعد فصل HRMS وتحسين مساحة العمل وواجهة `professional-hr-hub`.
 
-> **بعد الترقية | Post-upgrade:** شغّل `bench --site <your-site-name> migrate` ثم `bench build --app saudi_hr` و`bench --site <your-site-name> clear-cache`. عند النقل إلى نظام جديد استخدم أمر `bench get-app --branch version-15` لضمان تحميل فرع ERPNext v15 الصحيح.
+> **بعد الترقية | Post-upgrade:** شغّل `bench --site <your-site-name> migrate` ثم `bench build --app saudi_hr` و`bench --site <your-site-name> clear-cache`. عند النقل إلى نظام جديد استخدم أمر `bench get-app --branch version-16` لضمان تحميل فرع ERPNext v16 الصحيح.
 
 ### v1.16.0 — ٢٨ أبريل ٢٠٢٦
 

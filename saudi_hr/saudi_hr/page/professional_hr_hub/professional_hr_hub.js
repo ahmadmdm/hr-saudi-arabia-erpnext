@@ -7,20 +7,23 @@ frappe.pages["professional-hr-hub"].on_page_load = function (wrapper) {
 saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 	constructor(wrapper) {
 		this.wrapper = wrapper;
+		// Saudi HR is deliberately Arabic-first; English remains supporting copy.
+		this.isArabic = true;
 		this.catalog = { categories: [], features: [] };
 		this.activeCategory = "all";
 		this.searchText = "";
 		this.page = frappe.ui.make_app_page({
 			parent: wrapper,
-			title: __("Professional HR Hub"),
+			title: this.isArabic ? "مركز الموارد البشرية الاحترافي" : __("Professional HR Hub"),
 			single_column: true,
 		});
 		this.ensureStyles();
 		this.renderShell();
 		this.loadCatalog();
-		this.page.set_primary_action(__("Mobile Attendance"), () => this.open("/mobile-attendance"));
-		this.page.add_menu_item(__("Saudi HR Workspace"), () => this.open("/app/saudi-hr"));
-		this.page.add_menu_item(__("Saudi HR Settings"), () => this.open("/app/saudi-hr-settings/Saudi HR Settings"));
+		this.page.set_primary_action(this.isArabic ? "افتح مركز القيادة" : __("Open Command Center"), () => this.open("/app/saudi-compliance-command-center"));
+		this.page.add_menu_item(this.isArabic ? "الحضور عبر الجوال" : __("Mobile Attendance"), () => this.open("/mobile-attendance"));
+		this.page.add_menu_item("مساحة عمل Saudi HR", () => this.open("/app/saudi-hr"));
+		this.page.add_menu_item("إعدادات Saudi HR", () => this.open("/app/saudi-hr-settings/Saudi HR Settings"));
 	}
 
 	ensureStyles() {
@@ -35,15 +38,24 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 				display: grid;
 				gap: 18px;
 				padding: 8px 0 30px;
-				color: #172b4d;
+				color: #0f172a;
+				font-family: "Noto Sans Arabic", "Tajawal", var(--font-stack);
+			}
+
+			.professional-hr-hub[dir="rtl"] { text-align: right; }
+
+			.professional-hr-hub[dir="rtl"] .professional-hr-hub__secondary {
+				direction: ltr;
+				text-align: right;
+				unicode-bidi: plaintext;
 			}
 
 			.professional-hr-hub__panel,
 			.professional-hr-hub__feature,
 			.professional-hr-hub__category {
 				background: #ffffff;
-				border: 1px solid #dfe3eb;
-				border-radius: 8px;
+				border: 1px solid #cbd5e1;
+				border-radius: 10px;
 				box-shadow: 0 8px 24px rgba(23, 43, 77, 0.06);
 			}
 
@@ -122,7 +134,7 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 				width: 100%;
 				min-height: 40px;
 				border: 1px solid #dfe3eb;
-				border-radius: 8px;
+				border-radius: 10px;
 				padding: 9px 12px;
 				font-size: 13px;
 				background: #f7f9fb;
@@ -141,6 +153,12 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 				color: #ffffff;
 				background: #1f6f4a;
 				cursor: pointer;
+			}
+
+			.professional-hr-hub button:focus-visible,
+			.professional-hr-hub input:focus-visible {
+				outline: 3px solid #38bdf8;
+				outline-offset: 2px;
 			}
 
 			.professional-hr-hub__category-grid,
@@ -254,33 +272,38 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 					font-size: 22px;
 				}
 			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.professional-hr-hub * { transition: none !important; animation: none !important; }
+			}
 		`;
 		document.head.appendChild(style);
 	}
 
 	renderShell() {
 		this.page.body.html(`
-			<div class="professional-hr-hub">
+			<div class="professional-hr-hub" dir="rtl" lang="ar">
 				<section class="professional-hr-hub__hero">
 					<div class="professional-hr-hub__panel">
-						<div class="professional-hr-hub__eyebrow">Saudi HR</div>
-						<h2 class="professional-hr-hub__title">${__("Professional HR Hub")}</h2>
-						<p class="professional-hr-hub__subtitle">${__("A complete Saudi HR operating catalog with dedicated professional pages for every feature, while the default ERPNext screens remain available when needed.")}</p>
+						<div class="professional-hr-hub__eyebrow">SAUDI HR · الموارد البشرية السعودية</div>
+						<h2 class="professional-hr-hub__title">${this.isArabic ? "مركز الموارد البشرية الاحترافي" : __("Professional HR Hub")}</h2>
+						<p class="professional-hr-hub__subtitle">${this.isArabic ? "دليل تشغيلي موحّد يربط رحلات الموظفين والرواتب والامتثال بالأدلة والإجراءات المطلوبة." : __("A complete Saudi HR operating catalog with dedicated professional pages for every feature, while the default ERPNext screens remain available when needed.")}</p>
 					</div>
 					<div class="professional-hr-hub__panel">
-						<div class="professional-hr-hub__eyebrow">${__("Coverage")}</div>
+						<div class="professional-hr-hub__eyebrow">التغطية التشغيلية</div>
 						<div class="professional-hr-hub__stats" data-stats></div>
 					</div>
 				</section>
 
 				<section class="professional-hr-hub__panel">
 					<div class="professional-hr-hub__toolbar">
-						<input class="professional-hr-hub__search" data-search placeholder="${frappe.utils.escape_html(__("Search features, reports, workflows, leave, payroll, compliance..."))}">
-						<button class="professional-hr-hub__button" data-route="/mobile-attendance">${__("Mobile Attendance")}</button>
+						<label class="sr-only" for="saudi-hr-feature-search">${this.isArabic ? "ابحث في خدمات الموارد البشرية" : __("Search HR services")}</label>
+						<input id="saudi-hr-feature-search" class="professional-hr-hub__search" data-search placeholder="${frappe.utils.escape_html(this.isArabic ? "ابحث عن خدمة أو تقرير أو إجراء…" : __("Search features, reports, workflows, leave, payroll, compliance..."))}">
+						<button class="professional-hr-hub__button" data-route="/app/saudi-compliance-command-center">${this.isArabic ? "مركز القيادة" : __("Command Center")}</button>
 					</div>
 				</section>
 
-				<section class="professional-hr-hub__panel">
+				<section class="professional-hr-hub__panel" data-category-panel>
 					<div class="professional-hr-hub__category-grid" data-categories></div>
 				</section>
 
@@ -291,7 +314,8 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 		`);
 
 		this.page.body.find("[data-search]").on("input", (event) => {
-			this.searchText = event.currentTarget.value.trim().toLowerCase();
+			this.searchText = this.normalizeSearchText(event.currentTarget.value);
+			this.page.body.find("[data-category-panel]").toggle(!this.searchText);
 			this.renderFeatures();
 		});
 
@@ -301,7 +325,7 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 	}
 
 	loadCatalog() {
-		this.page.body.find("[data-features]").html(`<div class="professional-hr-hub__empty">${__("Loading Saudi HR features...")}</div>`);
+		this.page.body.find("[data-features]").html(`<div class="professional-hr-hub__empty">جارٍ تحميل خدمات الموارد البشرية السعودية…</div>`);
 		frappe.call({
 			method: "saudi_hr.saudi_hr.professional_hr_catalog.get_professional_hr_catalog",
 			callback: (response) => {
@@ -312,7 +336,7 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 				this.renderFeatures();
 			},
 			error: () => {
-				this.page.body.find("[data-features]").html(`<div class="professional-hr-hub__empty">${__("Unable to load the feature catalog.")}</div>`);
+				this.page.body.find("[data-features]").html(`<div class="professional-hr-hub__empty">تعذر تحميل دليل الخدمات. أعد المحاولة أو افتح مركز القيادة.</div>`);
 			},
 		});
 	}
@@ -326,10 +350,10 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 
 	renderStats() {
 		const stats = [
-			{ label: "Feature Pages", value: this.catalog.total_features || this.catalog.features.length },
-			{ label: "Operating Areas", value: this.catalog.categories.length },
-			{ label: "Primary Actions", value: this.catalog.primary_features || 0 },
-			{ label: "Navigation", value: "Custom first, ERPNext ready" },
+			{ label: this.isArabic ? "الخدمات والصفحات" : "Feature Pages", value: this.catalog.total_features || this.catalog.features.length },
+			{ label: this.isArabic ? "مجالات التشغيل" : "Operating Areas", value: this.catalog.categories.length },
+			{ label: this.isArabic ? "الإجراءات الرئيسية" : "Primary Actions", value: this.catalog.primary_features || 0 },
+			{ label: this.isArabic ? "النمط" : "Navigation", value: this.isArabic ? "عربي أولاً · ERPNext متاح" : "Custom first, ERPNext ready" },
 		];
 
 		this.page.body.find("[data-stats]").html(stats.map((stat) => `
@@ -341,11 +365,11 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 	}
 
 	renderCategories() {
-		const categories = [{ id: "all", title: "All Features", title_ar: "كل المميزات", count: this.catalog.features.length }, ...this.catalog.categories];
+		const categories = [{ id: "all", title: "All Features", title_ar: "كل الخدمات", count: this.catalog.features.length }, ...this.catalog.categories];
 		this.page.body.find("[data-categories]").html(categories.map((category) => `
 			<div class="professional-hr-hub__category ${this.activeCategory === category.id ? "is-active" : ""}" data-category="${frappe.utils.escape_html(category.id)}">
-				<div class="professional-hr-hub__category-title">${frappe.utils.escape_html(__(category.title))}</div>
-				<p class="professional-hr-hub__category-note">${frappe.utils.escape_html(category.title_ar || "")}</p>
+				<div class="professional-hr-hub__category-title">${frappe.utils.escape_html(this.isArabic ? category.title_ar : __(category.title))}</div>
+				<p class="professional-hr-hub__category-note professional-hr-hub__secondary" lang="en">${frappe.utils.escape_html(category.title || "")}</p>
 				<span class="professional-hr-hub__badge">${frappe.utils.escape_html(String(category.count || 0))}</span>
 			</div>
 		`).join(""));
@@ -360,29 +384,32 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 	renderFeatures() {
 		const filtered = this.catalog.features.filter((feature) => {
 			const categoryMatch = this.activeCategory === "all" || feature.category === this.activeCategory;
-			const haystack = [feature.title, feature.title_ar, feature.summary, feature.summary_ar, feature.target_type, feature.target].join(" ").toLowerCase();
-			return categoryMatch && (!this.searchText || haystack.includes(this.searchText));
+			const haystack = this.normalizeSearchText(
+				[feature.title, feature.title_ar, feature.summary, feature.summary_ar, feature.target_type, feature.target].join(" ")
+			);
+			const queryTokens = this.searchText.split(" ").filter(Boolean);
+			return categoryMatch && queryTokens.every((token) => haystack.includes(token));
 		});
 
 		if (!filtered.length) {
-			this.page.body.find("[data-features]").html(`<div class="professional-hr-hub__empty">${__("No matching features found.")}</div>`);
+			this.page.body.find("[data-features]").html(`<div class="professional-hr-hub__empty">لا توجد خدمات مطابقة. غيّر عبارة البحث أو اختر «كل الخدمات».</div>`);
 			return;
 		}
 
 		this.page.body.find("[data-features]").html(filtered.map((feature) => `
 			<article class="professional-hr-hub__feature">
 				<div class="professional-hr-hub__feature-meta">
-					<span class="professional-hr-hub__badge">${frappe.utils.escape_html(__(feature.target_type))}</span>
-					${feature.priority ? `<span class="professional-hr-hub__badge">${frappe.utils.escape_html(__(feature.priority))}</span>` : ""}
+					<span class="professional-hr-hub__badge">${frappe.utils.escape_html(this.arabicType(feature.target_type))}</span>
+					${feature.priority ? `<span class="professional-hr-hub__badge">${frappe.utils.escape_html(this.arabicPriority(feature.priority))}</span>` : ""}
 				</div>
 				<div>
-					<div class="professional-hr-hub__feature-title">${frappe.utils.escape_html(__(feature.title))}</div>
-					<p class="professional-hr-hub__feature-note">${frappe.utils.escape_html(feature.title_ar || "")}</p>
+					<div class="professional-hr-hub__feature-title">${frappe.utils.escape_html(this.isArabic ? feature.title_ar : __(feature.title))}</div>
+					<p class="professional-hr-hub__feature-note professional-hr-hub__secondary" lang="en">${frappe.utils.escape_html(feature.title || "")}</p>
 				</div>
-				<p class="professional-hr-hub__feature-note">${frappe.utils.escape_html(__(feature.summary))}</p>
+				<p class="professional-hr-hub__feature-note">${frappe.utils.escape_html(this.isArabic ? feature.summary_ar : __(feature.summary))}</p>
 				<div class="professional-hr-hub__feature-actions">
-					<button class="professional-hr-hub__link" data-feature-id="${frappe.utils.escape_html(feature.id)}">${__("Open Feature Page")}</button>
-					<button class="professional-hr-hub__link" data-route="${frappe.utils.escape_html(feature.route)}">${frappe.utils.escape_html(__(feature.action_label || "ERPNext View"))}</button>
+					<button class="professional-hr-hub__link" data-feature-id="${frappe.utils.escape_html(feature.id)}">${this.isArabic ? "افتح صفحة الخدمة" : __("Open Feature Page")}</button>
+					<button class="professional-hr-hub__link" data-route="${frappe.utils.escape_html(feature.route)}">${frappe.utils.escape_html(this.isArabic ? "افتح السجل" : __(feature.action_label || "ERPNext View"))}</button>
 				</div>
 			</article>
 		`).join(""));
@@ -400,6 +427,29 @@ saudi_hr.ProfessionalHrHub = class ProfessionalHrHub {
 			}
 			this.open(feature.detail_route);
 		}
+	}
+
+	arabicType(value) {
+		return ({ DocType: "سجل", Page: "صفحة", Report: "تقرير", URL: "رابط" })[value] || value || "خدمة";
+	}
+
+	arabicPriority(value) {
+		return ({ Primary: "رئيسي" })[value] || value || "";
+	}
+
+	normalizeSearchText(value) {
+		return String(value || "")
+			.normalize("NFKD")
+			.toLowerCase()
+			.replace(/[\u064b-\u065f\u0670\u0640]/g, "")
+			.replace(/[أإآ]/g, "ا")
+			.replace(/ى/g, "ي")
+			.replace(/ة/g, "ه")
+			.replace(/[^\p{L}\p{N}]+/gu, " ")
+			.trim()
+			.split(/\s+/)
+			.map((token) => (token.startsWith("ال") && token.length > 4 ? token.slice(2) : token))
+			.join(" ");
 	}
 
 	open(route) {

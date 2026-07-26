@@ -1,20 +1,93 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, nowdate
+from frappe.utils import add_days, flt, getdate, nowdate
 
-from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_positive_basic_salary, get_employee_basic_salary as get_current_basic_salary, text_matches_tokens
+from saudi_hr.saudi_hr.utils import (
+	assert_doctype_permissions,
+	assert_positive_basic_salary,
+	get_employee_basic_salary as get_current_basic_salary,
+	get_employee_salary_components,
+	text_matches_tokens,
+)
+
+
+WORKING_HOURS_PER_MONTH = 240
+ANNUAL_OVERTIME_LIMIT_HOURS = 720
+COMPENSATORY_LEAVE_FACTOR = 1.5
+COMPENSATORY_LEAVE_USE_DAYS = 60
+COMPENSATORY_LEAVE_ANNUAL_CAP_DAYS = 30
+STANDARD_WORKDAY_HOURS = 8
+CASH_PAYMENT = "Cash Payment / بدل نقدي"
+COMPENSATORY_LEAVE = "Compensatory Leave / إجازة تعويضية"
+
+
+def calculate_overtime_breakdown(monthly_actual_wage, monthly_basic, overtime_hours, working_hours_per_month=WORKING_HOURS_PER_MONTH):
+	"""Return the Article 107 overtime components in an auditable structure.
+
+	Payable overtime hour = actual hourly wage + 50% of basic hourly wage.
+	"""
+	actual_wage = flt(monthly_actual_wage)
+	basic_wage = flt(monthly_basic)
+	hours = flt(overtime_hours)
+	monthly_hours = flt(working_hours_per_month)
+	if actual_wage <= 0 or basic_wage <= 0 or hours < 0 or monthly_hours <= 0:
+		raise ValueError("Overtime inputs must contain positive wages and monthly hours, and non-negative overtime hours.")
+
+	basic_hourly_rate = basic_wage / monthly_hours
+	actual_hourly_rate = actual_wage / monthly_hours
+	overtime_premium_hourly = basic_hourly_rate * 0.5
+	payable_hourly_rate = actual_hourly_rate + overtime_premium_hourly
+	return {
+		"basic_hourly_rate": round(basic_hourly_rate, 4),
+		"actual_hourly_rate": round(actual_hourly_rate, 4),
+		"overtime_premium_hourly": round(overtime_premium_hourly, 4),
+		"payable_hourly_rate": round(payable_hourly_rate, 4),
+		"equivalent_basic_rate": round(payable_hourly_rate / basic_hourly_rate, 4),
+		"overtime_amount": round(hours * payable_hourly_rate, 2),
+	}
+
+
+def calculate_compensatory_leave_entitlement(overtime_hours, request_date=None, normal_hours=STANDARD_WORKDAY_HOURS):
+	"""Return the minimum compensatory-leave entitlement in the Executive Regulations.
+
+	Each overtime hour produces at least 1.5 paid leave hours. The employer may
+	normally schedule the balance within 60 days, and the ordinary annual cap is
+	30 leave days unless the parties agree otherwise.
+	"""
+	hours = flt(overtime_hours)
+	workday_hours = flt(normal_hours or STANDARD_WORKDAY_HOURS)
+	if hours < 0 or workday_hours <= 0:
+		raise ValueError("Overtime hours must be non-negative and normal hours must be positive.")
+	leave_hours = round(hours * COMPENSATORY_LEAVE_FACTOR, 2)
+	return {
+		"factor": COMPENSATORY_LEAVE_FACTOR,
+		"leave_hours": leave_hours,
+		"leave_days": round(leave_hours / workday_hours, 4),
+		"use_by": add_days(getdate(request_date), COMPENSATORY_LEAVE_USE_DAYS) if request_date else None,
+		"annual_cap_days": COMPENSATORY_LEAVE_ANNUAL_CAP_DAYS,
+	}
+
+
+def calculate_annual_overtime_status(existing_hours, requested_hours):
+	total = max(0, flt(existing_hours)) + max(0, flt(requested_hours))
+	return {
+		"total_hours": round(total, 2),
+		"limit_hours": ANNUAL_OVERTIME_LIMIT_HOURS,
+		"consent_required": total > ANNUAL_OVERTIME_LIMIT_HOURS,
+	}
 
 
 class OvertimeRequest(Document):
 
-	OVERTIME_RATE = 1.5  # م.107: 150%
-	WORKING_HOURS_PER_MONTH = 240  # 8 h/day × 30 days
+	WORKING_HOURS_PER_MONTH = WORKING_HOURS_PER_MONTH
 
 	def validate(self):
 		self._validate_overtime_hours()
+		self._validate_compensation_method()
 		self._fetch_salary()
 		self._calculate_overtime()
+		self._validate_annual_limits()
 
 	def _validate_overtime_hours(self):
 		"""العمل الإضافي لا يتجاوز حد معقول (لا تزيد ساعات اليوم الإجمالية عن 12)."""
@@ -28,19 +101,101 @@ class OvertimeRequest(Document):
 		if (self.overtime_hours or 0) <= 0:
 			frappe.throw(_("Overtime hours must be greater than 0 / يجب أن تكون ساعات الإضافي أكبر من الصفر"))
 
+	def _validate_compensation_method(self):
+		self.compensation_method = self.compensation_method or CASH_PAYMENT
+		if self.compensation_method == COMPENSATORY_LEAVE and not (self.written_consent_reference or "").strip():
+			frappe.throw(
+				_("Written employee consent is required for compensatory leave.<br>"
+				  "تلزم موافقة الموظف الكتابية عند اختيار الإجازة التعويضية."),
+				title=_("Written Consent Required / الموافقة الكتابية مطلوبة"),
+			)
+
 	def _fetch_salary(self):
-		"""جلب الراتب الأساسي من العقد النشط للموظف."""
-		self.monthly_basic = get_current_basic_salary(self.employee)
+		"""Fetch actual and basic monthly wages from the active Saudi contract."""
+		salary = get_employee_salary_components(self.employee)
+		self.monthly_basic = flt(salary.get("basic_salary"))
+		self.monthly_actual_wage = flt(salary.get("total_salary") or self.monthly_basic)
 		assert_positive_basic_salary(self.employee_name or self.employee, self.monthly_basic, _("calculating overtime / احتساب العمل الإضافي"))
-		self.overtime_rate = self.OVERTIME_RATE
-		# الأجر الساعي = الراتب الشهري / 240
-		self.hourly_rate = round(self.monthly_basic / self.WORKING_HOURS_PER_MONTH, 4)
+		if self.monthly_actual_wage <= 0:
+			frappe.throw(_("Actual monthly wage must be greater than zero / يجب أن يكون الأجر الفعلي الشهري أكبر من صفر"))
 
 	def _calculate_overtime(self):
-		"""حساب مبلغ العمل الإضافي = ساعات × الأجر الساعي × 1.5"""
-		self.overtime_amount = round(
-			flt(self.overtime_hours) * flt(self.hourly_rate) * self.OVERTIME_RATE, 2
+		"""Apply Article 107: actual hourly wage plus 50% of basic hourly wage."""
+		breakdown = calculate_overtime_breakdown(
+			self.monthly_actual_wage,
+			self.monthly_basic,
+			self.overtime_hours,
+			self.WORKING_HOURS_PER_MONTH,
 		)
+		self.basic_hourly_rate = breakdown["basic_hourly_rate"]
+		self.actual_hourly_rate = breakdown["actual_hourly_rate"]
+		self.overtime_premium_hourly = breakdown["overtime_premium_hourly"]
+		self.hourly_rate = breakdown["payable_hourly_rate"]
+		self.overtime_rate = breakdown["equivalent_basic_rate"]
+		if self.compensation_method == COMPENSATORY_LEAVE:
+			entitlement = calculate_compensatory_leave_entitlement(
+				self.overtime_hours,
+				self.date,
+				self.normal_hours,
+			)
+			self.overtime_amount = 0
+			self.compensatory_leave_factor = entitlement["factor"]
+			self.compensatory_leave_hours = entitlement["leave_hours"]
+			self.compensatory_leave_days = entitlement["leave_days"]
+			self.compensatory_leave_use_by = entitlement["use_by"]
+		else:
+			self.overtime_amount = breakdown["overtime_amount"]
+			self.compensatory_leave_factor = COMPENSATORY_LEAVE_FACTOR
+			self.compensatory_leave_hours = 0
+			self.compensatory_leave_days = 0
+			self.compensatory_leave_use_by = None
+
+	def _validate_annual_limits(self):
+		if not self.employee or not self.date:
+			return
+
+		year = getdate(self.date).year
+		rows = frappe.get_all(
+			"Overtime Request",
+			filters={
+				"employee": self.employee,
+				"date": ["between", [f"{year}-01-01", f"{year}-12-31"]],
+				"docstatus": 1,
+			},
+			fields=["name", "overtime_hours", "compensation_method", "compensatory_leave_days"],
+		)
+		rows = [row for row in rows if row.name != self.name]
+		annual_status = calculate_annual_overtime_status(
+			sum(flt(row.overtime_hours) for row in rows),
+			self.overtime_hours,
+		)
+		self.annual_overtime_hours = annual_status["total_hours"]
+		if annual_status["consent_required"] and not (self.annual_limit_consent_reference or "").strip():
+			frappe.throw(
+				_("The annual overtime total is {0} hours and exceeds the ordinary 720-hour limit. "
+				  "Record the worker's consent before continuing.<br>"
+				  "بلغ مجموع العمل الإضافي السنوي {0} ساعة وتجاوز الحد المعتاد البالغ 720 ساعة. "
+				  "سجّل موافقة العامل قبل المتابعة.").format(annual_status["total_hours"]),
+				title=_("Worker Consent Required / موافقة العامل مطلوبة"),
+			)
+
+		if self.compensation_method != COMPENSATORY_LEAVE:
+			return
+		existing_leave_days = sum(
+			flt(row.compensatory_leave_days)
+			for row in rows
+			if row.compensation_method == COMPENSATORY_LEAVE
+		)
+		total_leave_days = round(existing_leave_days + flt(self.compensatory_leave_days), 4)
+		self.annual_compensatory_leave_days = total_leave_days
+		if total_leave_days > COMPENSATORY_LEAVE_ANNUAL_CAP_DAYS and not (self.compensatory_leave_exception_reference or "").strip():
+			frappe.throw(
+				_("Compensatory leave totals {0} days this year and exceeds the ordinary 30-day cap. "
+				  "Record the parties' exception agreement before continuing.<br>"
+				  "بلغ رصيد الإجازة التعويضية {0} يوماً هذا العام وتجاوز السقف المعتاد البالغ 30 يوماً. "
+				  "سجّل اتفاق الطرفين على الاستثناء قبل المتابعة.").format(total_leave_days),
+				title=_("Exception Agreement Required / اتفاق الاستثناء مطلوب"),
+			)
 
 	def on_submit(self):
 		"""عند الاعتماد: إنشاء قيد يومي بدلاً من Additional Salary."""
@@ -50,7 +205,8 @@ class OvertimeRequest(Document):
 				  "لا يمكن الاعتماد إلا إذا كانت حالة الموافقة 'موافق'."),
 				title=_("Not Approved / لم يُوافق بعد"),
 			)
-		self._create_overtime_journal_entry()
+		if self.compensation_method == CASH_PAYMENT:
+			self._create_overtime_journal_entry()
 
 	def _create_overtime_journal_entry(self):
 		"""إنشاء قيد يومي لتحميل مبلغ العمل الإضافي بدلاً من Additional Salary."""
@@ -114,7 +270,7 @@ class OvertimeRequest(Document):
 			"posting_date": self.date or nowdate(),
 			"user_remark": (
 				f"Overtime Pay — {self.employee_name} — {self.date} — "
-				f"{self.overtime_hours}h × {self.overtime_rate} = {flt(self.overtime_amount):.2f} SAR"
+				f"{self.overtime_hours}h × {flt(self.hourly_rate):.4f} = {flt(self.overtime_amount):.2f} SAR"
 			),
 			"accounts": [
 				{
@@ -162,3 +318,9 @@ def create_overtime_journal_entry(doc, method=None):
 def get_employee_basic_salary(employee):
 	"""Return the employee's current basic salary for JS auto-fill."""
 	return get_current_basic_salary(employee)
+
+
+@frappe.whitelist()
+def get_employee_overtime_salary(employee):
+	"""Return the wage components needed for the Article 107 preview."""
+	return get_employee_salary_components(employee)

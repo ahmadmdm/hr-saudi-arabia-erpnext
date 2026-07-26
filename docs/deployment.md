@@ -5,7 +5,7 @@ Use this guide when moving Saudi HR to a new server, staging bench, or productio
 ## Recommended Flow
 
 ```bash
-bench get-app --branch version-15 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
+bench get-app --branch version-16 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 bench --site <your-site-name> install-app saudi_hr
 bench --site <your-site-name> migrate
 bench build --app saudi_hr
@@ -42,7 +42,7 @@ The full dependency contract is documented in [DEPENDENCIES.md](../DEPENDENCIES.
 
 | Area | Check |
 |------|-------|
-| Branch | Use `version-15` with ERPNext v15 |
+| Branch | Use `version-16` with ERPNext v16 |
 | Apps | Confirm `frappe`, `erpnext`, and `saudi_hr` are installed |
 | HRMS | HRMS is not required |
 | Assets | Run `bench build --app saudi_hr` after updates |

@@ -1,14 +1,14 @@
 # Installation Guide
 
-This guide installs Saudi HR on a Frappe/ERPNext v15 bench.
+This guide installs Saudi HR on a Frappe/ERPNext v16 bench.
 
 ## Requirements
 
 | Component | Version |
 |-----------|---------|
 | Python | 3.10 or newer |
-| Frappe Framework | v15 |
-| ERPNext | v15 |
+| Frappe Framework | v16 |
+| ERPNext | v16 |
 | MariaDB | 10.6 or newer |
 | Node.js | 18 or newer |
 
@@ -17,7 +17,7 @@ Saudi HR does not require HRMS. The app runs on `frappe` and `erpnext`.
 ## Install
 
 ```bash
-bench get-app --branch version-15 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
+bench get-app --branch version-16 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 bench --site <your-site-name> install-app saudi_hr
 bench --site <your-site-name> migrate
 bench build --app saudi_hr

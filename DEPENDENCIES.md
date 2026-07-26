@@ -4,8 +4,8 @@ This app is designed to move between Frappe benches without requiring HRMS.
 
 ## Required Bench Apps
 
-- `frappe` v15 or newer
-- `erpnext` v15 or newer
+- `frappe` v16
+- `erpnext` v16
 
 `hrms` is intentionally not a required app. Saudi HR owns its Saudi shift, attendance, payroll, leave, WPS, GOSI, and compliance records directly.
 

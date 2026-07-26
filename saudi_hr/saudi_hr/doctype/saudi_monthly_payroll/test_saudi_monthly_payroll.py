@@ -1,4 +1,5 @@
 from io import BytesIO
+from contextlib import nullcontext
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -1396,7 +1397,14 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 	# ─────────────────────────────────────────────────────────────────────────────
 
 	def test_extract_employee_setup_rows_reads_generated_workbook(self):
-		with patch("frappe.utils.xlsxutils.get_excel_date_format", return_value=("yyyy-mm-dd", "hh:mm:ss")):
+		from frappe.utils import xlsxutils
+
+		date_format_patch = (
+			patch("frappe.utils.xlsxutils.get_excel_date_format", return_value=("yyyy-mm-dd", "hh:mm:ss"))
+			if hasattr(xlsxutils, "get_excel_date_format")
+			else nullcontext()
+		)
+		with date_format_patch:
 			content = payroll_module.make_xlsx([
 				payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS,
 				[6, "2960", "Missing Employee", "2089300780", "amd", "Finance", "Accountant", "2960", "Ali", "", "", "Male", "1990-01-01", "2024-01-01", "Active", "ok"],
