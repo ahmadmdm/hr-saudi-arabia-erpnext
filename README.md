@@ -8,7 +8,7 @@
 
 <br>
 
-<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.16.5-v16"><img alt="Version 1.16.5" src="https://img.shields.io/badge/version-1.16.5-0F766E?style=for-the-badge"></a>
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.17.0-v16"><img alt="Version 1.17.0" src="https://img.shields.io/badge/version-1.17.0-0F766E?style=for-the-badge"></a>
 <img alt="Frappe v16" src="https://img.shields.io/badge/Frappe-v16-2563EB?style=for-the-badge">
 <img alt="ERPNext v16" src="https://img.shields.io/badge/ERPNext-v16-7C3AED?style=for-the-badge">
 <img alt="No HRMS dependency" src="https://img.shields.io/badge/HRMS-not%20required-16A34A?style=for-the-badge">
@@ -201,7 +201,7 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 - Frappe `16.27.1`
 - ERPNext `16.28.0`
-- Saudi HR `1.16.5`
+- Saudi HR `1.17.0`
 - Python `3.10`
 - MariaDB `10.6+`
 - Node.js `24.x`
@@ -492,7 +492,13 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.16.5 — ١٩ يوليو ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.17.0 — ٢٦ يوليو ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**تغطية اللائحة التنفيذية | Executive Regulations Coverage:** المادة (11) المهن المقصورة على السعوديين، والمادة (23) ساعات العمل للفئات المستثناة من المادة (108)، والمادة (29) خزانة الإسعافات الطبية، والمادة (30) مواقع العمل البعيدة عن العمران، والمواد (32-35) ضوابط تشغيل الأحداث وشروط استثناء التعليم والتدريب.
+
+**تصحيحات حسابية | Calculation Fixes:** شرائح الاستقالة في المادة (85) كانت مقلوبة وصُححت (أكثر من 5 وأقل من 10 سنوات = الثلثان، و10 سنوات فأكثر = المكافأة كاملة)، واستحقاق أجزاء السنة في المادة (84)، وتصحيح نسب التأمينات إلى 9.75%/11.75% مع جدول نظام التأمينات الجديد (م/273)، ومعالجة احتساب اقتطاع التأمينات صفراً للسعوديين في مسير الرواتب، ورفض احتساب الاشتراك عند تعذّر تحديد الجنسية.
+
+### v1.16.5 — ١٩ يوليو ٢٠٢٦
 
 **حزمة الإنقاذ النظامي | Legal Accuracy Rescue:** تصحيح الأمومة إلى 84 يوماً، وإعادة بناء أجر الإضافي على الأجر الفعلي للساعة + 50% من الأساسي، وإلزام مرجع الموافقة الكتابية للإجازة التعويضية، وتصحيح مهل التسوية النهائية، وضوابط ساعات وأنماط العمل وتداخل العطل، مع اختبارات حماية للقواعد الحرجة على v15 وv16.
 
