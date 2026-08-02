@@ -10,7 +10,7 @@ from frappe.model.document import Document
 from frappe.utils.file_manager import save_file
 from openpyxl import Workbook, load_workbook
 
-from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions, validate_leave_policy_values
 
 
 ALLOWED_IMPORT_EXTENSIONS = {".xlsx", ".xlsm", ".xls"}
@@ -18,7 +18,15 @@ MAX_IMPORT_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 
 class SaudiHRSettings(Document):
-	pass
+	def validate(self):
+		validate_leave_policy_values(
+			self.annual_leave_years_threshold,
+			self.annual_leave_before_threshold,
+			self.annual_leave_after_threshold,
+			self.sick_leave_full_pay_days,
+			self.sick_leave_partial_pay_days,
+			self.sick_leave_partial_pay_percentage,
+		)
 
 
 def _assert_settings_access():
@@ -248,7 +256,7 @@ def _find_employee_for_import(employee_id: str, user_id: str, employee_name: str
 	return None
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def sync_branch_employee_directory():
 	_assert_settings_access()
 	settings = _sync_directory_table()
@@ -268,7 +276,7 @@ def download_employee_branch_template():
 	return {"file_url": file_doc.file_url, "file_name": file_doc.file_name}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def import_employee_branch_template(file_url: str | None = None):
 	_assert_settings_access()
 	if not file_url:
@@ -327,7 +335,7 @@ def import_employee_branch_template(file_url: str | None = None):
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def refresh_mobile_attendance_api_reference():
 	_assert_attendance_api_admin()
 	settings = frappe.get_single("Saudi HR Settings")

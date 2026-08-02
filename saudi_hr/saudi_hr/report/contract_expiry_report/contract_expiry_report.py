@@ -57,7 +57,7 @@ def get_data(filters):
 		as_dict=True,
 	)
 
-	from frappe.utils import date_diff, getdate
+	from frappe.utils import date_diff
 	for row in rows:
 		row["days_to_expiry"] = date_diff(row["end_date"], today())
 

@@ -8,6 +8,31 @@ from frappe.utils import today, add_days, getdate
 DEFAULT_ALERT_MILESTONES = (30, 14, 7, 1, 0)
 
 
+def sync_contract_statuses(reference_date=None):
+	"""Activate scheduled contracts and expire ended contracts once per day."""
+	reference_date = getdate(reference_date or today())
+	contracts = frappe.get_all(
+		"Saudi Employment Contract",
+		filters={"docstatus": 1, "contract_status": ["not in", ["Terminated / مُنهى"]]},
+		fields=["name", "start_date", "end_date", "contract_status"],
+	)
+	for contract in contracts:
+		if getdate(contract.start_date) > reference_date:
+			status = "Scheduled / مجدول"
+		elif contract.end_date and getdate(contract.end_date) < reference_date:
+			status = "Expired / منتهي"
+		else:
+			status = "Active / نشط"
+		if contract.contract_status != status:
+			frappe.db.set_value(
+				"Saudi Employment Contract",
+				contract.name,
+				"contract_status",
+				status,
+				update_modified=False,
+			)
+
+
 def _get_saudi_hr_settings():
 	return frappe.get_single("Saudi HR Settings")
 
@@ -237,9 +262,6 @@ def _send_alert(subject, message, doctype, docname=None):
 
 def send_sick_leave_threshold_alerts():
 	"""تنبيه عند اقتراب الموظف من حد الإجازة المرضية 90 يوماً."""
-	from frappe.utils import getdate
-	import datetime
-
 	year = getdate(frappe.utils.today()).year
 	# Find employees with 75-90 sick days this year
 	results = frappe.db.sql("""

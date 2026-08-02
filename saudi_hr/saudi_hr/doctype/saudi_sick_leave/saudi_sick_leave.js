@@ -70,6 +70,12 @@ function _refresh_cycle(frm) {
             frm.set_value('benefit_cycle_start', cycle.cycle_start || frm.doc.from_date);
             frm.set_value('benefit_cycle_end', cycle.cycle_end || null);
             frm.set_value('sick_days_this_year_before', flt(cycle.used_days));
+            frm.set_value('leave_policy', cycle.leave_policy || null);
+            frm.set_value('leave_policy_assignment', cycle.leave_policy_assignment || null);
+            frm.set_value('entitlement_source', cycle.entitlement_source || '');
+            frm.set_value('policy_full_pay_days', flt(cycle.policy_full_pay_days) || 30);
+            frm.set_value('policy_partial_pay_days', flt(cycle.policy_partial_pay_days) || 60);
+            frm.set_value('policy_partial_pay_percentage', flt(cycle.policy_partial_pay_percentage) || 75);
             _set_cycle_boundary_review(frm);
             _calc_pay(frm);
         }
@@ -96,22 +102,27 @@ function _calc_pay(frm) {
     const total     = flt(frm.doc.total_days);
     const after     = before + total;
     const daily     = flt(frm.doc.daily_salary);
+    const fullLimit = flt(frm.doc.policy_full_pay_days) || 30;
+    const partialLimit = flt(frm.doc.policy_partial_pay_days) || 60;
+    const partialPercentage = flt(frm.doc.policy_partial_pay_percentage) || 75;
+    const partialRate = partialPercentage / 100;
+    const unpaidThreshold = fullLimit + partialLimit;
 
     frm.set_value('sick_days_this_year_after', after);
 
-    // م.117: أيام الفئة الأولى (1-30 بأجر كامل)، الثانية (31-90 بـ75%)، الثالثة (91-120 بلا أجر)
-    const full_days = Math.min(total, Math.max(0, 30 - before));
+    // Server-validated policy values can improve the statutory tiers but never reduce them.
+    const full_days = Math.min(total, Math.max(0, fullLimit - before));
     const remaining = Math.max(0, total - full_days);
-    const partial_consumed = Math.max(0, Math.min(60, before - 30));
-    const partial_days = Math.min(remaining, Math.max(0, 60 - partial_consumed));
+    const partial_consumed = Math.max(0, Math.min(partialLimit, before - fullLimit));
+    const partial_days = Math.min(remaining, Math.max(0, partialLimit - partial_consumed));
     const no_days = Math.max(0, remaining - partial_days);
-    const pay = daily * full_days + daily * 0.75 * partial_days;
+    const pay = daily * full_days + daily * partialRate * partial_days;
     const effective_rate = total && daily ? (pay / (daily * total)) * 100 : 0;
-    const alert_30 = after > 30 ? 1 : 0;
-    const alert_90 = after > 90 ? 1 : 0;
+    const alert_30 = after > fullLimit ? 1 : 0;
+    const alert_90 = after > unpaidThreshold ? 1 : 0;
     let rate_label = 'شرائح نظامية مختلطة / Mixed Statutory Tiers';
     if (full_days === total) rate_label = 'أجر كامل (م.117) / Full Pay (Art.117)';
-    else if (partial_days === total) rate_label = '75% من الأجر (م.117) / 75% Pay (Art.117)';
+    else if (partial_days === total) rate_label = `${partialPercentage}% من الأجر (م.117) / ${partialPercentage}% Pay (Art.117)`;
     else if (no_days === total) rate_label = 'بدون أجر (م.117) / No Pay (Art.117)';
 
     frm.set_value('leave_pay_amount', flt(pay.toFixed(2)));
@@ -125,12 +136,12 @@ function _calc_pay(frm) {
 
     if (alert_90) {
         frappe.show_alert({
-            message: __('دخل الموظف شريحة دون أجر بعد 90 يوماً تراكمياً؛ استمر في متابعة استحقاق 120 يوماً ولا تبدأ الإنهاء تلقائياً. / The employee entered the unpaid tier; continue tracking the 120-day entitlement and do not terminate automatically.'),
+            message: __('دخل الموظف شريحة دون أجر بعد {0} يوماً تراكمياً؛ استمر في متابعة استحقاق 120 يوماً ولا تبدأ الإنهاء تلقائياً. / The employee entered the unpaid tier after {0} cumulative days; continue tracking the 120-day entitlement and do not terminate automatically.', [unpaidThreshold]),
             indicator: 'orange'
         });
     } else if (alert_30) {
         frappe.show_alert({
-            message: __('تنبيه: الموظف تجاوز 30 يوم إجازة مرضية — معدل 75% / Notice: Employee exceeded 30 sick days — 75% pay rate'),
+            message: __('تنبيه: الموظف تجاوز {0} يوم إجازة مرضية — معدل {1}% / Notice: Employee exceeded {0} sick days — {1}% pay rate', [fullLimit, partialPercentage]),
             indicator: 'orange'
         });
     }

@@ -1,3 +1,83 @@
+(function cleanup_legacy_saudi_mobile_worker() {
+	const SAUDI_MOBILE_WORKER_PATH = "/mobile-attendance-sw.js";
+	const SAUDI_MOBILE_CACHE_PREFIX = "saudi-hr-mobile-";
+	const SAUDI_MOBILE_CACHE_NAME = "saudi-hr-mobile-v7";
+	const RELOAD_GUARD_KEY = "saudi_hr_legacy_mobile_worker_reloaded";
+
+	function hasSaudiMobileWorker(registration) {
+		return [registration.active, registration.waiting, registration.installing]
+			.filter(Boolean)
+			.some((worker) => {
+				try {
+					return new URL(worker.scriptURL).pathname === SAUDI_MOBILE_WORKER_PATH;
+				} catch (error) {
+					return false;
+				}
+			});
+	}
+
+	async function cleanup() {
+		if (!("serviceWorker" in navigator)) {
+			return;
+		}
+
+		const controllerIsLegacySaudiWorker = (() => {
+			try {
+				return (
+					navigator.serviceWorker.controller &&
+					new URL(navigator.serviceWorker.controller.scriptURL).pathname ===
+						SAUDI_MOBILE_WORKER_PATH
+				);
+			} catch (error) {
+				return false;
+			}
+		})();
+
+		const registrations = await navigator.serviceWorker.getRegistrations();
+		const legacyRegistrations = registrations.filter((registration) => {
+			try {
+				return new URL(registration.scope).pathname === "/" && hasSaudiMobileWorker(registration);
+			} catch (error) {
+				return false;
+			}
+		});
+
+		const unregisterResults = await Promise.all(
+			legacyRegistrations.map((registration) => registration.unregister())
+		);
+
+		if ("caches" in window) {
+			const cacheNames = await caches.keys();
+			await Promise.all(
+				cacheNames
+					.filter(
+						(cacheName) =>
+							cacheName.startsWith(SAUDI_MOBILE_CACHE_PREFIX) &&
+							cacheName !== SAUDI_MOBILE_CACHE_NAME
+					)
+					.map((cacheName) => caches.delete(cacheName))
+			);
+		}
+
+		const removedLegacyRegistration = unregisterResults.some(Boolean);
+		if (
+			controllerIsLegacySaudiWorker &&
+			removedLegacyRegistration &&
+			sessionStorage.getItem(RELOAD_GUARD_KEY) !== "1"
+		) {
+			sessionStorage.setItem(RELOAD_GUARD_KEY, "1");
+			window.location.reload();
+			return;
+		}
+
+		sessionStorage.removeItem(RELOAD_GUARD_KEY);
+	}
+
+	cleanup().catch(() => {
+		// The desk remains usable even when browser privacy controls block PWA storage APIs.
+	});
+})();
+
 (function () {
 	const MOBILE_ATTENDANCE_LABEL = "\u0627\u0644\u062d\u0636\u0648\u0631 \u0639\u0628\u0631 \u0627\u0644\u062c\u0648\u0627\u0644";
 	const MOBILE_ATTENDANCE_ROUTE = "/mobile-attendance";

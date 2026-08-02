@@ -15,20 +15,22 @@ def _fake_getdate(value=None):
 
 
 class TestSpecialLeave(FrappeTestCase):
+	@patch.object(special_leave_module, "assert_employee_record_access", return_value=True)
 	@patch.object(special_leave_module, "getdate", side_effect=_fake_getdate)
 	@patch.object(special_leave_module, "date_diff", side_effect=lambda end, start: (end - start).days)
 	@patch.object(special_leave_module.frappe.db, "count", return_value=0)
 	@patch.object(special_leave_module.frappe.db, "get_value", return_value="2025-06-01")
-	def test_hajj_eligibility_requires_minimum_service(self, _get_value, _count, _date_diff, _getdate):
+	def test_hajj_eligibility_requires_minimum_service(self, _get_value, _count, _date_diff, _getdate, _access):
 		result = special_leave_module.check_hajj_eligibility("EMP-0001")
 		self.assertFalse(result["eligible"])
 		self.assertFalse(result["minimum_service_met"])
 
+	@patch.object(special_leave_module, "assert_employee_record_access", return_value=True)
 	@patch.object(special_leave_module, "getdate", side_effect=_fake_getdate)
 	@patch.object(special_leave_module, "date_diff", side_effect=lambda end, start: (end - start).days)
 	@patch.object(special_leave_module.frappe.db, "count", return_value=1)
 	@patch.object(special_leave_module.frappe.db, "get_value", return_value="2023-01-01")
-	def test_hajj_eligibility_blocks_repeat_leave(self, _get_value, _count, _date_diff, _getdate):
+	def test_hajj_eligibility_blocks_repeat_leave(self, _get_value, _count, _date_diff, _getdate, _access):
 		result = special_leave_module.check_hajj_eligibility("EMP-0001")
 		self.assertFalse(result["eligible"])
 		self.assertTrue(result["minimum_service_met"])

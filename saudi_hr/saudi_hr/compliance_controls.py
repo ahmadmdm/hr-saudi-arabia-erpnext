@@ -1260,6 +1260,10 @@ WORKSPACE_REPORT_LINKS = [
 	),
 ]
 
+WORKSPACE_LEAVE_POLICY_LINKS = [
+	("سياسة استحقاق الإجازات", "Saudi Leave Policy", "DocType"),
+	("إسناد سياسة الإجازات", "Saudi Leave Policy Assignment", "DocType"),
+]
 WORKSPACE_EXIT_LINK = ("Final Settlement SLA", "Final Settlement SLA", "DocType")
 VALID_WORKSPACE_LINK_TYPES = {"DocType", "Page", "Report"}
 WORKSPACE_SUBTITLE = (
@@ -1448,13 +1452,16 @@ def _sync_workspace_links(workspace):
 		group_rows.append(_workspace_card_break(group["label"], len(group["links"])))
 		group_rows.extend(_workspace_link(label, link_to, link_type) for label, link_to, link_type in group["links"])
 
+	leave_policy_rows = [_workspace_link(*link) for link in WORKSPACE_LEAVE_POLICY_LINKS]
 	target_keys = {_workspace_row_key(row) for row in group_rows}
+	target_keys.update(_workspace_row_key(row) for row in leave_policy_rows)
 	for report_link in WORKSPACE_REPORT_LINKS:
 		target_keys.add(_workspace_row_key(_workspace_link(*report_link)))
 	target_keys.add(_workspace_row_key(_workspace_link(*WORKSPACE_EXIT_LINK)))
 
 	new_links = []
 	inserted_groups = False
+	inserted_leave_policies = False
 	inserted_reports = False
 	inserted_exit = False
 
@@ -1471,6 +1478,14 @@ def _sync_workspace_links(workspace):
 
 		new_links.append(cleaned)
 
+		if (
+			not inserted_leave_policies
+			and cleaned.get("type") == "Link"
+			and cleaned.get("link_to") == "Special Leave"
+		):
+			new_links.extend(leave_policy_rows)
+			inserted_leave_policies = True
+
 		if not inserted_exit and cleaned.get("type") == "Link" and cleaned.get("link_to") == "Termination Notice":
 			new_links.append(_workspace_link(*WORKSPACE_EXIT_LINK))
 			inserted_exit = True
@@ -1481,6 +1496,8 @@ def _sync_workspace_links(workspace):
 
 	if not inserted_groups:
 		new_links.extend(group_rows)
+	if not inserted_leave_policies:
+		new_links.extend(leave_policy_rows)
 	if not inserted_exit:
 		new_links.append(_workspace_link(*WORKSPACE_EXIT_LINK))
 	if not inserted_reports:
@@ -1558,16 +1575,21 @@ def _recalculate_workspace_link_counts(rows):
 
 
 def sync_doctype(doctype_def):
-	name = doctype_def["name"]
-	if frappe.db.exists("DocType", name):
-		doc = frappe.get_doc("DocType", name)
-		update_doctype(doc, doctype_def)
-		doc.save(ignore_permissions=True, ignore_version=True)
-		return
+	was_in_patch = frappe.flags.in_patch
+	frappe.flags.in_patch = True
+	try:
+		name = doctype_def["name"]
+		if frappe.db.exists("DocType", name):
+			doc = frappe.get_doc("DocType", name)
+			update_doctype(doc, doctype_def)
+			doc.save(ignore_permissions=True, ignore_version=True)
+			return
 
-	doc = frappe.get_doc(doctype_def)
-	doc.flags.ignore_version = True
-	doc.insert(ignore_permissions=True)
+		doc = frappe.get_doc(doctype_def)
+		doc.flags.ignore_version = True
+		doc.insert(ignore_permissions=True)
+	finally:
+		frappe.flags.in_patch = was_in_patch
 
 
 def update_doctype(doc, doctype_def):

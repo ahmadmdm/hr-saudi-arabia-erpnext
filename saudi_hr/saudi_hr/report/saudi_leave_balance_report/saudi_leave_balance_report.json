@@ -23,6 +23,11 @@
    "options": "Employee"
   },
   {
+   "fieldname": "as_of_date",
+   "fieldtype": "Date",
+   "label": "As of Date / الرصيد حتى تاريخ"
+  },
+  {
    "fieldname": "leave_type",
    "fieldtype": "Select",
    "label": "Leave Type / نوع الإجازة",

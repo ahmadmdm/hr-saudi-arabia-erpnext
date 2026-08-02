@@ -1,9 +1,14 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, add_years, date_diff, flt, getdate, nowdate
+from frappe.utils import add_days, add_years, date_diff, flt, getdate, now_datetime, nowdate
 
-from saudi_hr.saudi_hr.utils import get_employee_basic_salary
+from saudi_hr.saudi_hr.utils import (
+	assert_employee_record_access,
+	assert_employee_salary_access,
+	get_employee_basic_salary,
+	resolve_leave_policy,
+)
 
 
 def _row_value(row, fieldname):
@@ -93,12 +98,33 @@ def calculate_sick_leave_pay_breakdown(
 class SaudiSickLeave(Document):
 
 	def validate(self):
+		self._sync_employee_context()
 		self._calculate_total_days()
 		self._validate_no_overlap()
 		self._calculate_cumulative_days()
 		self._validate_max_sick_days()
 		self._calculate_pay()
 		self._set_alerts()
+
+	def _sync_employee_context(self):
+		if not self.employee:
+			return
+
+		employee = frappe.db.get_value(
+			"Employee",
+			self.employee,
+			["employee_name", "company", "department"],
+			as_dict=True,
+		)
+		if not employee:
+			frappe.throw(
+				_("Employee {0} was not found.<br>لم يتم العثور على الموظف {0}.").format(
+					frappe.bold(self.employee)
+				)
+			)
+		self.employee_name = employee.employee_name
+		self.company = employee.company
+		self.department = employee.department
 
 	def _calculate_total_days(self):
 		if self.from_date and self.to_date:
@@ -170,10 +196,17 @@ class SaudiSickLeave(Document):
 
 	def _calculate_pay(self):
 		"""حساب أجر الإجازة المرضية بحسب الشرائح."""
-		settings = frappe.get_single("Saudi HR Settings")
-		full_days = int(settings.sick_leave_full_pay_days or 30)
-		partial_days = int(settings.sick_leave_partial_pay_days or 60)
-		partial_pct = flt(settings.sick_leave_partial_pay_percentage or 75)
+		policy = resolve_leave_policy(self.employee, self.from_date)
+		full_days = int(policy["sick_leave_full_pay_days"])
+		partial_days = int(policy["sick_leave_partial_pay_days"])
+		partial_pct = flt(policy["sick_leave_partial_pay_percentage"])
+		self.leave_policy = policy["policy"]
+		self.leave_policy_assignment = policy["assignment"]
+		self.entitlement_source = policy["source_type"]
+		self.policy_full_pay_days = full_days
+		self.policy_partial_pay_days = partial_days
+		self.policy_partial_pay_percentage = partial_pct
+		self.entitlement_resolved_on = now_datetime()
 
 		# حساب الأجر اليومي
 		monthly = get_employee_basic_salary(self.employee)
@@ -196,9 +229,8 @@ class SaudiSickLeave(Document):
 
 	def _set_alerts(self):
 		after = self.sick_days_this_year_after or 0
-		settings = frappe.get_single("Saudi HR Settings")
-		full_days = int(settings.sick_leave_full_pay_days or 30)
-		partial_days = int(settings.sick_leave_partial_pay_days or 60)
+		full_days = int(self.policy_full_pay_days or 30)
+		partial_days = int(self.policy_partial_pay_days or 60)
 
 		self.alert_30_days = 1 if after > full_days else 0
 		self.alert_90_days = 1 if after > full_days + partial_days else 0
@@ -215,6 +247,7 @@ class SaudiSickLeave(Document):
 @frappe.whitelist()
 def get_sick_leave_cycle(employee, from_date=None, exclude_doc=""):
 	"""Return the active statutory cycle and used days for a client-side preview."""
+	assert_employee_record_access(employee, "Saudi Sick Leave")
 	request_date = from_date or nowdate()
 	filters = {
 		"employee": employee,
@@ -230,7 +263,19 @@ def get_sick_leave_cycle(employee, from_date=None, exclude_doc=""):
 		fields=["name", "from_date", "to_date", "total_days"],
 		order_by="from_date asc, creation asc",
 	)
-	return calculate_sick_leave_cycle(request_date, rows)
+	cycle = calculate_sick_leave_cycle(request_date, rows)
+	policy = resolve_leave_policy(employee, request_date)
+	cycle.update(
+		{
+			"leave_policy": policy["policy"],
+			"leave_policy_assignment": policy["assignment"],
+			"entitlement_source": policy["source_type"],
+			"policy_full_pay_days": policy["sick_leave_full_pay_days"],
+			"policy_partial_pay_days": policy["sick_leave_partial_pay_days"],
+			"policy_partial_pay_percentage": policy["sick_leave_partial_pay_percentage"],
+		}
+	)
+	return cycle
 
 
 @frappe.whitelist()
@@ -242,5 +287,6 @@ def get_sick_days_this_year(employee, exclude_doc=""):
 @frappe.whitelist()
 def get_daily_salary(employee):
 	"""Return daily salary (monthly_basic / 30) for the employee."""
+	assert_employee_salary_access(employee)
 	monthly = get_employee_basic_salary(employee)
 	return round(monthly / 30, 2)

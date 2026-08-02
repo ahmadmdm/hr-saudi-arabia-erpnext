@@ -180,33 +180,24 @@
 <body>
 
 {%- set company = doc.company -%}
+{%- set salary_access = assert_employee_salary_access(doc.name) -%}
 {%- set issue_date = frappe.utils.today() -%}
 {%- set validity_date = frappe.utils.add_months(issue_date, 3) -%}
 
-{%- set contract_salary = frappe.db.get_value(
-  "Saudi Employment Contract",
-  {"employee": doc.name, "contract_status": "Active / نشط"},
-  ["basic_salary", "from_date"],
-  as_dict=True,
-  order_by="start_date desc"
+{%- set contract = get_active_contract(
+  doc.name,
+  ["basic_salary", "start_date", "housing_allowance", "transport_allowance", "other_allowances", "designation"],
+  as_dict=True
 ) or {} -%}
 
-{%- set basic = contract_salary.get("basic_salary") or 0 -%}
+{%- set basic = contract.get("basic_salary") or 0 -%}
 {%- set daily_rate = basic / 30 -%}
-
-{%- set contract = frappe.db.get_value(
-    "Saudi Employment Contract",
-    {"employee": doc.name, "contract_status": "Active / نشط"},
-    ["housing_allowance", "transport_allowance", "other_allowances", "job_title"],
-    as_dict=True,
-    order_by="start_date desc"
-) or {} -%}
 
 {%- set housing = contract.get("housing_allowance") or 0 -%}
 {%- set transport = contract.get("transport_allowance") or 0 -%}
 {%- set other = contract.get("other_allowances") or 0 -%}
 {%- set gross = basic + housing + transport + other -%}
-{%- set job_title = contract.get("job_title") or doc.designation or "" -%}
+{%- set job_title = contract.get("designation") or doc.designation or "" -%}
 
 <!-- Company Header -->
 <div class="header">

@@ -169,6 +169,24 @@
    "type": "Link"
   },
   {
+   "child": 1,
+   "collapsible": 1,
+   "label": "سياسة استحقاق الإجازات",
+   "link_to": "Saudi Leave Policy",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "label": "إسناد سياسة الإجازات",
+   "link_to": "Saudi Leave Policy Assignment",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
    "child": 0,
    "collapsible": 1,
    "icon": "wallet",
@@ -301,7 +319,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-05-18 00:00:00.000000",
+ "modified": "2026-07-29 14:45:00.000000",
  "modified_by": "Administrator",
  "module": "Saudi HR",
  "name": "Saudi HR",

@@ -192,7 +192,7 @@ class SaudiMonthlyPayroll(Document):
 
 # ─── Whitelist API Methods ───────────────────────────────────────────────────────
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def fetch_employees(doc_name: str):
 	"""
 	جلب جميع الموظفين النشطين للشركة وملء الجدول الفرعي.
@@ -380,7 +380,7 @@ def calculate_employee_row(employee: str, month: str, year: int):
 	return row
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 	"""استيراد ملف رواتب خارجي إلى كشف الرواتب الشهري."""
 	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
@@ -569,7 +569,7 @@ def download_employee_setup_template(doc_name: str, file_url: str | None = None)
 	return {"file_url": file_doc.file_url, "file_name": file_doc.file_name, "row_count": len(template_rows) - 1}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def import_employee_setup_workbook(doc_name: str, file_url: str | None = None):
 	"""استيراد ملف إعداد الموظفين المكتمل وإنشاء سجلات Employee الناقصة."""
 	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
@@ -592,7 +592,7 @@ def import_employee_setup_workbook(doc_name: str, file_url: str | None = None):
 	return {"created_count": len(created), "skipped": skipped, "created_employees": created}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def autofill_employee_setup_workbook_names(doc_name: str, file_url: str | None = None):
 	"""تعبئة حقول الاسم تلقائياً في ملف إعداد الموظفين من اسم الموظف القادم من ملف الرواتب."""
 	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
@@ -619,7 +619,7 @@ def autofill_employee_setup_workbook_names(doc_name: str, file_url: str | None =
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_basic_employees_from_payroll(
 	doc_name: str,
 	default_gender: str,
@@ -661,7 +661,7 @@ def create_basic_employees_from_payroll(
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def sync_linked_employee_master_fields(doc_name: str):
 	"""Backfill safe Employee master fields from linked payroll rows."""
 	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
@@ -677,7 +677,7 @@ def sync_linked_employee_master_fields(doc_name: str):
 	return {"updated_count": updated_count}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete_draft_payroll(doc_name: str):
 	"""Delete a draft payroll document using write access plus explicit safety checks."""
 	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
@@ -754,7 +754,7 @@ def _auto_create_missing_employees_for_import(doc) -> dict:
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_journal_entry_from_payroll(doc_name: str):
 	"""
 	إنشاء قيد يومي مباشر من بيانات Saudi Monthly Payroll
@@ -785,14 +785,9 @@ def create_journal_entry_from_payroll(doc_name: str):
 	posting_date = f"{doc.year}-{month_num:02d}-{last_day:02d}"
 
 	# ── حسابات الإجمالي ─────────────────────────────────────────────────────
-	total_gross = flt(doc.total_gross)
 	total_gosi = flt(doc.total_gosi_deductions)
-	total_sick = flt(doc.total_sick_deductions)
 	total_loan = flt(doc.total_loan_deductions)
-	total_other = flt(getattr(doc, "total_other_deductions", 0.0))
-	total_overtime = flt(doc.total_overtime)
 	total_net = flt(doc.total_net_payable)
-	total_salary_cost = round(total_gross + total_overtime - total_sick - total_other, 2)
 
 	# ── الحسابات المحاسبية ───────────────────────────────────────────────────
 	company_accounts = frappe.get_all(

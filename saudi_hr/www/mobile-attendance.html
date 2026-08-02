@@ -2292,13 +2292,93 @@
 			updatePermissionStatuses();
 		}
 
+		const SAUDI_MOBILE_WORKER_PATH = "/mobile-attendance-sw.js";
+		const SAUDI_MOBILE_WORKER_VERSION = "20260729a";
+		const SAUDI_MOBILE_SCOPE = "/mobile-attendance";
+		const SAUDI_MOBILE_CACHE_PREFIX = "saudi-hr-mobile-";
+		const SAUDI_MOBILE_CACHE_NAME = "saudi-hr-mobile-v7";
+		const SAUDI_MOBILE_RELOAD_GUARD_KEY = "saudi_hr_mobile_worker_reloaded";
+
+		function workerUsesSaudiMobileScript(worker) {
+			try {
+				return Boolean(
+					worker && new URL(worker.scriptURL).pathname === SAUDI_MOBILE_WORKER_PATH
+				);
+			} catch (error) {
+				return false;
+			}
+		}
+
+		function registrationUsesSaudiMobileWorker(registration) {
+			return [registration.active, registration.waiting, registration.installing]
+				.filter(Boolean)
+				.some(workerUsesSaudiMobileScript);
+		}
+
+		async function removeLegacySaudiMobileWorker() {
+			const registrations = await navigator.serviceWorker.getRegistrations();
+			const legacyRegistrations = registrations.filter((registration) => {
+				try {
+					return (
+						new URL(registration.scope).pathname === "/" &&
+						registrationUsesSaudiMobileWorker(registration)
+					);
+				} catch (error) {
+					return false;
+				}
+			});
+
+			const controllerWasLegacy =
+				legacyRegistrations.length > 0 &&
+				workerUsesSaudiMobileScript(navigator.serviceWorker.controller);
+			const unregisterResults = await Promise.all(
+				legacyRegistrations.map((registration) => registration.unregister())
+			);
+
+			if ("caches" in window) {
+				const cacheNames = await caches.keys();
+				await Promise.all(
+					cacheNames
+						.filter(
+							(cacheName) =>
+								cacheName.startsWith(SAUDI_MOBILE_CACHE_PREFIX) &&
+								cacheName !== SAUDI_MOBILE_CACHE_NAME
+						)
+						.map((cacheName) => caches.delete(cacheName))
+				);
+			}
+
+			return {
+				controllerWasLegacy,
+				removedLegacyRegistration: unregisterResults.some(Boolean),
+			};
+		}
+
 		async function registerPWA() {
 			if ("serviceWorker" in navigator) {
+				let shouldReloadAfterMigration = false;
 				try {
-					await navigator.serviceWorker.register("/mobile-attendance-sw.js?v=20260427c", { scope: "/" });
+					const cleanupResult = await removeLegacySaudiMobileWorker();
+					shouldReloadAfterMigration =
+						cleanupResult.controllerWasLegacy &&
+						cleanupResult.removedLegacyRegistration;
+					await navigator.serviceWorker.register(
+						`${SAUDI_MOBILE_WORKER_PATH}?v=${SAUDI_MOBILE_WORKER_VERSION}`,
+						{ scope: SAUDI_MOBILE_SCOPE }
+					);
 				} catch (error) {
 					// Ignore registration failures and keep app usable.
 				}
+
+				if (
+					shouldReloadAfterMigration &&
+					sessionStorage.getItem(SAUDI_MOBILE_RELOAD_GUARD_KEY) !== "1"
+				) {
+					sessionStorage.setItem(SAUDI_MOBILE_RELOAD_GUARD_KEY, "1");
+					window.location.reload();
+					return;
+				}
+				sessionStorage.removeItem(SAUDI_MOBILE_RELOAD_GUARD_KEY);
 			}
 
 			window.addEventListener("beforeinstallprompt", (event) => {

@@ -19,9 +19,13 @@ def main() -> None:
 	_docs_exist()
 	_referenced_images_exist()
 	_json_files_are_valid()
+	_mobile_service_worker_is_safely_scoped()
 	_critical_legal_rules_are_present()
 	_legal_catalog_is_consistent()
 	_localized_product_assets_are_valid()
+	_employee_profile_assets_are_valid()
+	_security_boundaries_are_enforced()
+	_print_format_contract_is_valid()
 	_all_text_assets_are_valid_utf8()
 	_demo_acceptance_scenarios_are_present()
 	print(f"Saudi HR quality checks passed for version {version}")
@@ -113,6 +117,26 @@ def _json_files_are_valid() -> None:
 		json.loads(path.read_text(encoding="utf-8"))
 
 
+def _mobile_service_worker_is_safely_scoped() -> None:
+	worker = (ROOT / "saudi_hr" / "www" / "mobile-attendance-sw.js").read_text(encoding="utf-8")
+	mobile_page = (ROOT / "saudi_hr" / "www" / "mobile-attendance.html").read_text(encoding="utf-8")
+	desk_script = (ROOT / "saudi_hr" / "public" / "js" / "desk_shortcuts.js").read_text(encoding="utf-8")
+	hooks = (ROOT / "saudi_hr" / "hooks.py").read_text(encoding="utf-8")
+
+	assert 'const CACHE_NAME = "saudi-hr-mobile-v7"' in worker, "Mobile PWA cache version is stale"
+	assert 'const SAUDI_MOBILE_SCOPE = "/mobile-attendance"' in mobile_page, "Mobile PWA scope must be narrow"
+	assert '{ scope: SAUDI_MOBILE_SCOPE }' in mobile_page, "Mobile PWA registration must use the narrow scope"
+	assert '{ scope: "/" }' not in mobile_page, "Mobile PWA must not control the whole ERPNext origin"
+	assert "url.origin !== self.location.origin" in worker, "Cross-origin requests must bypass the mobile worker"
+	assert "if (!PRECACHE_PATHS.has(url.pathname))" in worker, "Non-PWA requests must bypass the mobile worker"
+	assert 'event.request.url.includes("/mobile-attendance")' not in worker, "Mobile route matching must be exact"
+	assert "caches.match(event.request)" not in worker, "Authenticated GET responses must not be cached generically"
+	assert 'new URL(registration.scope).pathname === "/"' in mobile_page, "Mobile page must remove the legacy root worker"
+	assert 'new URL(registration.scope).pathname === "/"' in desk_script, "Desk must remove the legacy root worker"
+	assert "cacheName.startsWith(SAUDI_MOBILE_CACHE_PREFIX)" in desk_script, "Desk must clear legacy Saudi PWA caches"
+	assert "desk_shortcuts.js?v=20260729-1" in hooks, "Desk cleanup asset must use a cache-busting version"
+
+
 def _critical_legal_rules_are_present() -> None:
 	maternity = (ROOT / "saudi_hr" / "saudi_hr" / "doctype" / "maternity_paternity_leave" / "maternity_paternity_leave.py").read_text(encoding="utf-8")
 	overtime = (ROOT / "saudi_hr" / "saudi_hr" / "doctype" / "overtime_request" / "overtime_request.py").read_text(encoding="utf-8")
@@ -182,6 +206,59 @@ def _localized_product_assets_are_valid() -> None:
 		assert ":focus-visible" in page_text, f"Enterprise page must expose keyboard focus: {page.relative_to(ROOT)}"
 		assert "prefers-reduced-motion" in page_text, f"Enterprise page must respect reduced motion: {page.relative_to(ROOT)}"
 	assert "Termination is permissible per Art. 117" not in translations, "Arabic translations must not recommend automatic termination after 90 sick-leave days"
+
+
+def _employee_profile_assets_are_valid() -> None:
+	profile = (ROOT / "saudi_hr" / "saudi_hr" / "employee_profile.py").read_text(encoding="utf-8")
+	dashboard = (ROOT / "saudi_hr" / "saudi_hr" / "employee_dashboard.py").read_text(encoding="utf-8")
+	script = (ROOT / "saudi_hr" / "public" / "js" / "employee.js").read_text(encoding="utf-8")
+	styles = (ROOT / "saudi_hr" / "public" / "css" / "employee_profile.css").read_text(encoding="utf-8")
+	hooks = (ROOT / "saudi_hr" / "hooks.py").read_text(encoding="utf-8")
+	translations = (ROOT / "saudi_hr" / "translations" / "ar.csv").read_text(encoding="utf-8")
+
+	assert 'PROFILE_SCHEMA_VERSION = "2026.1"' in profile, "Employee profile API schema must be versioned"
+	assert 'frappe.has_permission("Employee", "read", doc=employee_doc, throw=True)' in profile, "Employee profile must enforce Employee read permission"
+	assert "frappe.get_list(" in profile, "Employee profile related records must use permission-aware queries"
+	assert "_can_read_doctype" in dashboard and "frappe.has_permission" in dashboard, "Employee connections must be permission-aware"
+	assert "frm.dashboard.add_section(" in script, "Employee 360 section is missing from the Employee form"
+	assert "frappe.utils.escape_html" in script, "Employee profile output must escape record values"
+	assert "Complete Employee File" in script, "Employee complete-file action is missing"
+	assert "conic-gradient" in styles, "Employee readiness compass styling is missing"
+	assert ":focus-visible" in styles, "Employee profile must expose keyboard focus"
+	assert "prefers-reduced-motion" in styles, "Employee profile must respect reduced motion"
+	assert "inset-inline-end" in styles, "Employee profile must use RTL-safe logical positioning"
+	assert "employee_profile.css?v=20260729-3" in hooks, "Employee profile stylesheet hook is missing"
+	assert "override_doctype_dashboards" in hooks, "Employee dashboard override is missing"
+	assert '"Complete Employee File","ملف الموظف الشامل"' in translations, "Arabic Employee profile translation is missing"
+
+
+def _security_boundaries_are_enforced() -> None:
+	utils = (ROOT / "saudi_hr" / "saudi_hr" / "utils.py").read_text(encoding="utf-8")
+	loan = (ROOT / "saudi_hr" / "saudi_hr" / "doctype" / "employee_loan" / "employee_loan.py").read_text(encoding="utf-8")
+	profile = (ROOT / "saudi_hr" / "saudi_hr" / "employee_profile.py").read_text(encoding="utf-8")
+	assert "def assert_employee_salary_access" in utils, "Salary API permission gate is missing"
+	assert "def assert_complete_employee_file_access" in utils, "Complete employee file permission gate is missing"
+	assert '"complete_file": can_access_complete_employee_file' in profile, "Employee profile must expose secure complete-file visibility"
+	for method in (
+		"create_disbursement_journal_entry",
+		"request_loan_approval",
+		"approve_loan",
+		"reject_loan",
+		"approve_loan_disbursement",
+	):
+		marker = f'@frappe.whitelist(methods=["POST"])\ndef {method}'
+		assert marker in loan, f"Employee Loan mutator must be POST-only: {method}"
+	assert 'frappe.has_permission("Employee Loan", "write", doc=doc, throw=True)' in loan, "Employee Loan mutations must enforce write permission"
+
+
+def _print_format_contract_is_valid() -> None:
+	complete_file = (ROOT / "saudi_hr" / "saudi_hr" / "print_format" / "employee_complete_file_ar" / "employee_complete_file_ar.html").read_text(encoding="utf-8")
+	salary_certificate = (ROOT / "saudi_hr" / "saudi_hr" / "print_format" / "salary_certificate_ar" / "salary_certificate_ar.html").read_text(encoding="utf-8")
+	assert "assert_complete_employee_file_access(emp.name)" in complete_file, "Complete employee file must enforce its sensitive print gate"
+	assert "assert_employee_salary_access(doc.name)" in salary_certificate, "Salary certificate must enforce salary access"
+	assert '"from_date"' not in salary_certificate, "Salary certificate references the invalid contract field from_date"
+	assert '"job_title"' not in salary_certificate, "Salary certificate references the invalid contract field job_title"
+	assert '"start_date"' in salary_certificate and '"designation"' in salary_certificate, "Salary certificate contract fields are incomplete"
 
 
 def _demo_acceptance_scenarios_are_present() -> None:

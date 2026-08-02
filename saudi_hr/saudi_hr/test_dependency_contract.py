@@ -50,6 +50,23 @@ class TestDependencyContract(FrappeTestCase):
 		self.assertTrue(is_saudi_nationality("saudi arabia"))
 		self.assertFalse(is_saudi_nationality("Jordanian"))
 
+	def test_employee_complete_file_uses_numeric_sick_pay_and_paid_payroll_only(self):
+		template = (
+			APP_ROOT
+			/ "saudi_hr"
+			/ "saudi_hr"
+			/ "print_format"
+			/ "employee_complete_file_ar"
+			/ "employee_complete_file_ar.html"
+		).read_text(encoding="utf-8")
+
+		self.assertIn("(r.pay_rate or 0) >= 99.99", template)
+		self.assertIn("(r.pay_rate or 0) > 0", template)
+		self.assertNotIn("r.pay_rate == 'full'", template)
+		self.assertNotIn("r.pay_rate == 'partial'", template)
+		self.assertIn("AND p.docstatus = 1", template)
+		self.assertIn("AND IFNULL(p.payroll_journal_entry, '') != ''", template)
+
 
 def _normalize_app_name(required_app):
 	return str(required_app).split("/")[-1]

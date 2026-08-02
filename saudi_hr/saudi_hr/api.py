@@ -14,7 +14,6 @@ from frappe.utils import cint, flt, get_datetime, get_first_day, get_last_day, g
 from frappe.utils.file_manager import save_file
 
 from saudi_hr.saudi_hr.attendance_policy import (
-	VOICE_POLICY_DISABLED,
 	VOICE_POLICY_REQUIRED,
 	calculate_attendance_variance,
 	resolve_mobile_attendance_policy,
@@ -43,6 +42,7 @@ SPECIAL_LEAVE_OPTIONS = [
 ELEVATED_ROLES = {"HR Manager", "HR User", "System Manager"}
 ORG_TREE_GLOBAL_ROLES = {"HR Manager", "HR User", "System Manager"}
 ORG_TREE_MANAGER_ROLES = {"Department Approver", "Leave Approver"}
+ORG_TREE_APPROVER_FIELDS = ("leave_approver", "expense_approver")
 ORG_TREE_ROOT_VALUE = "__org_root__"
 ORG_TREE_UNASSIGNED_DEPARTMENT = "__unassigned_department__"
 MAX_MOBILE_ATTACHMENTS = 3
@@ -400,18 +400,32 @@ def _has_org_tree_global_access(user=None):
 	return bool(ORG_TREE_GLOBAL_ROLES.intersection(set(frappe.get_roles(user))))
 
 
+def _get_org_tree_approver_fields():
+	"""Return only optional approver columns available on this ERPNext site."""
+	return tuple(
+		fieldname
+		for fieldname in ORG_TREE_APPROVER_FIELDS
+		if frappe.db.has_column("Employee", fieldname)
+	)
+
+
 def _has_org_tree_manager_scope(user=None):
 	user = user or frappe.session.user
 	roles = set(frappe.get_roles(user))
 	if ORG_TREE_MANAGER_ROLES.intersection(roles):
 		return True
 
+	approver_fields = _get_org_tree_approver_fields()
+	if not approver_fields:
+		return False
+
+	approver_conditions = " OR ".join(f"`{fieldname}` = %(user)s" for fieldname in approver_fields)
 	return bool(
 		frappe.db.sql(
-			"""
+			f"""
 			SELECT name
 			FROM `tabEmployee`
-			WHERE leave_approver = %(user)s OR expense_approver = %(user)s
+			WHERE {approver_conditions}
 			LIMIT 1
 			""",
 			{"user": user},
@@ -428,6 +442,7 @@ def _ensure_org_tree_access(user=None):
 def _get_org_tree_scope_rows(company=None, branch=None, department=None, user=None):
 	user = user or frappe.session.user
 	_ensure_org_tree_access(user)
+	approver_fields = set(_get_org_tree_approver_fields())
 
 	conditions = ["status = 'Active'"]
 	values = {}
@@ -443,15 +458,25 @@ def _get_org_tree_scope_rows(company=None, branch=None, department=None, user=No
 		values["department"] = department
 
 	if not _has_org_tree_global_access(user):
-		scope_conditions = ["leave_approver = %(review_user)s", "expense_approver = %(review_user)s"]
+		scope_conditions = [
+			f"`{fieldname}` = %(review_user)s"
+			for fieldname in ORG_TREE_APPROVER_FIELDS
+			if fieldname in approver_fields
+		]
 		values["review_user"] = user
 		scope_employee = _get_active_employee_for_user(user)
 		if scope_employee:
 			scope_conditions.extend(["name = %(scope_employee)s", "reports_to = %(scope_employee)s"])
 			values["scope_employee"] = scope_employee
+		if not scope_conditions:
+			scope_conditions.append("1 = 0")
 		conditions.append("(" + " OR ".join(scope_conditions) + ")")
 
 	where = " AND ".join(conditions)
+	approver_select = ",\n\t\t\t".join(
+		f"`{fieldname}`" if fieldname in approver_fields else f"NULL AS `{fieldname}`"
+		for fieldname in ORG_TREE_APPROVER_FIELDS
+	)
 	return frappe.db.sql(
 		f"""
 		SELECT
@@ -463,8 +488,7 @@ def _get_org_tree_scope_rows(company=None, branch=None, department=None, user=No
 			company,
 			reports_to,
 			user_id,
-			leave_approver,
-			expense_approver
+			{approver_select}
 		FROM `tabEmployee`
 		WHERE {where}
 		ORDER BY department ASC, employee_name ASC, name ASC
@@ -776,15 +800,21 @@ def _get_attendance_insights(employee, month=None, year=None):
 
 
 def _get_leave_options(employee):
-	annual_balance = get_annual_leave_balance(employee, nowdate())
+	as_of_date = nowdate()
+	annual_balance = get_annual_leave_balance(employee, as_of_date)
 
 	return {
 		"annual": {
 			"label": "Annual Leave / إجازة سنوية",
 			"doctype": "Saudi Annual Leave",
+			"as_of_date": str(annual_balance.get("reference_date") or as_of_date),
 			"balance": annual_balance.get("balance"),
 			"entitled": annual_balance.get("entitled"),
 			"taken": annual_balance.get("taken"),
+			"policy": annual_balance.get("policy"),
+			"policy_name": annual_balance.get("policy_name"),
+			"policy_source": annual_balance.get("source_type"),
+			"policy_assignment": annual_balance.get("assignment"),
 		},
 		"sick": {
 			"label": "Sick Leave / إجازة مرضية",
@@ -1179,7 +1209,7 @@ def get_attendance_insights(month=None, year=None):
 	return _get_attendance_insights(employee, month=month, year=year)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def issue_mobile_voice_challenge():
 	employee, profile = _require_employee_context()
 	location = _get_location_for_branch(profile.branch)
@@ -1192,7 +1222,7 @@ def issue_mobile_voice_challenge():
 	return result
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def enroll_mobile_voice_profile(challenge_token=None, voice_payload_json=None):
 	employee, _profile = _require_employee_context()
 	voice_payload = _load_json_param(voice_payload_json, default=None)
@@ -1204,7 +1234,7 @@ def enroll_mobile_voice_profile(challenge_token=None, voice_payload_json=None):
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def do_mobile_checkin(
 	latitude=None,
 	longitude=None,
@@ -1258,7 +1288,6 @@ def do_mobile_checkin(
 	voice_status = VOICE_VERIFICATION_STATUS_NOT_REQUIRED
 	voice_result = None
 	voice_required = policy.get("voice_policy") == VOICE_POLICY_REQUIRED
-	voice_enabled = policy.get("voice_policy") and policy.get("voice_policy") != VOICE_POLICY_DISABLED
 	if voice_required and not voice_payload:
 		frappe.throw(_("هذا الموقع يتطلب التحقق الصوتي قبل تسجيل الحركة."), frappe.PermissionError)
 	if voice_payload:
@@ -1358,7 +1387,7 @@ def do_mobile_checkin(
 	return result
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit_mobile_leave_request(
 	request_type,
 	start_date,
@@ -1446,7 +1475,7 @@ def get_available_locations():
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def sync_branch_employee_directory():
 	from saudi_hr.saudi_hr.doctype.saudi_hr_settings.saudi_hr_settings import sync_branch_employee_directory as _sync
 
@@ -1462,7 +1491,7 @@ def download_employee_branch_template():
 	return _download()
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def import_employee_branch_template(file_url=None):
 	from saudi_hr.saudi_hr.doctype.saudi_hr_settings.saudi_hr_settings import import_employee_branch_template as _import
 
@@ -1471,7 +1500,7 @@ def import_employee_branch_template(file_url=None):
 
 # ─── Payroll Adjustment Items Helpers ─────────────────────────────────────────
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def fetch_approved_overtime_for_payroll(payroll_name):
 	"""
 	Fetches all approved, unlinked Overtime Requests for the payroll period
@@ -1554,7 +1583,7 @@ def fetch_approved_overtime_for_payroll(payroll_name):
 	return {"added": added}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def add_payroll_adjustment_item(payroll_name, employee, item_type, description, amount):
 	"""
 	Add a single adjustment item to a payroll employee row.

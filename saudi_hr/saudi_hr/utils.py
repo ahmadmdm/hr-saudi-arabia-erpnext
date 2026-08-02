@@ -3,7 +3,19 @@ utils.py — Helper functions for Saudi HR calculations.
 """
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, date_diff, flt, getdate, today
+from frappe.utils import add_years, cint, cstr, date_diff, flt, getdate, today
+
+
+LEAVE_SCOPE_EMPLOYEE = "Employee / موظف"
+LEAVE_SCOPE_DEPARTMENT = "Department / قسم"
+LEAVE_SOURCE_SETTINGS = "Saudi HR Settings / إعدادات الموارد البشرية"
+STATUTORY_ANNUAL_THRESHOLD_YEARS = 5
+STATUTORY_ANNUAL_BEFORE_DAYS = 21
+STATUTORY_ANNUAL_AFTER_DAYS = 30
+STATUTORY_SICK_FULL_PAY_DAYS = 30
+STATUTORY_SICK_PAID_TIER_DAYS = 90
+STATUTORY_SICK_PARTIAL_PAY_PERCENTAGE = 75
+STATUTORY_SICK_MAX_DAYS = 120
 
 
 def assert_doctype_permissions(doctype: str, permission_types, doc=None):
@@ -58,7 +70,9 @@ def calculate_prorated_sick_leave_deduction(leave_rows: list, month_start, month
 	return round(deduction, 2)
 
 
-def get_active_contract(employee: str, fields=None, as_dict=True):
+def get_active_contract(employee: str, fields=None, as_dict=True, reference_date=None):
+	"""Return the submitted contract that is active on the requested date."""
+	reference_date = getdate(reference_date or today())
 	field_list = fields or [
 		"name",
 		"basic_salary",
@@ -67,13 +81,79 @@ def get_active_contract(employee: str, fields=None, as_dict=True):
 		"other_allowances",
 		"total_salary",
 	]
-	return frappe.db.get_value(
+	rows = frappe.get_all(
 		"Saudi Employment Contract",
-		{"employee": employee, "contract_status": "Active / نشط"},
-		field_list,
-		as_dict=as_dict,
+		filters={
+			"employee": employee,
+			"docstatus": 1,
+			"contract_status": "Active / نشط",
+			"start_date": ["<=", reference_date],
+		},
+		or_filters=[
+			["Saudi Employment Contract", "end_date", "is", "not set"],
+			["Saudi Employment Contract", "end_date", ">=", reference_date],
+		],
+		fields=field_list,
 		order_by="start_date desc",
+		limit=1,
 	)
+	if not rows:
+		return None
+	row = rows[0]
+	if as_dict:
+		return row
+	values = tuple(row.get(field) for field in field_list)
+	return values[0] if len(values) == 1 else values
+
+
+def assert_employee_record_access(employee: str, related_doctype: str | None = None) -> bool:
+	"""Allow access to employee-scoped data for the employee or an authorized reader."""
+	employee_doc = frappe.get_doc("Employee", employee)
+	if employee_doc.user_id and employee_doc.user_id == frappe.session.user:
+		return True
+
+	frappe.has_permission("Employee", "read", doc=employee_doc, throw=True)
+	if related_doctype:
+		frappe.has_permission(related_doctype, "read", throw=True)
+	return True
+
+
+def assert_employee_salary_access(employee: str) -> bool:
+	"""Allow salary lookup only for the employee themself or an authorized reader."""
+	assert_employee_record_access(employee)
+	if frappe.db.get_value("Employee", employee, "user_id") == frappe.session.user:
+		return True
+	contract = get_active_contract(employee, ["name"], as_dict=True)
+	if contract:
+		contract_doc = frappe.get_doc("Saudi Employment Contract", contract.name)
+		frappe.has_permission("Saudi Employment Contract", "read", doc=contract_doc, throw=True)
+	else:
+		frappe.has_permission("Saudi Employment Contract", "read", throw=True)
+	return True
+
+
+def can_access_complete_employee_file(employee: str) -> bool:
+	"""Return whether the current user may print the full, salary-bearing HR file."""
+	if frappe.session.user == "Guest":
+		return False
+	roles = set(frappe.get_roles(frappe.session.user))
+	if frappe.session.user != "Administrator" and not roles.intersection({"HR Manager", "System Manager"}):
+		return False
+	try:
+		employee_doc = frappe.get_doc("Employee", employee)
+		return bool(frappe.has_permission("Employee", "print", doc=employee_doc))
+	except (frappe.DoesNotExistError, frappe.PermissionError):
+		return False
+
+
+def assert_complete_employee_file_access(employee: str) -> bool:
+	"""Jinja security gate for the comprehensive employee print format."""
+	if not can_access_complete_employee_file(employee):
+		frappe.throw(
+			_("Only HR Managers may print the complete employee file.<br>طباعة ملف الموظف الشامل متاحة لمدير الموارد البشرية فقط."),
+			frappe.PermissionError,
+		)
+	return True
 
 
 def get_employee_basic_salary(employee: str) -> float:
@@ -132,30 +212,250 @@ def get_annual_leave_days_taken(employee: str, leave_year: int, exclude_name: st
 	return round(total, 2)
 
 
+def validate_leave_policy_values(
+	annual_threshold,
+	annual_before,
+	annual_after,
+	sick_full_days,
+	sick_partial_days,
+	sick_partial_percentage,
+):
+	"""Keep configurable benefits at or above the Saudi statutory minimums."""
+	threshold = flt(annual_threshold)
+	before_days = flt(annual_before)
+	after_days = flt(annual_after)
+	full_days = flt(sick_full_days)
+	partial_days = flt(sick_partial_days)
+	partial_percentage = flt(sick_partial_percentage)
+
+	if threshold < 1 or threshold > STATUTORY_ANNUAL_THRESHOLD_YEARS:
+		frappe.throw(
+			_(
+				"Annual leave threshold must be between 1 and 5 years.<br>"
+				"يجب أن تكون عتبة الإجازة السنوية بين سنة وخمس سنوات."
+			),
+			title=_("Invalid Leave Threshold / عتبة إجازة غير صالحة"),
+		)
+	if before_days < STATUTORY_ANNUAL_BEFORE_DAYS:
+		frappe.throw(
+			_("Annual leave before the threshold cannot be less than 21 days.<br>لا يجوز أن يقل الاستحقاق قبل العتبة عن 21 يومًا."),
+			title=_("Statutory Minimum / الحد النظامي"),
+		)
+	if after_days < STATUTORY_ANNUAL_AFTER_DAYS:
+		frappe.throw(
+			_("Annual leave after the threshold cannot be less than 30 days.<br>لا يجوز أن يقل الاستحقاق بعد العتبة عن 30 يومًا."),
+			title=_("Statutory Minimum / الحد النظامي"),
+		)
+	if after_days < before_days:
+		frappe.throw(
+			_("Entitlement after the threshold cannot be lower than the earlier entitlement.<br>لا يجوز أن ينخفض الاستحقاق بعد بلوغ العتبة."),
+			title=_("Invalid Entitlement / استحقاق غير صالح"),
+		)
+	if full_days < STATUTORY_SICK_FULL_PAY_DAYS:
+		frappe.throw(
+			_("Full-pay sick leave cannot be less than 30 days.<br>لا يجوز أن تقل الإجازة المرضية بأجر كامل عن 30 يومًا."),
+			title=_("Statutory Minimum / الحد النظامي"),
+		)
+	if full_days + partial_days < STATUTORY_SICK_PAID_TIER_DAYS:
+		frappe.throw(
+			_("Full and partial paid sick-leave tiers must cover at least 90 days.<br>يجب أن تغطي شرائح المرضية المدفوعة 90 يومًا على الأقل."),
+			title=_("Statutory Minimum / الحد النظامي"),
+		)
+	if full_days + partial_days > STATUTORY_SICK_MAX_DAYS:
+		frappe.throw(
+			_("Paid sick-leave tiers cannot exceed the 120-day benefit cycle.<br>لا يجوز أن تتجاوز شرائح المرضية المدفوعة دورة الاستحقاق البالغة 120 يومًا."),
+			title=_("Invalid Sick Leave Tiers / شرائح مرضية غير صالحة"),
+		)
+	if partial_days and partial_percentage < STATUTORY_SICK_PARTIAL_PAY_PERCENTAGE:
+		frappe.throw(
+			_("Partial sick-leave pay cannot be less than 75%.<br>لا يجوز أن تقل نسبة أجر المرضية الجزئي عن 75٪."),
+			title=_("Statutory Minimum / الحد النظامي"),
+		)
+
+
+def _normalize_leave_policy_values(values):
+	threshold = min(
+		STATUTORY_ANNUAL_THRESHOLD_YEARS,
+		max(1, flt(values.get("annual_leave_years_threshold") or STATUTORY_ANNUAL_THRESHOLD_YEARS)),
+	)
+	before_days = max(
+		STATUTORY_ANNUAL_BEFORE_DAYS,
+		int(flt(values.get("annual_leave_before_threshold") or STATUTORY_ANNUAL_BEFORE_DAYS)),
+	)
+	after_days = max(
+		STATUTORY_ANNUAL_AFTER_DAYS,
+		before_days,
+		int(flt(values.get("annual_leave_after_threshold") or STATUTORY_ANNUAL_AFTER_DAYS)),
+	)
+	full_days = min(
+		STATUTORY_SICK_MAX_DAYS,
+		max(
+			STATUTORY_SICK_FULL_PAY_DAYS,
+			int(flt(values.get("sick_leave_full_pay_days") or STATUTORY_SICK_FULL_PAY_DAYS)),
+		),
+	)
+	partial_days = max(0, int(flt(values.get("sick_leave_partial_pay_days") or 0)))
+	if full_days + partial_days < STATUTORY_SICK_PAID_TIER_DAYS:
+		partial_days = STATUTORY_SICK_PAID_TIER_DAYS - full_days
+	if full_days + partial_days > STATUTORY_SICK_MAX_DAYS:
+		partial_days = max(0, STATUTORY_SICK_MAX_DAYS - full_days)
+	partial_percentage = max(
+		STATUTORY_SICK_PARTIAL_PAY_PERCENTAGE,
+		flt(values.get("sick_leave_partial_pay_percentage") or STATUTORY_SICK_PARTIAL_PAY_PERCENTAGE),
+	)
+	return {
+		"annual_leave_years_threshold": threshold,
+		"annual_leave_before_threshold": before_days,
+		"annual_leave_after_threshold": after_days,
+		"sick_leave_full_pay_days": full_days,
+		"sick_leave_partial_pay_days": partial_days,
+		"sick_leave_partial_pay_percentage": partial_percentage,
+	}
+
+
+def _get_employee_leave_context(employee):
+	context = frappe.db.get_value(
+		"Employee",
+		employee,
+		["name", "company", "department", "date_of_joining"],
+		as_dict=True,
+	)
+	if not context:
+		frappe.throw(_("Employee {0} was not found. / لم يتم العثور على الموظف {0}.").format(employee))
+	if not context.date_of_joining:
+		frappe.throw(
+			_("Employee joining date is required to calculate leave entitlement.<br>تاريخ مباشرة الموظف مطلوب لحساب استحقاق الإجازة."),
+			title=_("Missing Joining Date / تاريخ المباشرة غير موجود"),
+		)
+	return context
+
+
+def _find_leave_policy_assignment(context, reference_date):
+	if not frappe.db.exists("DocType", "Saudi Leave Policy Assignment"):
+		return None
+
+	targets = [
+		(LEAVE_SCOPE_EMPLOYEE, "employee", context.name),
+		(LEAVE_SCOPE_DEPARTMENT, "department", context.department),
+	]
+	for scope, target_field, target in targets:
+		if not target:
+			continue
+		assignments = frappe.get_all(
+			"Saudi Leave Policy Assignment",
+			filters=[
+				["enabled", "=", 1],
+				["company", "=", context.company],
+				["applies_to", "=", scope],
+				[target_field, "=", target],
+				["effective_from", "<=", reference_date],
+			],
+			or_filters=[
+				["effective_to", "is", "not set"],
+				["effective_to", ">=", reference_date],
+			],
+			fields=["name", "policy", "applies_to", "effective_from"],
+			order_by="effective_from desc, modified desc",
+			limit_page_length=20,
+		)
+		for assignment in assignments:
+			policy = frappe.db.get_value(
+				"Saudi Leave Policy",
+				assignment.policy,
+				[
+					"name",
+					"policy_name",
+					"company",
+					"enabled",
+					"annual_leave_years_threshold",
+					"annual_leave_before_threshold",
+					"annual_leave_after_threshold",
+					"sick_leave_full_pay_days",
+					"sick_leave_partial_pay_days",
+					"sick_leave_partial_pay_percentage",
+				],
+				as_dict=True,
+			)
+			if policy and policy.enabled and policy.company == context.company:
+				return assignment, policy
+	return None
+
+
+def resolve_leave_policy(employee: str, reference_date: str | None = None) -> dict:
+	"""Resolve employee > department > global settings using the employee master record."""
+	reference = getdate(reference_date) if reference_date else getdate()
+	context = _get_employee_leave_context(employee)
+	resolved = _find_leave_policy_assignment(context, reference)
+
+	if resolved:
+		assignment, policy = resolved
+		values = _normalize_leave_policy_values(policy)
+		return {
+			**values,
+			"policy": policy.name,
+			"policy_name": policy.policy_name,
+			"assignment": assignment.name,
+			"source_type": assignment.applies_to,
+			"company": context.company,
+			"department": context.department,
+			"reference_date": reference,
+		}
+
+	settings = frappe.get_cached_doc("Saudi HR Settings")
+	values = _normalize_leave_policy_values(settings)
+	return {
+		**values,
+		"policy": None,
+		"policy_name": _("Saudi HR Settings / إعدادات الموارد البشرية"),
+		"assignment": None,
+		"source_type": LEAVE_SOURCE_SETTINGS,
+		"company": context.company,
+		"department": context.department,
+		"reference_date": reference,
+	}
+
+
+def get_annual_leave_entitlement_details(employee: str, date: str | None = None) -> dict:
+	"""Return the auditable annual entitlement and its resolved policy source."""
+	reference = getdate(date) if date else getdate()
+	context = _get_employee_leave_context(employee)
+	policy = resolve_leave_policy(employee, reference)
+	threshold = flt(policy["annual_leave_years_threshold"])
+	policy_threshold_date = add_years(context.date_of_joining, int(threshold))
+	statutory_threshold_date = add_years(context.date_of_joining, STATUTORY_ANNUAL_THRESHOLD_YEARS)
+	policy_entitlement = (
+		policy["annual_leave_after_threshold"]
+		if reference >= getdate(policy_threshold_date)
+		else policy["annual_leave_before_threshold"]
+	)
+	statutory_minimum = (
+		STATUTORY_ANNUAL_AFTER_DAYS
+		if reference >= getdate(statutory_threshold_date)
+		else STATUTORY_ANNUAL_BEFORE_DAYS
+	)
+	return {
+		**policy,
+		"entitled": int(max(flt(policy_entitlement), statutory_minimum)),
+		"statutory_minimum": statutory_minimum,
+		"joining_date": getdate(context.date_of_joining),
+		"years_of_service": round(date_diff(reference, context.date_of_joining) / 365.25, 2),
+	}
+
+
 def get_annual_leave_balance(employee: str, reference_date: str | None = None, exclude_name: str | None = None) -> dict:
 	reference = getdate(reference_date) if reference_date else getdate()
-	entitlement = get_annual_leave_entitlement(employee, reference)
+	details = get_annual_leave_entitlement_details(employee, reference)
 	taken = get_annual_leave_days_taken(employee, reference.year, exclude_name=exclude_name)
 	return {
-		"entitled": entitlement,
+		**details,
 		"taken": taken,
-		"balance": flt(entitlement) - flt(taken),
+		"balance": flt(details["entitled"]) - flt(taken),
 		"year": reference.year,
 	}
 
 
 def get_annual_leave_entitlement(employee: str, date: str = None) -> int:
-	"""
-	إرجاع عدد أيام الإجازة السنوية بحسب سنوات الخدمة (م.109).
-	< 5 سنوات: 21 يوم | ≥ 5 سنوات: 30 يوم
-	"""
-	emp = frappe.get_doc("Employee", employee)
-	joining_date = getdate(emp.date_of_joining)
-	ref_date = getdate(date) if date else getdate()
-	years = date_diff(ref_date, joining_date) / 365.0
-	settings = frappe.get_single("Saudi HR Settings")
-	threshold = flt(settings.annual_leave_years_threshold) or 5
-	return int(settings.annual_leave_after_threshold or 30) if years >= threshold else int(settings.annual_leave_before_threshold or 21)
+	return get_annual_leave_entitlement_details(employee, date)["entitled"]
 
 
 def get_eosb_amount(employee: str, termination_reason: str, termination_date: str = None) -> dict:
@@ -358,7 +658,7 @@ GOSI_SOURCE_ASSUMED = "Assumed from Joining Date / مُقدَّر من تاري�
 GOSI_SOURCE_CONFIRMED = "Confirmed from GOSI / مؤكد من التأمينات"
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def backfill_gosi_first_contribution_dates(dry_run=1, company=None):
 	"""
 	تعبئة تاريخ أول اشتراك من تاريخ الالتحاق لمن التحق في 3 يوليو 2024 أو بعده.

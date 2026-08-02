@@ -1,13 +1,14 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import date_diff, flt, getdate, nowdate
+from frappe.utils import date_diff, flt, getdate, now_datetime, nowdate
 
 from saudi_hr.saudi_hr.utils import get_annual_leave_balance
 
 
 class SaudiAnnualLeave(Document):
 	def validate(self):
+		self._sync_employee_context()
 		self._set_status()
 		self._calculate_days()
 		self._calculate_balance()
@@ -23,6 +24,26 @@ class SaudiAnnualLeave(Document):
 	def _set_status(self):
 		if not self.status:
 			self.status = "Draft / مسودة"
+
+	def _sync_employee_context(self):
+		if not self.employee:
+			return
+
+		employee = frappe.db.get_value(
+			"Employee",
+			self.employee,
+			["employee_name", "company", "department"],
+			as_dict=True,
+		)
+		if not employee:
+			frappe.throw(
+				_("Employee {0} was not found.<br>لم يتم العثور على الموظف {0}.").format(
+					frappe.bold(self.employee)
+				)
+			)
+		self.employee_name = employee.employee_name
+		self.company = employee.company
+		self.department = employee.department
 
 	def _calculate_days(self):
 		if not self.leave_start_date or not self.leave_end_date:
@@ -55,8 +76,14 @@ class SaudiAnnualLeave(Document):
 			)
 
 		balance = get_annual_leave_balance(self.employee, self.leave_start_date, exclude_name=self.name)
+		self.annual_entitlement_days = balance.get("entitled", balance.get("balance", 0))
 		self.leave_balance_before = balance["balance"]
 		self.leave_balance_after = flt(balance["balance"]) - flt(self.total_leave_days)
+		self.leave_policy = balance.get("policy")
+		self.leave_policy_assignment = balance.get("assignment")
+		self.entitlement_source = balance.get("source_type")
+		if balance.get("source_type"):
+			self.entitlement_resolved_on = now_datetime()
 
 		if self.leave_balance_after < 0:
 			frappe.throw(_("رصيد الإجازة السنوية غير كافٍ لهذا الطلب."), title=_("رصيد غير كافٍ"))

@@ -1,14 +1,19 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
-from frappe.utils import date_diff, getdate, flt
+from frappe.utils import date_diff, now_datetime
 
-from saudi_hr.saudi_hr.utils import get_annual_leave_days_taken, get_annual_leave_entitlement, get_employee_salary_components
+from saudi_hr.saudi_hr.utils import (
+	get_annual_leave_days_taken,
+	get_annual_leave_entitlement_details,
+	get_employee_salary_components,
+)
 
 
 class AnnualLeaveDisbursement(Document):
 
     def validate(self):
+        self._sync_employee_context()
         self._load_salary_data()
         self._calculate_entitlement()
         self._calculate_pay()
@@ -19,6 +24,26 @@ class AnnualLeaveDisbursement(Document):
         self.db_set("status", self.status)
 
     # ------------------------------------------------------------------
+
+    def _sync_employee_context(self):
+        if not self.employee:
+            return
+
+        employee = frappe.db.get_value(
+            "Employee",
+            self.employee,
+            ["employee_name", "company", "department"],
+            as_dict=True,
+        )
+        if not employee:
+            frappe.throw(
+                _("Employee {0} was not found.<br>لم يتم العثور على الموظف {0}.").format(
+                    frappe.bold(self.employee)
+                )
+            )
+        self.employee_name = employee.employee_name
+        self.company = employee.company
+        self.department = employee.department
 
     def _load_salary_data(self):
         if not self.employee:
@@ -39,20 +64,18 @@ class AnnualLeaveDisbursement(Document):
         if not self.employee or not self.leave_year:
             return
 
-        # Years of service
-        join_date = frappe.db.get_value("Employee", self.employee, "date_of_joining")
-        if not join_date:
-            return
-
-        reference_date = f"{self.leave_year}-12-31"
-        years_service = (getdate(reference_date) - getdate(join_date)).days / 365.25
-        entitled = get_annual_leave_entitlement(self.employee, reference_date)
-        self.leave_days_entitled = entitled
+        reference_date = self.leave_from_date or f"{self.leave_year}-12-31"
+        details = get_annual_leave_entitlement_details(self.employee, reference_date)
+        self.leave_days_entitled = details["entitled"]
+        self.leave_policy = details["policy"]
+        self.leave_policy_assignment = details["assignment"]
+        self.entitlement_source = details["source_type"]
+        self.entitlement_resolved_on = now_datetime()
 
         # Days already taken this year from Saudi Annual Leave requests
         taken = get_annual_leave_days_taken(self.employee, self.leave_year)
         self.leave_days_taken = taken
-        self.leave_days_balance = entitled - taken
+        self.leave_days_balance = self.leave_days_entitled - taken
 
         if not self.leave_days_to_pay:
             # Default to leave period duration
@@ -90,19 +113,19 @@ class AnnualLeaveDisbursement(Document):
 @frappe.whitelist()
 def get_leave_balance(employee, leave_year):
     """Return leave entitlement, taken and balance for UI"""
-    join_date = frappe.db.get_value("Employee", employee, "date_of_joining")
-    if not join_date:
-        return {}
-
     reference_date = f"{leave_year}-12-31"
-    years_service = (getdate(reference_date) - getdate(join_date)).days / 365.25
-    entitled = get_annual_leave_entitlement(employee, reference_date)
+    details = get_annual_leave_entitlement_details(employee, reference_date)
+    entitled = details["entitled"]
     taken = get_annual_leave_days_taken(employee, leave_year)
 
     return {
         "entitled": entitled,
         "taken": taken,
         "balance": entitled - taken,
-        "years_service": round(years_service, 1),
+        "years_service": details["years_of_service"],
+        "policy": details["policy"],
+        "policy_name": details["policy_name"],
+        "policy_assignment": details["assignment"],
+        "entitlement_source": details["source_type"],
     }
 

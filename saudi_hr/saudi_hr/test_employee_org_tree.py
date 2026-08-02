@@ -22,6 +22,54 @@ def _employee(**kwargs):
 
 
 class TestEmployeeOrgTree(FrappeTestCase):
+	def test_get_org_tree_approver_fields_uses_only_available_employee_columns(self):
+		with patch.object(
+			api_module.frappe.db,
+			"has_column",
+			side_effect=lambda doctype, fieldname: doctype == "Employee" and fieldname == "expense_approver",
+		):
+			fields = api_module._get_org_tree_approver_fields()
+
+		self.assertEqual(fields, ("expense_approver",))
+
+	def test_manager_scope_without_optional_approver_columns_does_not_query_them(self):
+		with patch.object(api_module.frappe, "get_roles", return_value=[]), patch.object(
+			api_module, "_get_org_tree_approver_fields", return_value=()
+		), patch.object(api_module.frappe.db, "sql") as sql:
+			has_scope = api_module._has_org_tree_manager_scope("manager@example.com")
+
+		self.assertFalse(has_scope)
+		sql.assert_not_called()
+
+	def test_scope_query_replaces_missing_approver_columns_with_null_aliases(self):
+		with patch.object(api_module, "_ensure_org_tree_access"), patch.object(
+			api_module, "_get_org_tree_approver_fields", return_value=()
+		), patch.object(api_module, "_has_org_tree_global_access", return_value=False), patch.object(
+			api_module, "_get_active_employee_for_user", return_value="EMP-MANAGER"
+		), patch.object(api_module.frappe.db, "sql", return_value=[]) as sql:
+			api_module._get_org_tree_scope_rows(user="manager@example.com")
+
+		query = sql.call_args.args[0]
+		self.assertIn("NULL AS `leave_approver`", query)
+		self.assertIn("NULL AS `expense_approver`", query)
+		self.assertNotIn("`leave_approver` = %(review_user)s", query)
+		self.assertNotIn("`expense_approver` = %(review_user)s", query)
+		self.assertIn("name = %(scope_employee)s", query)
+		self.assertIn("reports_to = %(scope_employee)s", query)
+
+	def test_scope_query_uses_only_available_approver_columns(self):
+		with patch.object(api_module, "_ensure_org_tree_access"), patch.object(
+			api_module, "_get_org_tree_approver_fields", return_value=("leave_approver",)
+		), patch.object(api_module, "_has_org_tree_global_access", return_value=False), patch.object(
+			api_module, "_get_active_employee_for_user", return_value=None
+		), patch.object(api_module.frappe.db, "sql", return_value=[]) as sql:
+			api_module._get_org_tree_scope_rows(user="manager@example.com")
+
+		query = sql.call_args.args[0]
+		self.assertIn("`leave_approver` = %(review_user)s", query)
+		self.assertNotIn("`expense_approver` = %(review_user)s", query)
+		self.assertIn("NULL AS `expense_approver`", query)
+
 	def test_get_employee_org_hierarchy_summary_counts_scope(self):
 		rows = [
 			_employee(name="EMP-CEO", employee_name="Aisha", department="Management"),

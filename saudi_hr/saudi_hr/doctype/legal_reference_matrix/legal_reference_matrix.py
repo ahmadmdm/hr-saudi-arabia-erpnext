@@ -137,7 +137,7 @@ def _map_risk_to_priority(risk_level):
 	return mapping.get(risk_level or "", "Medium / متوسط")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_regulatory_task(reference_name: str):
 	reference = frappe.get_doc("Legal Reference Matrix", reference_name)
 	task_names, created = reference.create_regulatory_task()

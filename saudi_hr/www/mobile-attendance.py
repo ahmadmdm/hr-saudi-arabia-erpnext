@@ -4,7 +4,6 @@ login_required = True
 
 def get_context(context):
 	import frappe
-	from frappe import _
 
 	if frappe.session.user == "Guest":
 		frappe.local.flags.redirect_location = "/login?redirect-to=/mobile-attendance"

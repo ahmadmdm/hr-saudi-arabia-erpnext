@@ -2,7 +2,7 @@ import frappe
 from frappe.model.document import Document
 from frappe import _
 
-from saudi_hr.saudi_hr.utils import get_employee_nationality
+from saudi_hr.saudi_hr.utils import assert_employee_record_access, get_employee_nationality
 
 
 class TrainingRecord(Document):
@@ -32,6 +32,7 @@ class TrainingRecord(Document):
 @frappe.whitelist()
 def get_employee_training_summary(employee):
     """Return training statistics for the given employee."""
+    assert_employee_record_access(employee, "Training Record")
     data = frappe.db.sql("""
         SELECT
             COUNT(*) as total_trainings,

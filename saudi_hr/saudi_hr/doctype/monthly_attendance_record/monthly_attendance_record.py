@@ -1,6 +1,5 @@
 import frappe
 from frappe.model.document import Document
-from frappe import _
 import calendar
 
 
@@ -92,7 +91,7 @@ def get_monthly_days(month_label, year):
         return []
 
     year = int(year)
-    _, num_days = calendar.monthrange(year, month_num)
+    num_days = calendar.monthrange(year, month_num)[1]
     rows = []
     for day in range(1, num_days + 1):
         d = datetime.date(year, month_num, day)

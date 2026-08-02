@@ -13,7 +13,7 @@ import sys
 import os
 import unittest
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import patch
 
 # ── Ensure frappe is importable ────────────────────────────────────────────────
 try:
@@ -117,7 +117,7 @@ class TestMergeEmployeeLookup(unittest.TestCase):
 		"""Two different employees sharing the same compact key → lookup[key] = None."""
 		lookup = {}
 		emp1 = self._emp("EMP-1", "دخيل محمد دخيل المبارك")
-		emp2 = self._emp("EMP-2", "دخيل نايف دخيل المبارك")
+		self._emp("EMP-2", "دخيل نايف دخيل المبارك")
 		m._merge_employee_lookup(lookup, emp1, "دخيل محمد دخيل المبارك", "employee_name")
 		# different employee, same compact key "دخيل X المبارك"? No, these are different compact keys.
 		# Test real ambiguity: two employees with SAME three-part compact alias

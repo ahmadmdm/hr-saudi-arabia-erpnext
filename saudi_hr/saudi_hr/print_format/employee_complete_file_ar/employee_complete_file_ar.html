@@ -158,17 +158,18 @@
 
 {#───────────────── DATA COLLECTION ─────────────────#}
 {%- set emp = doc -%}
+{%- set access_granted = assert_complete_employee_file_access(emp.name) -%}
 {%- set emp_name = emp.employee_name or emp.name -%}
 {%- set today_str = frappe.utils.today() -%}
 {%- set now_str   = frappe.utils.now_datetime().strftime('%Y-%m-%d %H:%M') -%}
 
-{%- set contract = frappe.db.get_value(
-    "Saudi Employment Contract",
-    {"employee": emp.name, "contract_status": "Active / نشط"},
+{%- set contract = get_active_contract(
+    emp.name,
     ["name","contract_type","start_date","end_date","basic_salary",
      "housing_allowance","transport_allowance","other_allowances",
-     "designation","probation_end_date","contract_status"],
-    as_dict=True, order_by="start_date desc"
+     "designation","probation_end_date","contract_status",
+     "nationality","iqama_number"],
+    as_dict=True
 ) or {} -%}
 {%- set gross_contract = (contract.get("basic_salary") or 0)
     + (contract.get("housing_allowance") or 0)
@@ -245,6 +246,8 @@
     FROM `tabSaudi Monthly Payroll Employee` pe
     INNER JOIN `tabSaudi Monthly Payroll` p ON p.name = pe.parent
     WHERE pe.employee = %(emp)s
+      AND p.docstatus = 1
+      AND IFNULL(p.payroll_journal_entry, '') != ''
     ORDER BY p.year DESC, p.month DESC
     LIMIT 36
 """, {"emp": emp.name}, as_dict=True) -%}
@@ -374,8 +377,8 @@
   <div class="info-grid">
     <div class="info-item"><span class="info-label">الاسم الكامل:</span><span class="info-value">{{ emp_name }}</span></div>
     <div class="info-item"><span class="info-label">رقم الموظف:</span><span class="info-value mono">{{ emp.name }}</span></div>
-    <div class="info-item"><span class="info-label">الجنسية:</span><span class="info-value">{{ emp.nationality or '—' }}</span></div>
-    <div class="info-item"><span class="info-label">رقم الهوية/الإقامة:</span><span class="info-value mono">{{ iqama.get('iqama_number') or emp.passport_number or '—' }}</span></div>
+    <div class="info-item"><span class="info-label">الجنسية:</span><span class="info-value">{{ contract.get('nationality') or '—' }}</span></div>
+    <div class="info-item"><span class="info-label">رقم الهوية/الإقامة:</span><span class="info-value mono">{{ iqama.get('iqama_number') or contract.get('iqama_number') or emp.passport_number or '—' }}</span></div>
     <div class="info-item"><span class="info-label">تاريخ الميلاد:</span><span class="info-value">{{ frappe.format(emp.date_of_birth, "Date") if emp.date_of_birth else '—' }}</span></div>
     <div class="info-item"><span class="info-label">الجنس:</span><span class="info-value">{{ emp.gender or '—' }}</span></div>
     <div class="info-item"><span class="info-label">تاريخ الالتحاق:</span><span class="info-value">{{ frappe.format(emp.date_of_joining, "Date") if emp.date_of_joining else '—' }}</span></div>
@@ -579,9 +582,10 @@
       <td>{{ frappe.format(r.to_date, "Date") }}</td>
       <td class="num"><strong>{{ (r.total_days or 0) | int }}</strong></td>
       <td class="num">
-        <span class="badge {% if r.pay_rate == 'full' %}badge-green{% elif r.pay_rate == 'partial' %}badge-yellow{% else %}badge-red{% endif %}">
-          {% if r.pay_rate == 'full' %}100%{% elif r.pay_rate == 'partial' %}75%{% else %}بدون أجر{% endif %}
+        <span class="badge {% if (r.pay_rate or 0) >= 99.99 %}badge-green{% elif (r.pay_rate or 0) > 0 %}badge-yellow{% else %}badge-red{% endif %}">
+          {% if (r.pay_rate or 0) > 0 %}{{ (r.pay_rate or 0) | round(2) }}%{% else %}بدون أجر{% endif %}
         </span>
+        {% if r.pay_label %}<div class="kpi-sub">{{ r.pay_label }}</div>{% endif %}
       </td>
       <td class="num">{{ "{:,.2f}".format(r.leave_pay_amount or 0) }}</td>
     </tr>

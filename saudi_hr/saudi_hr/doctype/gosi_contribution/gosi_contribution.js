@@ -22,7 +22,7 @@ frappe.ui.form.on('GOSI Contribution', {
         if (frm.is_new()) {
             const today = frappe.datetime.get_today();
             frm.set_value('year', parseInt(today.split('-')[0]));
-            frm.set_value('payment_status', 'Pending');
+            frm.set_value('payment_status', 'Pending / معلق');
         }
         frm.add_custom_button(__('Generate for All Employees / توليد للكل'), function() {
             _generate_for_all(frm);

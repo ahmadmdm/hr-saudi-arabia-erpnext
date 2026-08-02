@@ -5,6 +5,7 @@ from frappe.utils import cint, flt, getdate
 
 from saudi_hr.saudi_hr.utils import (
 	assert_doctype_permissions,
+	assert_employee_salary_access,
 	get_contract_nationality_lookup,
 	get_employee_basic_salary as get_current_basic_salary,
 	get_employee_nationality,
@@ -103,7 +104,7 @@ class GOSIContribution(Document):
 		self.period_label = f"{self.month} {self.year}"
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_payroll_entries(doc, method=None):
 	"""
 	Hook مستدعى عند اعتماد GOSI Contribution.
@@ -232,10 +233,11 @@ def create_payroll_entries(doc, method=None):
 @frappe.whitelist()
 def get_employee_basic_salary(employee):
 	"""Return the employee's current basic salary for JS auto-fill."""
+	assert_employee_salary_access(employee)
 	return get_current_basic_salary(employee)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def generate_gosi_for_month(company: str, month: str, year: int):
 	"""
 	إنشاء سجلات GOSI لجميع الموظفين النشطين في الشركة لشهر معين.

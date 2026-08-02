@@ -1,7 +1,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
-from frappe.utils import add_months, add_days
+from frappe.utils import add_months
 
 
 class MedicalExamination(Document):

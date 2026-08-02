@@ -118,7 +118,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Contract Status / حالة العقد",
-   "options": "Draft / مسودة\nActive / نشط\nExpired / منتهي\nTerminated / مُنهى"
+   "options": "Draft / مسودة\nScheduled / مجدول\nActive / نشط\nExpired / منتهي\nTerminated / مُنهى"
   },
   {
    "fieldname": "column_break_2",

@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, get_datetime, getdate, now_datetime, nowdate
+from frappe.utils import cint, cstr, getdate, now_datetime, nowdate
 
 from saudi_hr.saudi_hr.doctype.saudi_government_integration.saudi_government_integration import (
 	FILE_MODE,
@@ -457,7 +457,7 @@ def _file_content(meta, payload):
 	return json.dumps(payload, ensure_ascii=False, indent=2, default=_json_default)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def confirm_provider_export(profile_name, confirmation_phrase, from_date=None, to_date=None):
 	"""Create a private exchange file and an auditable transaction; never calls an external API."""
 	_require_enterprise_access()
@@ -780,7 +780,7 @@ def get_self_service_portal():
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def acknowledge_policy(acknowledgement_name, consent_text):
 	_require_logged_in()
 	consent = cstr(consent_text).strip()
