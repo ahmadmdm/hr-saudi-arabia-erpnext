@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import date_diff, getdate, today, add_days
+from frappe.utils import date_diff, today, add_days
 
 
 class WorkInjury(Document):

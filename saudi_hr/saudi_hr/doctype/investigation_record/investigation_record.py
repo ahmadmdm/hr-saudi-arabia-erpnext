@@ -29,7 +29,7 @@ class InvestigationRecord(Document):
 			self.status = "In Progress / قيد التحقيق"
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_warning_notice(record_name: str):
 	record = frappe.get_doc("Investigation Record", record_name)
 	frappe.has_permission("Investigation Record", "read", doc=record, throw=True)

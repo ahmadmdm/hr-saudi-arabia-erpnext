@@ -1,9 +1,9 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, flt
+from frappe.utils import add_days
 
-from saudi_hr.saudi_hr.utils import get_employee_basic_salary
+from saudi_hr.saudi_hr.utils import assert_employee_salary_access, get_employee_basic_salary
 
 # الأيام المستحقة بحسب نوع الإجازة (م.151 من نظام العمل السعودي)
 MATERNITY_LEAVE_TYPE = "Maternity / أمومة (84 يوماً)"
@@ -71,5 +71,6 @@ class MaternityPaternityLeave(Document):
 @frappe.whitelist()
 def get_daily_salary(employee):
 	"""Return daily salary (monthly_basic / 30) for JS auto-fill."""
+	assert_employee_salary_access(employee)
 	monthly = get_employee_basic_salary(employee)
 	return round(monthly / 30, 2)

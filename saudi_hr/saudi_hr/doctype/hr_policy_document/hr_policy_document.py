@@ -120,7 +120,7 @@ class HRPolicyDocument(Document):
 		return created
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def sync_policy_acknowledgements(policy_name: str):
 	policy = frappe.get_doc("HR Policy Document", policy_name)
 	frappe.has_permission("HR Policy Document", "read", doc=policy, throw=True)

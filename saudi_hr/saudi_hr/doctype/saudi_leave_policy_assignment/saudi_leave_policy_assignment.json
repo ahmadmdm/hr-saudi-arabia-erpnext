@@ -1,0 +1,174 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-29 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "policy",
+  "company",
+  "column_break_identity",
+  "enabled",
+  "applies_to",
+  "target_section",
+  "employee",
+  "department",
+  "effective_section",
+  "effective_from",
+  "column_break_dates",
+  "effective_to",
+  "reason"
+ ],
+ "fields": [
+  {
+   "default": "SAU-LPA-.YYYY.-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series / سلسلة التسمية",
+   "options": "SAU-LPA-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Leave Policy / سياسة الإجازات",
+   "options": "Saudi Leave Policy",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company / الشركة",
+   "options": "Company",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_identity",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled / مفعّل"
+  },
+  {
+   "fieldname": "applies_to",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Applies To / نطاق التطبيق",
+   "options": "Employee / موظف\nDepartment / قسم",
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_section",
+   "fieldtype": "Section Break",
+   "label": "Assignment Target / الجهة المستهدفة"
+  },
+  {
+   "depends_on": "eval:doc.applies_to=='Employee / موظف'",
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee / الموظف",
+   "mandatory_depends_on": "eval:doc.applies_to=='Employee / موظف'",
+   "options": "Employee"
+  },
+  {
+   "depends_on": "eval:doc.applies_to=='Department / قسم'",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Department / القسم",
+   "mandatory_depends_on": "eval:doc.applies_to=='Department / قسم'",
+   "options": "Department"
+  },
+  {
+   "fieldname": "effective_section",
+   "fieldtype": "Section Break",
+   "label": "Effective Period / فترة السريان"
+  },
+  {
+   "default": "Today",
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Effective From / ساري من",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_dates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Leave blank for an open-ended assignment. / اتركه فارغًا ليبقى التعيين مفتوح المدة.",
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective To / ساري حتى"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Assignment Reason / سبب التعيين"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-29 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Saudi Leave Policy Assignment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User"
+  }
+ ],
+ "search_fields": "policy,employee,department,company",
+ "sort_field": "effective_from",
+ "sort_order": "DESC",
+ "title_field": "policy",
+ "track_changes": 1
+}

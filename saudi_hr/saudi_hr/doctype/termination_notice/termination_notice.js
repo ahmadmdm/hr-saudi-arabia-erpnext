@@ -43,7 +43,7 @@ frappe.ui.form.on('Termination Notice', {
                     method: 'frappe.client.get_list',
                     args: {
                         doctype: 'Saudi Employment Contract',
-                        filters: { employee: frm.doc.employee, contract_status: 'Active' },
+                        filters: { employee: frm.doc.employee, docstatus: 1, contract_status: 'Active / نشط' },
                         fields: ['name'],
                         limit: 1
                     },
@@ -67,7 +67,7 @@ frappe.ui.form.on('Termination Notice', {
         if (frm.doc.during_probation) {
             frm.set_value('notice_required_days', 0);
             frm.set_value('eosb_applicable', 0);
-            frm.set_value('termination_article', 'م.77 / Art.77');
+            frm.set_value('termination_article', 'م.53 — فترة التجربة');
             frm.set_value('article_description', 'إنهاء العقد أثناء فترة التجربة — لا مكافأة نهاية خدمة / Termination during probation — No EOSB');
         } else {
             _set_article(frm);
@@ -98,19 +98,21 @@ function _set_article(frm) {
     let article = '', description = '';
 
     if (reason.includes('75') || reason.includes('استقالة')) {
-        article = 'م.75 / Art.75';
+        article = 'م.75 — استقالة الموظف';
         description = 'استقالة الموظف — مع مراعاة المدة اللازمة للاستحقاق / Employee resignation — subject to service period requirements';
         frm.set_value('eosb_applicable', 1);
     } else if (reason.includes('80') || reason.includes('Dismissal') || reason.includes('فصل')) {
-        article = 'م.80 / Art.80';
+        article = 'م.80 — فسخ العقد بدون إشعار';
         description = 'فصل تأديبي — لا مكافأة نهاية خدمة / Disciplinary dismissal — No EOSB';
         frm.set_value('eosb_applicable', 0);
     } else if (reason.includes('74') || reason.includes('Mutual') || reason.includes('اتفاق')) {
-        article = 'م.74 / Art.74';
+        article = 'م.74 — انتهاء العقد أو الاتفاق على إنهائه';
         description = 'إنهاء بالاتفاق المتبادل / Mutual agreement termination';
         frm.set_value('eosb_applicable', 1);
     } else {
-        article = 'م.74 / Art.74';
+        article = reason.includes('76') || reason.includes('Employer') || reason.includes('صاحب العمل')
+            ? 'م.76 — إنهاء من صاحب العمل'
+            : 'م.74 — انتهاء العقد أو الاتفاق على إنهائه';
         description = 'انتهاء العقد أو إنهاؤه من صاحب العمل — المكافأة كاملة / Contract expiry or employer termination — Full EOSB';
         frm.set_value('eosb_applicable', 1);
     }

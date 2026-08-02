@@ -138,18 +138,29 @@ class TestGOSIContributionDocument(FrappeTestCase):
 
 class TestGOSINationalityGuard(FrappeTestCase):
 	"""بدون الجنسية تُطبَّق نسبة غير السعوديين على السعوديين خطأً، فيجب منع الحفظ."""
+	def _make_employee_without_nationality(self):
+		seed = frappe.db.get_value(
+			"Employee",
+			{"status": "Active"},
+			["company", "gender", "date_of_birth", "date_of_joining"],
+			as_dict=True,
+		)
+		self.assertTrue(seed, "an active Employee fixture is required")
+		return frappe.get_doc(
+			{
+				"doctype": "Employee",
+				"first_name": f"GOSI Guard {frappe.generate_hash(length=8)}",
+				"company": seed.company,
+				"gender": seed.gender,
+				"date_of_birth": seed.date_of_birth or "1990-01-01",
+				"date_of_joining": seed.date_of_joining or "2020-01-01",
+				"status": "Active",
+				"nationality": None,
+			}
+		).insert(ignore_permissions=True).name
 
 	def test_contribution_without_resolvable_nationality_is_rejected(self):
-		employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
-		existing = frappe.get_all(
-			"Saudi Employment Contract",
-			filters={"employee": employee, "docstatus": ["<", 2]},
-			pluck="name",
-		)
-		self.assertFalse(
-			existing,
-			msg="fixture employee unexpectedly has a contract; pick an employee without one",
-		)
+		employee = self._make_employee_without_nationality()
 
 		with self.assertRaises(frappe.ValidationError):
 			frappe.get_doc(

@@ -101,7 +101,7 @@ class WPSSubmission(Document):
 			action.save()
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_wps_submission_from_payroll(payroll_document):
 	payroll = frappe.get_doc("Saudi Monthly Payroll", payroll_document)
 	frappe.has_permission("Saudi Monthly Payroll", "read", doc=payroll, throw=True)

@@ -6,7 +6,7 @@ frappe.ui.form.on('End of Service Benefit', {
     onload(frm) {
         if (frm.is_new()) {
             frm.set_value('termination_date', frappe.datetime.get_today());
-            frm.set_value('payment_status', 'Pending');
+            frm.set_value('payment_status', 'Pending / معلق');
         }
     },
 

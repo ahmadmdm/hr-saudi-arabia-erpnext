@@ -1,0 +1,186 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-29 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "policy_name",
+  "company",
+  "column_break_identity",
+  "enabled",
+  "annual_section",
+  "annual_leave_years_threshold",
+  "annual_leave_before_threshold",
+  "annual_leave_after_threshold",
+  "sick_section",
+  "sick_leave_full_pay_days",
+  "sick_leave_partial_pay_days",
+  "sick_leave_partial_pay_percentage",
+  "compliance_section",
+  "legal_reference",
+  "notes"
+ ],
+ "fields": [
+  {
+   "default": "SAU-LPOL-.YYYY.-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series / سلسلة التسمية",
+   "options": "SAU-LPOL-.YYYY.-.####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Policy Name / اسم السياسة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company / الشركة",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_identity",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled / مفعلة"
+  },
+  {
+   "fieldname": "annual_section",
+   "fieldtype": "Section Break",
+   "label": "Annual Leave Entitlement / استحقاق الإجازة السنوية"
+  },
+  {
+   "default": "5",
+   "description": "A value from 1 to 5 years. / قيمة من سنة إلى خمس سنوات.",
+   "fieldname": "annual_leave_years_threshold",
+   "fieldtype": "Int",
+   "label": "Service Threshold (Years) / عتبة سنوات الخدمة",
+   "reqd": 1
+  },
+  {
+   "default": "21",
+   "description": "Cannot be less than 21 days. / لا يمكن أن يقل عن 21 يومًا.",
+   "fieldname": "annual_leave_before_threshold",
+   "fieldtype": "Int",
+   "label": "Days Before Threshold / الأيام قبل العتبة",
+   "reqd": 1
+  },
+  {
+   "default": "30",
+   "description": "Cannot be less than 30 days. / لا يمكن أن يقل عن 30 يومًا.",
+   "fieldname": "annual_leave_after_threshold",
+   "fieldtype": "Int",
+   "label": "Days From Threshold / الأيام من تاريخ بلوغ العتبة",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sick_section",
+   "fieldtype": "Section Break",
+   "label": "Sick Leave Pay Tiers / شرائح أجر الإجازة المرضية"
+  },
+  {
+   "default": "30",
+   "description": "Cannot be less than 30 days. / لا يمكن أن يقل عن 30 يومًا.",
+   "fieldname": "sick_leave_full_pay_days",
+   "fieldtype": "Int",
+   "label": "Full-Pay Days / أيام الأجر الكامل",
+   "reqd": 1
+  },
+  {
+   "default": "60",
+   "description": "The full and partial tiers together must cover at least 90 days and no more than 120 days. / يجب أن تغطي شريحتا الأجر الكامل والجزئي 90 يومًا على الأقل وألا تتجاوزا 120 يومًا.",
+   "fieldname": "sick_leave_partial_pay_days",
+   "fieldtype": "Int",
+   "label": "Partial-Pay Days / أيام الأجر الجزئي",
+   "reqd": 1
+  },
+  {
+   "default": "75",
+   "description": "Cannot be less than 75%. / لا يمكن أن تقل عن 75٪.",
+   "fieldname": "sick_leave_partial_pay_percentage",
+   "fieldtype": "Percent",
+   "label": "Partial-Pay Percentage / نسبة الأجر الجزئي",
+   "reqd": 1
+  },
+  {
+   "fieldname": "compliance_section",
+   "fieldtype": "Section Break",
+   "label": "Compliance and Notes / الامتثال والملاحظات"
+  },
+  {
+   "default": "Saudi Labor Law Articles 109 and 117 / المادتان 109 و117 من نظام العمل السعودي",
+   "fieldname": "legal_reference",
+   "fieldtype": "Small Text",
+   "label": "Legal Reference / المرجع النظامي",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Internal Notes / ملاحظات داخلية"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-29 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Saudi HR",
+ "name": "Saudi Leave Policy",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User"
+  }
+ ],
+ "search_fields": "policy_name,company",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "policy_name",
+ "track_changes": 1
+}

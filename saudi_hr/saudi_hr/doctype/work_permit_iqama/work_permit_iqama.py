@@ -1,6 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import date_diff, getdate, today
+from frappe.utils import date_diff, today
 
 from saudi_hr.saudi_hr.utils import get_employee_nationality
 

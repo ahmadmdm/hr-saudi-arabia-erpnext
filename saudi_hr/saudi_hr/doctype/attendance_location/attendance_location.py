@@ -33,12 +33,12 @@ class AttendanceLocation(Document):
 				},
 			)
 
-	@frappe.whitelist()
+	@frappe.whitelist(methods=["POST"])
 	def set_geolocation(self):
 		self.geolocation = build_geolocation(self.latitude, self.longitude, self.allowed_radius_meters)
 		return self.geolocation
 
-	@frappe.whitelist()
+	@frappe.whitelist(methods=["POST"])
 	def resolve_reference(self):
 		resolved = resolve_location_reference(
 			plus_code=self.plus_code,

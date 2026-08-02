@@ -3,7 +3,7 @@ from frappe.model.document import Document
 from frappe import _
 from frappe.utils import today
 
-from saudi_hr.saudi_hr.utils import assert_doctype_permissions
+from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_employee_record_access
 
 
 class DisciplinaryProcedure(Document):
@@ -80,10 +80,10 @@ class DisciplinaryProcedure(Document):
         self.employee_warning_notice = self.employee_warning_notice or record.get("employee_warning_notice")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_decision_log(doc_name):
     doc = frappe.get_doc("Disciplinary Procedure", doc_name)
-    frappe.has_permission("Disciplinary Procedure", "read", doc=doc, throw=True)
+    frappe.has_permission("Disciplinary Procedure", "write", doc=doc, throw=True)
     if doc.disciplinary_decision_log and frappe.db.exists("Disciplinary Decision Log", doc.disciplinary_decision_log):
         return {"decision_log": doc.disciplinary_decision_log, "created": False}
 
@@ -129,6 +129,7 @@ def create_decision_log(doc_name):
 @frappe.whitelist()
 def get_prior_warnings(employee):
     """Return count and list of prior disciplinary records for an employee"""
+    assert_employee_record_access(employee, "Disciplinary Procedure")
     records = frappe.get_all(
         "Disciplinary Procedure",
         filters={"employee": employee, "docstatus": 1},

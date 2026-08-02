@@ -1,7 +1,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
-from frappe.utils import getdate, date_diff
+from frappe.utils import getdate
 
 
 class LaborDispute(Document):

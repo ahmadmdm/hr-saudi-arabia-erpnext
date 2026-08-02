@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, getdate, date_diff
+from frappe.utils import add_days, getdate, today
 
 
 class SaudiEmploymentContract(Document):
@@ -53,7 +53,45 @@ class SaudiEmploymentContract(Document):
 				)
 
 	# ─── On Submit ──────────────────────────────────────────────────────────────
+	def before_submit(self):
+		self._validate_no_overlapping_contract()
+
+	def _validate_no_overlapping_contract(self):
+		overlap = frappe.db.sql(
+			"""
+			SELECT name
+			FROM `tabSaudi Employment Contract`
+			WHERE employee = %(employee)s
+			  AND name != %(name)s
+			  AND docstatus = 1
+			  AND contract_status != 'Terminated / مُنهى'
+			  AND start_date <= %(new_end)s
+			  AND (end_date IS NULL OR end_date >= %(new_start)s)
+			LIMIT 1
+			""",
+			{
+				"employee": self.employee,
+				"name": self.name,
+				"new_start": self.start_date,
+				"new_end": self.end_date or "9999-12-31",
+			},
+		)
+		if overlap:
+			frappe.throw(
+				_("Contract dates overlap with submitted contract {0}.<br>تتداخل مدة العقد مع العقد المعتمد {0}.").format(overlap[0][0]),
+				title=_("Overlapping Employment Contract / تداخل عقود العمل"),
+			)
 
 	def on_submit(self):
-		self.contract_status = "Active / نشط"
-		self.db_set("contract_status", "Active / نشط")
+		reference_date = getdate(today())
+		if getdate(self.start_date) > reference_date:
+			status = "Scheduled / مجدول"
+		elif self.end_date and getdate(self.end_date) < reference_date:
+			status = "Expired / منتهي"
+		else:
+			status = "Active / نشط"
+		self.contract_status = status
+		self.db_set("contract_status", status)
+
+	def on_cancel(self):
+		self.db_set("contract_status", "Terminated / مُنهى")

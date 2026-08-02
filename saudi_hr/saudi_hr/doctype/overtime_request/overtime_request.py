@@ -5,6 +5,7 @@ from frappe.utils import add_days, flt, getdate, nowdate
 
 from saudi_hr.saudi_hr.utils import (
 	assert_doctype_permissions,
+	assert_employee_salary_access,
 	assert_positive_basic_salary,
 	get_employee_basic_salary as get_current_basic_salary,
 	get_employee_salary_components,
@@ -304,7 +305,7 @@ class OvertimeRequest(Document):
 		)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_overtime_journal_entry(doc, method=None):
 	"""Hook called from hooks.py on_submit — delegates to document method."""
 	if isinstance(doc, str):
@@ -317,10 +318,12 @@ def create_overtime_journal_entry(doc, method=None):
 @frappe.whitelist()
 def get_employee_basic_salary(employee):
 	"""Return the employee's current basic salary for JS auto-fill."""
+	assert_employee_salary_access(employee)
 	return get_current_basic_salary(employee)
 
 
 @frappe.whitelist()
 def get_employee_overtime_salary(employee):
 	"""Return the wage components needed for the Article 107 preview."""
+	assert_employee_salary_access(employee)
 	return get_employee_salary_components(employee)

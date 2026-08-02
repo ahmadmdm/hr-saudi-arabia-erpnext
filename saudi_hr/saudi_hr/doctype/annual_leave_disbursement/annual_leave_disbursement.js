@@ -29,8 +29,11 @@ frappe.ui.form.on("Annual Leave Disbursement", {
                     frm.set_value("leave_days_entitled", r.message.entitled);
                     frm.set_value("leave_days_taken", r.message.taken);
                     frm.set_value("leave_days_balance", r.message.balance);
-                    let msg = __("Years of service: {0} → Annual leave entitlement: {1} days (م.109)",
-                        [r.message.years_service, r.message.entitled]);
+                    frm.set_value("leave_policy", r.message.policy || null);
+                    frm.set_value("leave_policy_assignment", r.message.policy_assignment || null);
+                    frm.set_value("entitlement_source", r.message.entitlement_source || "");
+                    let msg = __("Years of service: {0} → Annual leave entitlement: {1} days. Source: {2}",
+                        [r.message.years_service, r.message.entitled, r.message.policy_name || r.message.entitlement_source]);
                     frm.dashboard.add_comment(msg, "blue", true);
                 }
             }
@@ -106,9 +109,10 @@ frappe.ui.form.on("Annual Leave Disbursement", {
 
         // Show entitlement law reference
         if (frm.doc.leave_days_entitled) {
-            let basis = frm.doc.leave_days_entitled === 30 ?
-                __("30 days (>5 years service - م.109)") :
-                __("21 days (<5 years service - م.109)");
+            let basis = __("{0} days — {1}", [
+                frm.doc.leave_days_entitled,
+                frm.doc.entitlement_source || __("Saudi HR Settings")
+            ]);
             frm.dashboard.add_comment(__("Entitlement: ") + basis, "green", true);
         }
     }

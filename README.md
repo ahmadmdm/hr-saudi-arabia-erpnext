@@ -8,7 +8,7 @@
 
 <br>
 
-<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.17.0"><img alt="Version 1.17.0" src="https://img.shields.io/badge/version-1.17.0-0F766E?style=for-the-badge"></a>
+<a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.18.0"><img alt="Version 1.18.0" src="https://img.shields.io/badge/version-1.18.0-0F766E?style=for-the-badge"></a>
 <img alt="Frappe v15" src="https://img.shields.io/badge/Frappe-v15-2563EB?style=for-the-badge">
 <img alt="ERPNext v15" src="https://img.shields.io/badge/ERPNext-v15-7C3AED?style=for-the-badge">
 <img alt="No HRMS dependency" src="https://img.shields.io/badge/HRMS-not%20required-16A34A?style=for-the-badge">
@@ -183,6 +183,7 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 | [فصل HRMS](docs/hrms-decoupling.md) | HRMS Decoupling | إثبات أن التطبيق لا يحتاج HRMS ومعرفة البدائل السعودية داخله |
 | [الجولة المرئية](docs/visual-tour.md) | Visual Tour | استعراض الصور، GIF، وصورة Social Preview |
 | [بيانات الديمو](docs/demo-data.md) | Demo Data | إنشاء موظف ومدير وعقد وإجازة ورواتب تجريبية في بيئة اختبار |
+| [تخصيص سياسات الإجازات](docs/leave-policy-customization.md) | Leave Policy Customization | تعريف سياسات الإجازات وإسنادها للموظف أو القسم ضمن الحدود النظامية |
 | [التبعيات](DEPENDENCIES.md) | Dependencies | عقد التبعيات الكامل ومسار الصوت الاختياري |
 
 ---
@@ -201,7 +202,7 @@ The app is deliberately independent from HRMS, making deployment and upgrades cl
 
 - Frappe `15.115.4`
 - ERPNext `15.117.0`
-- Saudi HR `1.17.0`
+- Saudi HR `1.18.0`
 - Python `3.10`
 - MariaDB `10.6+`
 - Node.js `24.x`
@@ -305,6 +306,10 @@ bench --site <your-site-name> run-tests --app saudi_hr --module saudi_hr.saudi_h
 | Saudi Sick Leave | الإجازة المرضية | م.117 | 100% ← 75% ← 0% حسب المدة — Tiered pay: 100%/75%/0% |
 | Maternity Paternity Leave | إجازة الأمومة والأبوة | م.151، م.160 | 12 أسبوعاً (84 يوماً) للأم، 3 أيام للأب — 12 weeks mother / 3 days father |
 | Special Leave | الإجازة الخاصة | م.113 | حج (15 يوم، مرة واحدة بعد سنتين خدمة)، وفاة (5)، زواج (5) — Hajj/Bereavement/Marriage |
+| Saudi Leave Policy | سياسة استحقاق الإجازات | م.109، م.117 | تعريف استحقاق السنوية وشرائح أجر المرضية مع حماية الحدود النظامية |
+| Saudi Leave Policy Assignment | إسناد سياسة الإجازات | — | إسناد السياسة لموظف أو قسم خلال فترة سريان محددة |
+
+تُطبّق السياسة السارية الأكثر تحديدًا وفق الترتيب: **الموظف ← القسم ← إعدادات Saudi HR العامة**. راجع [دليل تخصيص سياسات الإجازات](docs/leave-policy-customization.md) لمعرفة قواعد السريان والحدود النظامية.
 
 #### 🏛️ الامتثال | Compliance
 
@@ -492,7 +497,13 @@ saudi_hr/
 
 ## 🆕 سجل التغييرات | Changelog
 
-### v1.17.0 — ٢٦ يوليو ٢٠٢٦ *(الإصدار الحالي | Current)*
+### v1.18.0 — ٢ أغسطس ٢٠٢٦ *(الإصدار الحالي | Current)*
+
+**ملف الموظف وسياسات الإجازات | Employee Dossier and Leave Policies:** ملف موظف شامل ومحسن، وسياسات إجازات قابلة للتخصيص على مستوى الموظف والقسم، مع تعيينات وضوابط أرصدة واختبارات صلاحيات.
+
+**الامتثال والجودة | Compliance and Quality:** توسيع ضوابط اللائحة التنفيذية، تحسين العقود والحضور والرواتب ونهاية الخدمة، تعريب احترافي، تشديد حدود الصلاحيات، وفحوص جودة واختبارات متطابقة لنسختي ERPNext v15 وv16.
+
+### v1.17.0 — ٢٦ يوليو ٢٠٢٦
 
 **تغطية اللائحة التنفيذية | Executive Regulations Coverage:** المادة (11) المهن المقصورة على السعوديين، والمادة (23) ساعات العمل للفئات المستثناة من المادة (108)، والمادة (29) خزانة الإسعافات الطبية، والمادة (30) مواقع العمل البعيدة عن العمران، والمواد (32-35) ضوابط تشغيل الأحداث وشروط استثناء التعليم والتدريب.
 

@@ -324,16 +324,18 @@ def revert_payroll_loan_deductions(payroll_doc):
 		_update_parent_loan_summary(installment.parent)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_disbursement_journal_entry(doc_name: str):
 	doc = frappe.get_doc("Employee Loan", doc_name)
+	frappe.has_permission("Employee Loan", "write", doc=doc, throw=True)
 	journal_entry = doc.create_disbursement_journal_entry()
 	return {"journal_entry": journal_entry}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def request_loan_approval(doc_name: str):
 	doc = frappe.get_doc("Employee Loan", doc_name)
+	frappe.has_permission("Employee Loan", "write", doc=doc, throw=True)
 	if doc.docstatus != 0:
 		frappe.throw(_("Only draft loans can be submitted for approval / فقط القروض في المسودة يمكن إرسالها للاعتماد"))
 	doc.db_set("approval_status", "Pending Approval / بانتظار الاعتماد")
@@ -342,10 +344,11 @@ def request_loan_approval(doc_name: str):
 	return {"approval_status": "Pending Approval / بانتظار الاعتماد"}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def approve_loan(doc_name: str):
 	_assert_loan_approver()
 	doc = frappe.get_doc("Employee Loan", doc_name)
+	frappe.has_permission("Employee Loan", "write", doc=doc, throw=True)
 	if doc.docstatus != 0:
 		frappe.throw(_("Only draft loans can be approved / فقط القروض المسودة يمكن اعتمادها"))
 	doc.db_set("approval_status", "Approved / معتمد")
@@ -354,20 +357,22 @@ def approve_loan(doc_name: str):
 	return {"approval_status": "Approved / معتمد"}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def reject_loan(doc_name: str):
 	_assert_loan_approver()
 	doc = frappe.get_doc("Employee Loan", doc_name)
+	frappe.has_permission("Employee Loan", "write", doc=doc, throw=True)
 	if doc.docstatus != 0:
 		frappe.throw(_("Only draft loans can be rejected / فقط القروض المسودة يمكن رفضها"))
 	doc.db_set("approval_status", "Rejected / مرفوض")
 	return {"approval_status": "Rejected / مرفوض"}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def approve_loan_disbursement(doc_name: str):
 	_assert_loan_approver()
 	doc = frappe.get_doc("Employee Loan", doc_name)
+	frappe.has_permission("Employee Loan", "write", doc=doc, throw=True)
 	if doc.docstatus != 1:
 		frappe.throw(_("Loan must be submitted before disbursement approval / يجب اعتماد القرض نهائياً قبل موافقة الصرف"))
 	if doc.approval_status not in ("Approved / معتمد", "Ready for Disbursement / جاهز للصرف", "Disbursed / مصروف"):

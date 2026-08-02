@@ -11,7 +11,7 @@ frappe.ui.form.on('Saudi Employment Contract', {
 
     onload(frm) {
         if (frm.is_new()) {
-            frm.set_value('contract_status', 'Draft');
+            frm.set_value('contract_status', 'Draft / مسودة');
             frm.set_value('working_hours_per_day', 8);
         }
     },
@@ -73,7 +73,7 @@ function _calc_probation_end(frm) {
 }
 
 function _calc_end_date(frm) {
-    if (frm.doc.contract_type === 'Fixed Term / محدد المدة' && frm.doc.start_date) {
+    if (frm.doc.contract_type === 'محدد المدة / Fixed Term' && frm.doc.start_date) {
         if (!frm.doc.end_date) {
             frm.set_value('end_date', frappe.datetime.add_months(frm.doc.start_date, 12));
         }

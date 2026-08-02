@@ -1,1 +1,1 @@
-from saudi_hr.saudi_hr.saudi_hr.permissions import *
+from saudi_hr.saudi_hr.saudi_hr.permissions import *  # noqa: F403

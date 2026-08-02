@@ -7,7 +7,7 @@ class SaudiShiftAssignmentTool(Document):
 	pass
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_assignments(shift_type, start_date, end_date=None, employees=None, status="Active"):
 	if isinstance(employees, str):
 		import json

@@ -33,6 +33,15 @@
   "pay_label",
   "daily_salary",
   "leave_pay_amount",
+  "policy_snapshot_section",
+  "leave_policy",
+  "leave_policy_assignment",
+  "entitlement_source",
+  "column_break_policy",
+  "policy_full_pay_days",
+  "policy_partial_pay_days",
+  "policy_partial_pay_percentage",
+  "entitlement_resolved_on",
   "alert_section",
   "alert_30_days",
   "alert_90_days",
@@ -74,6 +83,7 @@
    "fieldtype": "Link",
    "label": "Company / الشركة",
    "options": "Company",
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -81,7 +91,8 @@
    "fieldname": "department",
    "fieldtype": "Link",
    "label": "Department / القسم",
-   "options": "Department"
+   "options": "Department",
+   "read_only": 1
   },
   {
    "fieldname": "leave_details_section",
@@ -203,6 +214,62 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Leave Pay Amount / أجر الإجازة المرضية",
+   "read_only": 1
+  },
+  {
+   "fieldname": "policy_snapshot_section",
+   "fieldtype": "Section Break",
+   "label": "Applied Leave Policy / سياسة الإجازات المطبقة"
+  },
+  {
+   "fieldname": "leave_policy",
+   "fieldtype": "Link",
+   "label": "Leave Policy / سياسة الإجازات",
+   "options": "Saudi Leave Policy",
+   "read_only": 1
+  },
+  {
+   "fieldname": "leave_policy_assignment",
+   "fieldtype": "Link",
+   "label": "Policy Assignment / تعيين السياسة",
+   "options": "Saudi Leave Policy Assignment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "entitlement_source",
+   "fieldtype": "Data",
+   "label": "Entitlement Source / مصدر الاستحقاق",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_policy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "30",
+   "fieldname": "policy_full_pay_days",
+   "fieldtype": "Int",
+   "label": "Policy Full-Pay Days / أيام الأجر الكامل في السياسة",
+   "read_only": 1
+  },
+  {
+   "default": "60",
+   "fieldname": "policy_partial_pay_days",
+   "fieldtype": "Int",
+   "label": "Policy Partial-Pay Days / أيام الأجر الجزئي في السياسة",
+   "read_only": 1
+  },
+  {
+   "default": "75",
+   "fieldname": "policy_partial_pay_percentage",
+   "fieldtype": "Percent",
+   "label": "Policy Partial-Pay Percentage / نسبة الأجر الجزئي في السياسة",
+   "read_only": 1
+  },
+  {
+   "fieldname": "entitlement_resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolved On / وقت احتساب السياسة",
    "read_only": 1
   },
   {

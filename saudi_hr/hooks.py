@@ -1,4 +1,3 @@
-from . import __version__ as app_version
 
 
 app_name = "saudi_hr"
@@ -34,6 +33,7 @@ website_route_rules = [
 # Runs every day at midnight to send expiry alerts
 scheduler_events = {
 	"daily": [
+		"saudi_hr.saudi_hr.tasks.sync_contract_statuses",
 		"saudi_hr.saudi_hr.tasks.send_iqama_expiry_alerts",
 		"saudi_hr.saudi_hr.tasks.send_contract_expiry_alerts",
 		"saudi_hr.saudi_hr.tasks.send_work_permit_expiry_alerts",
@@ -132,8 +132,16 @@ doctype_js = {
 	"Employee": "public/js/employee.js",
 }
 
+override_doctype_dashboards = {
+	"Employee": "saudi_hr.saudi_hr.employee_dashboard.get_data",
+}
+
+app_include_css = [
+	"/assets/saudi_hr/css/employee_profile.css?v=20260729-3",
+]
+
 app_include_js = [
-	"/assets/saudi_hr/js/desk_shortcuts.js",
+	"/assets/saudi_hr/js/desk_shortcuts.js?v=20260729-1",
 	"/assets/saudi_hr/js/desk_polish_20260722.js?v=20260722-2",
 ]
 
@@ -147,6 +155,9 @@ jinja = {
 		"saudi_hr.saudi_hr.utils.get_eosb_amount",
 		"saudi_hr.saudi_hr.utils.get_annual_leave_entitlement",
 		"saudi_hr.saudi_hr.utils.get_gosi_rates",
+		"saudi_hr.saudi_hr.utils.get_active_contract",
+		"saudi_hr.saudi_hr.utils.assert_employee_salary_access",
+		"saudi_hr.saudi_hr.utils.assert_complete_employee_file_access",
 	]
 }
 

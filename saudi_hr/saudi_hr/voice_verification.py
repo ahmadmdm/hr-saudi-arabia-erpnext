@@ -64,8 +64,6 @@ _DIGIT_WORDS = {
 	"eight": "8",
 	"ثمانية": "8",
 	"ثمانيه": "8",
-	"ثمانية": "8",
-	"ثمانيه": "8",
 	"nine": "9",
 	"تسعة": "9",
 	"تسعه": "9",
@@ -273,7 +271,7 @@ def enroll_employee_voice_profile(employee, voice_payload, challenge_token):
 	}
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def reset_employee_voice_profile(profile_name=None, employee=None):
 	frappe.only_for(VOICE_PROFILE_RESET_ROLES)
 	if not profile_name and not employee:
