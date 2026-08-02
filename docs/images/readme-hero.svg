@@ -1,0 +1,64 @@
+<svg width="1600" height="720" viewBox="0 0 1600 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1190 336) rotate(90) scale(350)">
+      <stop stop-color="#1FAF7C" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#06161C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#65E5B7"/><stop offset="1" stop-color="#2AB985"/>
+    </linearGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="24"/></filter>
+    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse"><path d="M80 0H0V80" stroke="#D1E7E0" stroke-opacity=".055"/></pattern>
+  </defs>
+  <rect width="1600" height="720" rx="42" fill="#06161C"/>
+  <rect width="1600" height="720" rx="42" fill="url(#grid)"/>
+  <rect width="1600" height="720" rx="42" fill="url(#glow)"/>
+  <rect x="14" y="14" width="1572" height="692" rx="32" stroke="#D1E7E0" stroke-opacity=".12"/>
+
+  <g transform="translate(80 65)">
+    <circle cx="25" cy="25" r="25" fill="url(#jade)"/>
+    <text x="25" y="34" text-anchor="middle" fill="#06161C" font-family="Tahoma, sans-serif" font-size="24" font-weight="700">س</text>
+    <text x="68" y="20" fill="#E9E2D0" font-family="Verdana, sans-serif" font-size="15" font-weight="700" letter-spacing="2">SAUDI HR</text>
+    <text x="68" y="41" fill="#A4B8B5" font-family="monospace" font-size="9" letter-spacing="2">EMPLOYEE OPERATING SYSTEM</text>
+  </g>
+
+  <g transform="translate(80 210)">
+    <text x="0" y="0" fill="#A4B8B5" font-family="Tahoma, sans-serif" font-size="18">نظام تشغيل موارد بشرية سعودي</text>
+    <text x="0" y="90" fill="#E9E2D0" font-family="Tahoma, sans-serif" font-size="78" font-weight="700">الموظف رحلة،</text>
+    <text x="0" y="180" fill="#49D5A2" font-family="Tahoma, sans-serif" font-size="78">لا سجل.</text>
+    <text x="0" y="250" fill="#A4B8B5" font-family="Tahoma, sans-serif" font-size="22">من أول عقد إلى آخر مخالصة — كل القرار في مدار واحد.</text>
+    <g transform="translate(0 307)">
+      <rect width="170" height="44" rx="22" fill="#49D5A2"/>
+      <text x="85" y="28" text-anchor="middle" fill="#06161C" font-family="Tahoma, sans-serif" font-size="13" font-weight="700">ERPNext 15 + 16</text>
+      <rect x="185" width="130" height="44" rx="22" fill="#E9E2D0" fill-opacity=".06" stroke="#D1E7E0" stroke-opacity=".13"/>
+      <text x="250" y="28" text-anchor="middle" fill="#E9E2D0" font-family="Tahoma, sans-serif" font-size="13">عربي أولًا</text>
+      <rect x="330" width="150" height="44" rx="22" fill="#E9E2D0" fill-opacity=".06" stroke="#D1E7E0" stroke-opacity=".13"/>
+      <text x="405" y="28" text-anchor="middle" fill="#E9E2D0" font-family="Tahoma, sans-serif" font-size="13">بدون HRMS</text>
+    </g>
+  </g>
+
+  <g transform="translate(1180 360)">
+    <circle r="285" stroke="#D1E7E0" stroke-opacity=".12"/>
+    <circle r="230" stroke="#D1E7E0" stroke-opacity=".08" stroke-dasharray="4 12"/>
+    <circle r="155" stroke="#49D5A2" stroke-opacity=".18"/>
+    <circle r="106" fill="#0B2229" stroke="#D1E7E0" stroke-opacity=".18"/>
+    <circle r="95" stroke="#D1E7E0" stroke-opacity=".08"/>
+    <circle cy="-20" r="28" fill="#E9E2D0"/>
+    <text x="0" y="-10" text-anchor="middle" fill="#06161C" font-family="Tahoma, sans-serif" font-size="18" font-weight="700">أ</text>
+    <text x="0" y="35" text-anchor="middle" fill="#DFA96A" font-family="Tahoma, sans-serif" font-size="10">ملف الموظف</text>
+    <text x="0" y="62" text-anchor="middle" fill="#E9E2D0" font-family="Tahoma, sans-serif" font-size="20" font-weight="700">متصل</text>
+
+    <g font-family="Tahoma, sans-serif" font-size="12" font-weight="700">
+      <g transform="translate(0 -285)"><circle r="20" fill="#49D5A2"/><text y="4" text-anchor="middle" fill="#06161C">عقد</text></g>
+      <g transform="translate(-247 -142)"><circle r="20" fill="#0B2229" stroke="#D1E7E0" stroke-opacity=".25"/><text y="4" text-anchor="middle" fill="#E9E2D0">حضور</text></g>
+      <g transform="translate(-247 142)"><circle r="20" fill="#0B2229" stroke="#D1E7E0" stroke-opacity=".25"/><text y="4" text-anchor="middle" fill="#E9E2D0">إجازة</text></g>
+      <g transform="translate(0 285)"><circle r="20" fill="#0B2229" stroke="#D1E7E0" stroke-opacity=".25"/><text y="4" text-anchor="middle" fill="#E9E2D0">راتب</text></g>
+      <g transform="translate(247 142)"><circle r="20" fill="#0B2229" stroke="#D1E7E0" stroke-opacity=".25"/><text y="4" text-anchor="middle" fill="#E9E2D0">امتثال</text></g>
+      <g transform="translate(247 -142)"><circle r="20" fill="#0B2229" stroke="#D1E7E0" stroke-opacity=".25"/><text y="4" text-anchor="middle" fill="#E9E2D0">خروج</text></g>
+    </g>
+    <circle cx="-190" cy="-212" r="7" fill="#DFA96A"/><circle cx="202" cy="197" r="7" fill="#49D5A2"/>
+  </g>
+
+  <text x="80" y="665" fill="#A4B8B5" fill-opacity=".55" font-family="monospace" font-size="9" letter-spacing="2">CONTRACT · ATTENDANCE · LEAVE · PAYROLL · COMPLIANCE · EXIT</text>
+  <text x="1518" y="665" text-anchor="end" fill="#DFA96A" font-family="monospace" font-size="9">BY AHMAD</text>
+</svg>

@@ -1,214 +1,190 @@
 <!doctype html>
-<html lang="ar" dir="rtl" data-theme="dark">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#071d18">
-  <meta name="description" content="الدليل التفاعلي لتثبيت وإعداد وتشغيل Saudi HR على ERPNext v15 وv16.">
-  <meta property="og:title" content="Saudi HR — دليل التشغيل السعودي">
-  <meta property="og:description" content="من التثبيت إلى أول دورة موارد بشرية مكتملة، بدليل عربي تفاعلي.">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#06161c">
+  <meta name="description" content="Saudi HR — دورة الموظف والامتثال السعودي داخل ERPNext، من أول عقد إلى آخر مخالصة.">
+  <meta property="og:title" content="Saudi HR — الموظف رحلة، لا سجل">
+  <meta property="og:description" content="الدليل التفاعلي لتثبيت وتشغيل Saudi HR على ERPNext 15 و16.">
   <meta property="og:image" content="https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/images/social-preview.png">
-  <meta property="og:type" content="website">
-  <title>Saudi HR — دليل التشغيل السعودي</title>
+  <title>Saudi HR — الموظف رحلة، لا سجل</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">تجاوز إلى المحتوى</a>
-  <div class="ambient ambient--one" aria-hidden="true"></div>
-  <div class="ambient ambient--two" aria-hidden="true"></div>
+  <a class="skip" href="#content">انتقل إلى المحتوى</a>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="page-line page-line--a" aria-hidden="true"></div>
+  <div class="page-line page-line--b" aria-hidden="true"></div>
 
-  <header class="site-header" data-header>
-    <a class="brand" href="#top" aria-label="Saudi HR — الصفحة الرئيسية">
-      <span class="brand__mark" aria-hidden="true">س</span>
-      <span><b>Saudi HR</b><small>دليل التشغيل السعودي</small></span>
-    </a>
-    <nav class="desktop-nav" aria-label="التنقل الرئيسي">
-      <a href="#tour">الجولة</a>
-      <a href="#capabilities">القدرات</a>
-      <a href="#install">التثبيت</a>
-      <a href="#launch">الإطلاق</a>
-    </nav>
-    <div class="header-actions">
-      <button class="icon-button" type="button" data-theme-toggle aria-label="تبديل المظهر" title="تبديل المظهر">
-        <span data-theme-icon aria-hidden="true">☼</span>
-      </button>
-      <a class="button button--compact button--ghost" href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
-      <button class="menu-button" type="button" data-menu-button aria-expanded="false" aria-controls="mobile-menu" aria-label="فتح القائمة"><span></span><span></span></button>
-    </div>
-    <nav class="mobile-nav" id="mobile-menu" data-mobile-menu aria-label="التنقل على الجوال">
-      <a href="#tour">الجولة</a><a href="#capabilities">القدرات</a><a href="#install">التثبيت</a><a href="#launch">الإطلاق</a>
+  <header class="nav-shell">
+    <nav class="nav" aria-label="التنقل الرئيسي">
+      <a class="wordmark" href="#top" aria-label="Saudi HR — البداية">
+        <span class="wordmark__seal">س</span>
+        <span><b>SAUDI HR</b><small>OPERATING SYSTEM</small></span>
+      </a>
+      <div class="nav__links">
+        <a href="#journey">الرحلة</a>
+        <a href="#tutorial">التوتريال</a>
+        <a href="#install">التثبيت</a>
+      </div>
+      <a class="nav__github" href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext" target="_blank" rel="noreferrer"><span>GitHub</span><i>↗</i></a>
+      <button class="menu-toggle" type="button" aria-label="فتح القائمة" aria-expanded="false" data-menu-toggle><i></i><i></i></button>
     </nav>
   </header>
 
-  <main id="main">
-    <section class="hero section" id="top">
-      <div class="hero__copy reveal">
-        <div class="eyebrow"><span class="pulse" aria-hidden="true"></span> طبقة تشغيل موارد بشرية للمنشآت السعودية</div>
-        <h1>كل رحلة الموظف.<br><em>بوصلة امتثال واحدة.</em></h1>
-        <p class="hero__lead">من أول عقد إلى آخر مخالصة، يدير Saudi HR الحضور والإجازات والرواتب والوثائق والالتزامات السعودية داخل ERPNext — بتجربة عربية عملية وقابلة للتدقيق.</p>
+  <div class="menu-overlay" data-menu-overlay aria-hidden="true">
+    <div class="menu-overlay__links"><a href="#journey">الرحلة</a><a href="#tutorial">التوتريال</a><a href="#install">التثبيت</a><a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext">GitHub</a></div>
+    <p>الموظف رحلة، لا سجل.</p>
+  </div>
+
+  <main id="content">
+    <section class="hero" id="top">
+      <div class="hero__index" aria-hidden="true"><span>01</span><i></i><b>THE EMPLOYEE ORBIT</b></div>
+      <div class="hero__copy intro">
+        <p class="micro-label"><span></span> نظام تشغيل موارد بشرية سعودي</p>
+        <h1>الموظف<br><em>رحلة،</em><br>لا سجل.</h1>
+        <p class="hero__lead">طبقة تشغيل عربية داخل ERPNext تربط كل قرار في حياة الموظف: من العقد الأول، إلى الحضور والراتب والامتثال، وحتى آخر مخالصة.</p>
         <div class="hero__actions">
-          <a class="button button--primary" href="#install">ابدأ التثبيت <span aria-hidden="true">←</span></a>
-          <a class="button button--secondary" href="#tour">شاهد الجولة</a>
+          <a class="kinetic-button kinetic-button--jade" href="#tutorial"><span>ابدأ الجولة</span><i>↓</i></a>
+          <a class="quiet-link" href="#install">ثبّت التطبيق <span>↙</span></a>
         </div>
-        <div class="compatibility" aria-label="التوافق">
-          <span>متوافق مع</span><b>ERPNext 15</b><i></i><b>ERPNext 16</b><i></i><b>بدون HRMS</b>
-        </div>
+        <div class="hero__meta"><span>ERPNext 15 + 16</span><span>عربي أولًا</span><span>لا يحتاج HRMS</span></div>
       </div>
 
-      <div class="command-card reveal" aria-label="ملخص حالة النظام">
-        <div class="command-card__top"><span>مركز القيادة</span><span class="live"><i></i> جاهز للعمل</span></div>
-        <div class="score-ring" aria-label="اكتمال مسار التشغيل 92 بالمئة">
-          <svg viewBox="0 0 120 120" role="img" aria-hidden="true"><circle class="ring-base" cx="60" cy="60" r="51"></circle><circle class="ring-value" cx="60" cy="60" r="51"></circle></svg>
-          <div><strong>92</strong><small>%</small><span>اكتمال المسار</span></div>
+      <div class="orbit-stage intro" data-orbit-stage>
+        <div class="orbit-stage__halo" aria-hidden="true"></div>
+        <div class="orbit orbit--outer" aria-hidden="true"></div>
+        <div class="orbit orbit--inner" aria-hidden="true"></div>
+        <span class="coordinate coordinate--x" aria-hidden="true">24°43′N</span>
+        <span class="coordinate coordinate--y" aria-hidden="true">46°40′E</span>
+
+        <button class="orbit-node orbit-node--1 is-active" type="button" data-orbit-node="contract" aria-pressed="true"><i></i><span>العقد</span></button>
+        <button class="orbit-node orbit-node--2" type="button" data-orbit-node="attendance" aria-pressed="false"><i></i><span>الحضور</span></button>
+        <button class="orbit-node orbit-node--3" type="button" data-orbit-node="leave" aria-pressed="false"><i></i><span>الإجازات</span></button>
+        <button class="orbit-node orbit-node--4" type="button" data-orbit-node="payroll" aria-pressed="false"><i></i><span>الراتب</span></button>
+        <button class="orbit-node orbit-node--5" type="button" data-orbit-node="compliance" aria-pressed="false"><i></i><span>الامتثال</span></button>
+        <button class="orbit-node orbit-node--6" type="button" data-orbit-node="exit" aria-pressed="false"><i></i><span>الخروج</span></button>
+
+        <div class="employee-core" aria-live="polite">
+          <div class="employee-core__top"><span data-orbit-code>SEC / 01</span><i></i></div>
+          <div class="employee-core__avatar">أ</div>
+          <small data-orbit-kicker>البداية الموثقة</small>
+          <h2 data-orbit-title>العقد</h2>
+          <p data-orbit-copy>نوع العلاقة، الأجر، المدة، التجربة والالتزامات في مرجع واحد.</p>
+          <div class="employee-core__status"><span>الحالة</span><b data-orbit-status>موثق</b></div>
         </div>
-        <div class="status-list">
-          <div><span class="status-dot status-dot--good"></span><p><b>العقود والملفات</b><small>مترابطة وقابلة للمراجعة</small></p><strong>نشط</strong></div>
-          <div><span class="status-dot status-dot--good"></span><p><b>الحضور والإجازات</b><small>سياسات حسب الموظف والقسم</small></p><strong>نشط</strong></div>
-          <div><span class="status-dot status-dot--warn"></span><p><b>الربط الحكومي</b><small>يتطلب بيانات اعتماد معتمدة</small></p><strong>إعداد</strong></div>
+
+        <div class="orbit-caption"><b>ملف موظف واحد</b><span>كل مرحلة تغيّر الصورة، ولا تقطعها.</span></div>
+      </div>
+      <p class="hero__vertical" aria-hidden="true">SAUDI EMPLOYMENT · FULL CYCLE · 2026</p>
+    </section>
+
+    <section class="manifesto reveal" aria-label="رسالة المنتج">
+      <p>لا نريد من مسؤول الموارد البشرية أن يبحث عن الحقيقة بين عشر شاشات.</p>
+      <h2>نضع الحقيقة التشغيلية<br><em>في مدار واحد.</em></h2>
+      <div class="manifesto__foot"><span>العقد يعرف الراتب</span><i></i><span>الحضور يعرف الاستحقاق</span><i></i><span>الامتثال يعرف الموعد</span></div>
+    </section>
+
+    <section class="journey" id="journey">
+      <header class="chapter-heading reveal"><div><span>الفصل الأول</span><small>EMPLOYEE JOURNEY</small></div><h2>ست محطات.<br>أثر واحد لا ينقطع.</h2><p>اضغط على أي محطة لترى ما يملكه النظام وما يسلّمه للمحطة التالية.</p></header>
+      <div class="journey-ledger reveal">
+        <div class="journey-ledger__rail" role="tablist" aria-label="محطات رحلة الموظف">
+          <button role="tab" aria-selected="true" data-journey="hire"><span>01</span><b>الاستقطاب</b><small>Hire</small></button>
+          <button role="tab" aria-selected="false" data-journey="join"><span>02</span><b>الانضمام</b><small>Join</small></button>
+          <button role="tab" aria-selected="false" data-journey="work"><span>03</span><b>العمل اليومي</b><small>Operate</small></button>
+          <button role="tab" aria-selected="false" data-journey="grow"><span>04</span><b>النمو</b><small>Grow</small></button>
+          <button role="tab" aria-selected="false" data-journey="govern"><span>05</span><b>الحوكمة</b><small>Govern</small></button>
+          <button role="tab" aria-selected="false" data-journey="close"><span>06</span><b>الخروج</b><small>Close</small></button>
         </div>
-        <div class="route-rail" aria-label="مسار الجهات الحكومية"><span>قوى</span><i></i><span>GOSI</span><i></i><span>مدد</span><i></i><span>مقيم</span></div>
+        <div class="journey-ledger__panel" role="tabpanel">
+          <div class="ledger-watermark" data-journey-number>01</div>
+          <p class="micro-label"><span></span><b data-journey-label>قرار التوظيف</b></p>
+          <h3 data-journey-title>من الاحتياج إلى مرشح جاهز للعقد.</h3>
+          <p data-journey-copy>طلب توظيف واضح، مرشحون، مقابلات، قرار موثق، ثم انتقال منضبط إلى إنشاء العقد دون إعادة إدخال البيانات.</p>
+          <div class="ledger-output"><small>المخرجات</small><p data-journey-output>طلب توظيف · تقييم مرشح · قرار قبول</p></div>
+          <a data-journey-link href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext#مدار-الموظف">استكشف المكونات <i>↗</i></a>
+        </div>
       </div>
     </section>
 
-    <section class="trust-strip" aria-label="أبرز مزايا النظام">
-      <div><strong>7</strong><span>مسارات تشغيل مترابطة</span></div>
-      <div><strong>RTL</strong><span>تجربة عربية أصلية</span></div>
-      <div><strong>24/7</strong><span>تنبيهات ومهام مجدولة</span></div>
-      <div><strong>GPL</strong><span>مفتوح المصدر</span></div>
-    </section>
-
-    <section class="section tour" id="tour">
-      <div class="section-heading reveal">
-        <div><span class="kicker">01 — الجولة</span><h2>شاشة تعرف ما يحتاجه فريقك <em>الآن.</em></h2></div>
-        <p>مركز تشغيل يقدّم الأولويات قبل القوائم: حالة اليوم، الإجراءات المتأخرة، الوثائق القريبة من الانتهاء، والانتقال المباشر للعمل.</p>
-      </div>
-      <figure class="product-frame reveal">
-        <div class="browser-bar"><span></span><span></span><span></span><p>professional-hr-hub</p><b>آمن</b></div>
-        <img src="images/professional-hr-hub-desktop.png" alt="واجهة مركز الموارد البشرية الاحترافي في Saudi HR" loading="lazy">
-        <figcaption><span>واجهة تشغيل فعلية</span><p>مصممة للقرار اليومي، وليست مجرد لوحة أرقام.</p></figcaption>
-      </figure>
-    </section>
-
-    <section class="section capabilities" id="capabilities">
-      <div class="section-heading reveal">
-        <div><span class="kicker">02 — المنظومة</span><h2>سبعة مسارات. <em>سجل موظف واحد.</em></h2></div>
-        <p>كل إجراء يترك أثرًا قابلًا للمراجعة، وكل مرحلة تتصل بما قبلها وما بعدها دون تكرار البيانات.</p>
-      </div>
-      <div class="capability-grid">
-        <article class="capability-card capability-card--wide reveal"><span class="card-index">01</span><div class="card-icon" aria-hidden="true">ملف</div><h3>ملف الموظف الشامل</h3><p>الهوية والوظيفة والعقد والوثائق والحضور والإجازات والراتب والخروج في منظور تشغيلي موحد.</p><ul><li>وصول محكوم بالصلاحيات</li><li>تنبيهات الوثائق</li><li>سجل الإجراءات التالية</li></ul></article>
-        <article class="capability-card reveal"><span class="card-index">02</span><div class="card-icon" aria-hidden="true">عقد</div><h3>التوظيف والعقود</h3><p>من الطلب والمرشح إلى العقد والتهيئة وفترة التجربة.</p></article>
-        <article class="capability-card reveal"><span class="card-index">03</span><div class="card-icon" aria-hidden="true">وقت</div><h3>الحضور والورديات</h3><p>تسجيل يومي وشهري، مواقع حضور، غياب، وعمل مرن.</p></article>
-        <article class="capability-card reveal"><span class="card-index">04</span><div class="card-icon" aria-hidden="true">إجازة</div><h3>سياسات الإجازات</h3><p>استحقاقات سنوية ومرضية وخاصة، تُخصص لقسم أو موظف.</p></article>
-        <article class="capability-card reveal"><span class="card-index">05</span><div class="card-icon" aria-hidden="true">راتب</div><h3>الرواتب والالتزامات</h3><p>رواتب شهرية، GOSI، WPS، نطاقات، قروض وتسويات.</p></article>
-        <article class="capability-card reveal"><span class="card-index">06</span><div class="card-icon" aria-hidden="true">درع</div><h3>الامتثال والعلاقات</h3><p>سياسات وإقرارات وتحقيقات وتظلمات وتفتيش بأدلة.</p></article>
-        <article class="capability-card capability-card--accent reveal"><span class="card-index">07</span><div class="card-icon" aria-hidden="true">ختام</div><h3>الخروج ونهاية الخدمة</h3><p>إنهاء وإخلاء ومقابلة ومخالصة وEOSB ضمن مهلة واضحة.</p><a href="#launch">اطّلع على دورة التشغيل <span aria-hidden="true">←</span></a></article>
-      </div>
-    </section>
-
-    <section class="section lifecycle">
-      <div class="section-heading section-heading--compact reveal"><div><span class="kicker">03 — الرحلة</span><h2>من المرشح إلى الأثر <em>الموثق.</em></h2></div></div>
-      <ol class="lifecycle-rail">
-        <li class="reveal"><span>01</span><div><b>جذب وتوظيف</b><small>طلب، مرشح، مقابلة</small></div></li>
-        <li class="reveal"><span>02</span><div><b>تعاقد وانضمام</b><small>عقد، وثائق، تهيئة</small></div></li>
-        <li class="reveal"><span>03</span><div><b>تشغيل يومي</b><small>حضور، إجازة، راتب</small></div></li>
-        <li class="reveal"><span>04</span><div><b>نمو وعلاقات</b><small>أداء، ترقية، تظلم</small></div></li>
-        <li class="reveal"><span>05</span><div><b>خروج منضبط</b><small>إخلاء، EOSB، إغلاق</small></div></li>
-      </ol>
-    </section>
-
-    <section class="section install" id="install">
-      <div class="install__intro reveal">
-        <span class="kicker">04 — التثبيت</span>
-        <h2>من المستودع إلى أول شاشة <em>بوضوح.</em></h2>
-        <p>اختر إصدار ERPNext لديك. سنضبط الفرع والأوامر تلقائيًا، ثم اتبع الخطوات بالترتيب.</p>
-        <div class="version-switch" role="group" aria-label="اختر إصدار ERPNext">
-          <button type="button" data-version="15" class="is-active" aria-pressed="true"><span>ERPNext</span><b>v15</b></button>
-          <button type="button" data-version="16" aria-pressed="false"><span>ERPNext</span><b>v16</b></button>
-        </div>
-        <div class="requirements">
-          <p><span>✓</span> Bench وFrappe/ERPNext مثبتة</p><p><span>✓</span> Python 3.10 أو أحدث</p><p><span>✓</span> صلاحية إدارة الموقع</p>
+    <section class="proof reveal" aria-label="واجهة المنتج الفعلية">
+      <div class="proof__copy"><span class="chapter-no">LIVE / 01</span><h2>ليست فكرة.<br><em>هذه شاشة العمل.</em></h2><p>مؤشرات اليوم، العقد، الحضور، الراتب، الوثائق والإجراءات التالية في ملف موظف شامل ومركز تشغيل واحد.</p><a class="quiet-link" href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/blob/version-15/docs/visual-tour.md">الجولة البصرية <span>↗</span></a></div>
+      <div class="machine-frame">
+        <div class="machine-frame__rim">
+          <div class="machine-frame__bar"><i></i><span>PROFESSIONAL HR HUB</span><b>LIVE</b></div>
+          <div class="machine-frame__screen"><img src="images/professional-hr-hub-desktop.png" alt="مركز الموارد البشرية الاحترافي في Saudi HR" loading="lazy"></div>
         </div>
       </div>
-      <div class="terminal reveal" aria-label="أوامر التثبيت">
-        <div class="terminal__bar"><span><i></i><i></i><i></i></span><b>~/frappe-bench</b><button type="button" data-copy-all>نسخ الكل</button></div>
-        <pre><code data-install-code><span class="comment"># 1 — جلب الفرع المتوافق</span>
+    </section>
+
+    <section class="tutorial" id="tutorial">
+      <header class="chapter-heading chapter-heading--light reveal"><div><span>الفصل الثاني</span><small>GUIDED START</small></div><h2>لا تقرأ دليلًا.<br>امشِ في مسارك.</h2><p>اختر دورك، وسنعرض الخطوات التي تحتاجها فقط.</p></header>
+
+      <div class="role-switch reveal" role="tablist" aria-label="اختر دورك">
+        <button role="tab" aria-selected="true" data-role="admin"><i>01</i><span><b>مسؤول النظام</b><small>تثبيت، صلاحيات، نسخ احتياطي</small></span></button>
+        <button role="tab" aria-selected="false" data-role="hr"><i>02</i><span><b>مسؤول الموارد البشرية</b><small>سياسات، موظفون، تشغيل يومي</small></span></button>
+        <button role="tab" aria-selected="false" data-role="quality"><i>03</i><span><b>فريق الجودة</b><small>اختبارات، قبول، جاهزية إنتاج</small></span></button>
+      </div>
+
+      <div class="tutorial-board reveal">
+        <aside class="tutorial-board__aside"><span data-role-code>SYS.ADMIN</span><h3 data-role-heading>أطلق بيئة موثوقة.</h3><p data-role-intro>ابدأ من بنية صحيحة، ثم ثبّت التطبيق واضبط الصلاحيات والنسخ الاحتياطي قبل إدخال بيانات حقيقية.</p><div class="tutorial-progress"><i data-role-progress></i></div><small><b data-role-step-current>1</b> / <span data-role-step-total>4</span></small></aside>
+        <div class="tutorial-board__steps" data-role-steps></div>
+      </div>
+    </section>
+
+    <section class="install" id="install">
+      <div class="install__header reveal"><span class="chapter-no">INSTALL / READY</span><h2>أربعة أوامر.<br><em>ثم تبدأ الرحلة.</em></h2><p>اختر نسختك. يتغيّر الفرع فورًا وتبقى بقية الخطوات كما هي.</p></div>
+      <div class="install__body reveal">
+        <div class="version-dial" role="group" aria-label="إصدار ERPNext">
+          <button class="is-active" type="button" data-version="15" aria-pressed="true"><span>15</span><small>ERPNext</small></button>
+          <button type="button" data-version="16" aria-pressed="false"><span>16</span><small>ERPNext</small></button>
+          <i data-version-indicator></i>
+        </div>
+        <div class="code-shell">
+          <div class="code-shell__rim">
+            <div class="code-shell__top"><span><i></i><i></i></span><b>bash · frappe-bench</b><button type="button" data-copy><span>نسخ الأوامر</span><i>⧉</i></button></div>
+            <pre><code data-install-code><span># جلب النسخة المطابقة</span>
 bench get-app --branch <mark data-branch>version-15</mark> \
   https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 
-<span class="comment"># 2 — تثبيت التطبيق على موقعك</span>
-bench --site <span class="variable">your-site.local</span> install-app saudi_hr
-
-<span class="comment"># 3 — الترحيل وتحديث الأصول</span>
-bench --site <span class="variable">your-site.local</span> migrate
-bench build --app saudi_hr
-bench clear-cache
-bench restart</code></pre>
-        <div class="terminal__footer"><span class="terminal-status">●</span><p>الفرع المختار: <b data-selected-branch>version-15</b></p><span>لا يتطلب HRMS</span></div>
+<span># التثبيت والترحيل</span>
+bench --site <b>your-site.local</b> install-app saudi_hr
+bench --site <b>your-site.local</b> migrate
+bench build --app saudi_hr && bench restart</code></pre>
+            <div class="code-shell__status"><i></i><span>الفرع: <b data-branch-label>version-15</b></span><small>لا يتطلب HRMS</small></div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="section launch" id="launch">
-      <div class="section-heading reveal">
-        <div><span class="kicker">05 — أول دورة كاملة</span><h2>شغّل تجربة صغيرة، ثم <em>وسّع بثقة.</em></h2></div>
-        <p>ابدأ بموظف تجريبي ومجموعة بيانات معزولة. لا تنتقل للإنتاج قبل إكمال نقاط التحقق الست.</p>
-      </div>
-      <div class="launch-grid">
-        <ol class="steps">
-          <li class="reveal"><span>1</span><div><h3>ثبّت وتحقق</h3><p>نفّذ الترحيل، امسح الذاكرة المؤقتة، وتأكد من ظهور مساحة Saudi HR.</p><code>/app/saudi-hr</code></div></li>
-          <li class="reveal"><span>2</span><div><h3>اضبط الهيكل</h3><p>راجع الشركة والفروع والأقسام والمواقع والأدوار قبل استيراد الموظفين.</p></div></li>
-          <li class="reveal"><span>3</span><div><h3>ابنِ السياسات</h3><p>أنشئ الورديات وسياسة الإجازة العامة، ثم خصّص الاستثناءات حسب القسم أو الموظف.</p></div></li>
-          <li class="reveal"><span>4</span><div><h3>أكمل ملفًا تجريبيًا</h3><p>أضف موظفًا وعقدًا ووثائق وتواريخ صلاحية، وراجع الصلاحيات من حساب HR تجريبي.</p></div></li>
-          <li class="reveal"><span>5</span><div><h3>شغّل دورة فعلية</h3><p>سجّل حضورًا، اطلب إجازة، نفّذ الموافقة، واحسب راتب شهر تجريبي.</p></div></li>
-          <li class="reveal"><span>6</span><div><h3>راجع قبل الإطلاق</h3><p>افحص التنبيهات والتقارير وملفات GOSI/WPS، وخذ نسخة احتياطية موثقة.</p></div></li>
-        </ol>
-        <aside class="checklist reveal">
-          <div class="checklist__head"><span>قائمة جاهزية الإنتاج</span><b data-progress-label>0 / 6</b></div>
-          <div class="progress"><i data-progress></i></div>
-          <label><input type="checkbox" data-check><span></span> نسخة احتياطية واختبار استعادة</label>
-          <label><input type="checkbox" data-check><span></span> مراجعة الأدوار وصلاحيات الرواتب</label>
-          <label><input type="checkbox" data-check><span></span> سياسة إجازة افتراضية ومخصصة</label>
-          <label><input type="checkbox" data-check><span></span> دورة حضور وإجازة تجريبية ناجحة</label>
-          <label><input type="checkbox" data-check><span></span> دورة راتب وتسوية تجريبية</label>
-          <label><input type="checkbox" data-check><span></span> مراجعة قانونية لسياسات المنشأة</label>
-          <p>تُحفظ هذه القائمة على جهازك فقط.</p>
-        </aside>
-      </div>
+    <section class="launch-sequence reveal">
+      <div class="launch-sequence__title"><span class="chapter-no">FIRST 30 DAYS</span><h2>خطة إطلاق<br><em>لا تترك فراغًا.</em></h2></div>
+      <ol>
+        <li><span>الأسبوع 01</span><b>البنية</b><p>شركة، فروع، أقسام، مواقع، أدوار وصلاحيات.</p></li>
+        <li><span>الأسبوع 02</span><b>السياسات</b><p>ورديات وإجازات وعقود وتنبيهات الوثائق.</p></li>
+        <li><span>الأسبوع 03</span><b>التجربة</b><p>موظف تجريبي، حضور، إجازة، راتب ومخالصة.</p></li>
+        <li><span>الأسبوع 04</span><b>الإطلاق</b><p>تدقيق، نسخة احتياطية، تدريب، ثم توسع مرحلي.</p></li>
+      </ol>
     </section>
 
-    <section class="section paths">
-      <div class="section-heading section-heading--compact reveal"><div><span class="kicker">06 — أين تبدأ؟</span><h2>مسار واضح لكل <em>دور.</em></h2></div></div>
-      <div class="path-grid">
-        <a class="path-card reveal" href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/blob/version-15/docs/deployment.md"><span>مسؤول النظام</span><h3>التثبيت والنشر والصلاحيات</h3><p>من متطلبات الخادم إلى النسخ الاحتياطي والجاهزية.</p><b>دليل النشر ←</b></a>
-        <a class="path-card reveal" href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/blob/version-15/docs/leave-policy-customization.md"><span>مسؤول الموارد البشرية</span><h3>السياسات والتشغيل اليومي</h3><p>الإجازات المخصصة، العقود، الحضور ودورة الموظف.</p><b>دليل السياسات ←</b></a>
-        <a class="path-card reveal" href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/blob/version-15/docs/COMPREHENSIVE_TEST_PLAN.md"><span>فريق الجودة</span><h3>سيناريوهات التحقق</h3><p>اختبارات وظيفية ومنطقية وبصرية قبل الإنتاج.</p><b>خطة الاختبار ←</b></a>
-      </div>
-    </section>
-
-    <section class="section faq">
-      <div class="section-heading section-heading--compact reveal"><div><span class="kicker">07 — أسئلة سريعة</span><h2>قبل أن <em>تبدأ.</em></h2></div></div>
-      <div class="faq-list">
-        <details class="reveal"><summary>هل يحتاج التطبيق إلى HRMS؟ <span>+</span></summary><p>لا. Saudi HR يملك سجلات الحضور والرواتب والإجازات والامتثال السعودية داخليًا، ويعتمد على Frappe وERPNext فقط.</p></details>
-        <details class="reveal"><summary>كيف أختار بين v15 وv16؟ <span>+</span></summary><p>استخدم الفرع المطابق للإصدار الرئيسي المثبت لديك: <code>version-15</code> لـERPNext 15 و<code>version-16</code> لـERPNext 16. لا تخلط بين الفرعين.</p></details>
-        <details class="reveal"><summary>هل الربط مع قوى والتأمينات ومدد ومقيم مباشر؟ <span>+</span></summary><p>يوفر التطبيق نماذج الجاهزية وتجهيز البيانات ومسارات المتابعة. الربط الحي يتطلب بيانات اعتماد ونقاط تكامل وقنوات معتمدة من كل جهة.</p></details>
-        <details class="reveal"><summary>هل يمكن تخصيص الإجازات لقسم أو موظف؟ <span>+</span></summary><p>نعم. أنشئ Saudi Leave Policy ثم استخدم Saudi Leave Policy Assignment. أولوية الموظف أعلى من القسم ثم السياسة الافتراضية، مع الحفاظ على الحدود النظامية الدنيا.</p></details>
-      </div>
-    </section>
-
-    <section class="cta section reveal">
-      <div><span class="kicker">جاهز للخطوة التالية؟</span><h2>حوّل الامتثال من ملفات متفرقة إلى <em>نظام يعمل.</em></h2><p>ابدأ ببيئة تجريبية، اختبر دورة كاملة، ثم أطلق على مراحل.</p></div>
-      <div><a class="button button--light" href="#install">ابدأ الآن <span aria-hidden="true">←</span></a><a class="text-link" href="mailto:ahmad8@outlook.com">تواصل مع ahmad</a></div>
+    <section class="finale reveal">
+      <div class="finale__orbit" aria-hidden="true"><i></i><i></i><i></i><span>س</span></div>
+      <div><p class="micro-label"><span></span> الخطوة التالية</p><h2>اجعل كل قرار<br><em>قابلًا للتفسير.</em></h2><p>ابدأ على بيئة تجريبية اليوم، وشغّل دورة موظف كاملة قبل الانتقال إلى الإنتاج.</p></div>
+      <div class="finale__actions"><a class="kinetic-button kinetic-button--stone" href="#install"><span>ابدأ التثبيت</span><i>↓</i></a><a href="mailto:ahmad8@outlook.com">تحدث مع ahmad <span>↗</span></a></div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="footer-brand"><span class="brand__mark" aria-hidden="true">س</span><div><b>Saudi HR</b><p>بُني بعناية لفرق الموارد البشرية في المملكة.</p></div></div>
-    <div class="footer-links"><a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext">GitHub</a><a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases">الإصدارات</a><a href="mailto:ahmad8@outlook.com">ahmad8@outlook.com</a></div>
-    <p class="copyright">صاحب المشروع: <strong>ahmad</strong> · <span data-year></span> · GPL-3.0</p>
+  <footer class="footer">
+    <div class="footer__brand"><span class="wordmark__seal">س</span><div><b>SAUDI HR</b><p>نظام تشغيل دورة الموظف السعودية.</p></div></div>
+    <div class="footer__owner"><small>صاحب المشروع</small><b>ahmad</b><a href="mailto:ahmad8@outlook.com">ahmad8@outlook.com</a></div>
+    <div class="footer__links"><a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext">GitHub</a><a href="https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases">Releases</a><span>GPL-3.0 · <b data-year></b></span></div>
   </footer>
-  <div class="toast" role="status" aria-live="polite" data-toast>تم نسخ الأوامر</div>
+
+  <div class="toast" data-toast role="status" aria-live="polite">نُسخت الأوامر</div>
 </body>
 </html>
