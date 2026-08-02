@@ -1,164 +1,138 @@
 <div align="center" dir="rtl">
 
-<img src="docs/images/social-preview.png" alt="Saudi HR — نظام الموارد البشرية السعودي على ERPNext" width="100%">
+<a href="https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/">
+  <img src="docs/images/readme-hero.svg" alt="Saudi HR — الموظف رحلة، لا سجل" width="100%">
+</a>
 
-# Saudi HR for ERPNext
+<br>
 
-### الموارد البشرية السعودية، من ملف الموظف إلى الامتثال — في مساحة تشغيل واحدة.
+[![Version](https://img.shields.io/badge/version-1.18.0-49D5A2?style=flat-square&labelColor=06161C)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.18.0-v16)
+![ERPNext](https://img.shields.io/badge/ERPNext-v16-DFA96A?style=flat-square&labelColor=06161C)
+![Arabic first](https://img.shields.io/badge/Arabic-first-E9E2D0?style=flat-square&labelColor=06161C)
+![HRMS](https://img.shields.io/badge/HRMS-not_required-49D5A2?style=flat-square&labelColor=06161C)
+[![Quality](https://img.shields.io/github/actions/workflow/status/ahmadmdm/hr-saudi-arabia-erpnext/quality.yml?branch=version-16&style=flat-square&label=quality&labelColor=06161C)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/actions/workflows/quality.yml)
 
-نظام مستقل ومفتوح المصدر لإدارة دورة حياة الموظف وفق احتياجات المنشآت في المملكة، مبني فوق **Frappe + ERPNext** ولا يتطلب HRMS.
+### نظام تشغيل دورة الموظف السعودية داخل ERPNext
 
-[![الإصدار](https://img.shields.io/badge/version-1.18.0--v16-0B6B4F?style=for-the-badge)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.18.0-v16)
-![ERPNext](https://img.shields.io/badge/ERPNext-v16-1D3557?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.10+-C89B3C?style=for-the-badge)
-[![الفحوصات](https://img.shields.io/github/actions/workflow/status/ahmadmdm/hr-saudi-arabia-erpnext/quality.yml?branch=version-16&label=quality&style=for-the-badge)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/actions/workflows/quality.yml)
-[![الرخصة](https://img.shields.io/badge/license-GPL--3.0-6B7280?style=for-the-badge)](LICENSE)
-
-**[ابدأ الجولة التفاعلية](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/)** · [التثبيت](#-التثبيت-السريع) · [القدرات](#-منظومة-واحدة-لكامل-الدورة) · [التوثيق](#-مركز-التوثيق) · [تواصل](#-صاحب-المشروع)
+**[ادخل التجربة التفاعلية](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/)** &nbsp;·&nbsp; [ثبّت الآن](#التثبيت) &nbsp;·&nbsp; [اكتشف الرحلة](#مدار-الموظف) &nbsp;·&nbsp; [تواصل](#صاحب-المشروع)
 
 </div>
 
 ---
 
-## نظام صُمّم للعمل اليومي، لا لمجرد حفظ السجلات
+## الموظف ليس صفًا في جدول
 
-يجمع **Saudi HR** العمليات اليومية للموارد البشرية مع طبقة امتثال قابلة للتتبع: ملف موظف شامل، عقود، حضور وورديات، إجازات مخصصة، رواتب، تأمينات اجتماعية، حماية أجور، نطاقات، تصاريح، مخالفات، تحقيقات، وإنهاء خدمة. كل ذلك داخل تجربة عربية واضحة ومدعومة بسجلات وأدلة مراجعة.
+هو عقد يؤثر في الراتب، وحضور يؤثر في الاستحقاق، وإجازة لها سياسة، ووثيقة لها موعد، وقرار يجب أن يبقى قابلًا للتفسير.
+
+**Saudi HR** يربط هذه الرحلة داخل ERPNext في ملف واحد وطبقة تشغيل عربية مستقلة عن HRMS. النتيجة ليست مزيدًا من النماذج؛ بل حقيقة تشغيلية واحدة يعرف منها الفريق: ماذا حدث؟ لماذا؟ ومن يملك الخطوة التالية؟
 
 > [!IMPORTANT]
-> التطبيق يقدم أدوات تشغيل وامتثال مبنية على اللائحة ونظام العمل السعودي، لكنه لا يُعد استشارة قانونية. الحالات الخاصة تستلزم مراجعة مختص قانوني مؤهل.
+> التطبيق أداة تشغيل وامتثال مبنية على متطلبات العمل السعودي، وليس بديلًا عن الاستشارة القانونية للحالات الخاصة.
 
-<table dir="rtl">
-<tr>
-<td width="25%"><strong>🇸🇦 عربي أولًا</strong><br><sub>مصطلحات وسير عمل وواجهات ملائمة لفرق الموارد البشرية في المملكة.</sub></td>
-<td width="25%"><strong>🧭 دورة مكتملة</strong><br><sub>من طلب التوظيف والعقد حتى المخالصة ومكافأة نهاية الخدمة.</sub></td>
-<td width="25%"><strong>🛡️ امتثال قابل للتدقيق</strong><br><sub>مهل، تنبيهات، أدلة، سجلات، ومركز قيادة للمتابعة.</sub></td>
-<td width="25%"><strong>🔌 مستقل عن HRMS</strong><br><sub>يعتمد على Frappe وERPNext فقط، مع عقد تبعيات موثق.</sub></td>
-</tr>
-</table>
+## مدار الموظف
 
-## لقطة من مركز التشغيل
+```text
+                              ┌──────── العقد ────────┐
+                       الحضور │                       │ الامتثال
+                              │   ملف موظف شامل      │
+                       الإجازة│  هوية · عمل · أثر    │ الراتب
+                              └──────── الخروج ───────┘
+```
 
-<p align="center">
-  <a href="https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/#tour">
-    <img src="docs/images/professional-hr-hub-desktop.png" alt="مركز الموارد البشرية الاحترافي في Saudi HR" width="100%">
-  </a>
-</p>
+| المحطة | ما يربطه النظام | ما يتركه للمراجعة |
+|:--|:--|:--|
+| **التوظيف والعقد** | الطلب، المرشح، التقييم، العرض، العقد والتجربة | قرار موثق وبداية محددة |
+| **التشغيل اليومي** | الوردية، الموقع، الحضور، الغياب والإجازات المخصصة | حركة واستحقاق قابلان للتفسير |
+| **الراتب والالتزامات** | المسير، التسويات، القروض، GOSI، WPS ونطاقات | حساب ومخرج نظامي قابلان للمراجعة |
+| **العلاقات والامتثال** | السياسات، الإقرارات، التحقيقات، التظلمات والتفتيش | مسؤول وموعد ودليل إغلاق |
+| **الخروج** | الإنهاء، الإخلاء، المقابلة، EOSB والمخالصة | نهاية خدمة بلا فجوات |
 
-<p align="center"><sub>مؤشرات اليوم، الإجراءات ذات الأولوية، حالة الامتثال والتنقل السريع في شاشة واحدة.</sub></p>
+## شاهد النظام وهو يعمل
 
-## منظومة واحدة لكامل الدورة
+<a href="https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/#journey">
+  <img src="docs/images/professional-hr-hub-desktop.png" alt="مركز التشغيل الاحترافي في Saudi HR" width="100%">
+</a>
 
-| المسار | ما الذي يديره التطبيق؟ | مخرجات يمكن مراجعتها |
-|---|---|---|
-| **التوظيف والانضمام** | طلبات التوظيف، المرشحون، العقود، التهيئة، التجربة والجاهزية | عقد وتواريخ ومسؤوليات موثقة |
-| **ملف الموظف الشامل** | الهوية، الاتصال، الوظيفة، الوثائق، العقد، الحضور، الراتب، الإجازات والخروج | صورة تشغيلية موحدة للموظف |
-| **الحضور والورديات** | الورديات، تسجيل الدخول والخروج، المواقع، الحضور اليومي والشهري والغياب | سجلات زمنية قابلة للتتبع |
-| **الإجازات** | سنوية، مرضية، خاصة وأمومة مع سياسات حسب الموظف أو القسم | أرصدة، استحقاقات وموافقات |
-| **الرواتب والالتزامات** | الرواتب الشهرية، التسويات، القروض، GOSI، WPS ونطاقات | حسابات وملفات وتقارير نظامية |
-| **العلاقات والامتثال** | السياسات، الإقرارات، الجزاءات، التظلمات، التحقيقات والتفتيش | سجل إجراء ودليل وموعد استحقاق |
-| **الخروج ونهاية الخدمة** | الإنهاء، الإخلاء، المقابلة، المخالصة وEOSB | مسار إغلاق كامل بمهلة متابعة |
+<p align="center" dir="rtl"><sub>مركز التشغيل الفعلي: الأولويات اليومية والملف الشامل والامتثال في منظور واحد.</sub></p>
 
-## التثبيت السريع
+## التثبيت
 
-هذه الصفحة تخص فرع **ERPNext v16**. لتثبيت النسخة المتوافقة:
-
-الحزمة المختبرة: Saudi HR `1.18.0` — الإصدار `v1.18.0-v16`.
+هذه الحزمة مخصصة لـ **ERPNext v16**. الحزمة المختبرة: Saudi HR `1.18.0` — الإصدار `v1.18.0-v16`.
 
 ```bash
 cd ~/frappe-bench
 bench get-app --branch version-16 https://github.com/ahmadmdm/hr-saudi-arabia-erpnext.git
 bench --site your-site.local install-app saudi_hr
 bench --site your-site.local migrate
-bench clear-cache
+bench build --app saudi_hr
 bench restart
 ```
 
-بعد التثبيت افتح:
+ثم ابدأ من:
 
-- مساحة العمل: `/app/saudi-hr`
-- مركز التشغيل: `/app/professional-hr-hub`
-- مركز إجراءات الحضور: `/app/attendance-action-hub`
-- حضور الجوال: `/mobile-attendance`
-
-تستخدم ERPNext v15؟ انتقل إلى **[فرع version-15](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/tree/version-15)** أو اختر v15 داخل **[التوتريال التفاعلي](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/#install)**.
-
-## رحلة الإطلاق في 6 محطات
-
-```mermaid
-flowchart RL
-    A[1. تثبيت التطبيق] --> B[2. إعداد الشركة والفروع]
-    B --> C[3. تعريف الورديات وسياسات الإجازة]
-    C --> D[4. إضافة الموظفين والعقود]
-    D --> E[5. تشغيل الحضور والرواتب]
-    E --> F[6. مراقبة الامتثال والتقارير]
+```text
+/app/saudi-hr                مساحة العمل
+/app/professional-hr-hub     مركز التشغيل
+/app/attendance-action-hub   إجراءات الحضور
+/mobile-attendance           حضور الجوال
 ```
 
-1. ثبّت التطبيق ونفّذ الترحيل ثم تحقّق من ظهور مساحة **Saudi HR**.
-2. راجع الشركة والفروع والمواقع والأدوار والصلاحيات.
-3. أنشئ الورديات وسياسة الإجازة العامة، ثم خصّصها لقسم أو موظف عند الحاجة.
-4. أكمل ملف الموظف والعقد والوثائق وتواريخ الهوية والإقامة والتصاريح.
-5. اختبر دورة حضور وإجازة وراتب على مجموعة تجريبية قبل التعميم.
-6. راقب مركز الامتثال والتنبيهات وراجع المخرجات الحكومية قبل الإرسال.
-
 > [!TIP]
-> التوتريال الكامل يضم خطوات قابلة للنسخ، قائمة تحقق للإطلاق، ومسارات منفصلة لمسؤول النظام وموظف الموارد البشرية: **[افتح دليل المشروع](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/)**.
+> تستخدم ERPNext v15؟ انتقل إلى [فرع version-15](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/tree/version-15)، أو اختر إصدارك داخل [التوتريال التفاعلي](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/#install).
 
-## مركز التوثيق
+## أول دورة حقيقية
 
-| الدليل | الغرض |
-|---|---|
-| [التثبيت](docs/installation.md) | متطلبات البيئة وخطوات التثبيت والتحقق |
-| [النشر](docs/deployment.md) | إعداد الموقع، المسارات، والجاهزية التشغيلية |
-| [تخصيص الإجازات](docs/leave-policy-customization.md) | إسناد سياسة لموظف أو قسم وأولوية التطبيق |
-| [البيانات التجريبية](docs/demo-data.md) | سيناريو آمن لبناء تجربة كاملة |
-| [الجولة البصرية](docs/visual-tour.md) | أهم الشاشات والمسارات المرئية |
-| [مصفوفة الامتثال](docs/LEGAL_COMPLIANCE_MATRIX.md) | ربط المتطلبات النظامية بوظائف التطبيق |
-| [خطة الاختبار](docs/COMPREHENSIVE_TEST_PLAN.md) | نطاق الاختبارات الوظيفية والتكاملية والبصرية |
-| [نتائج الاختبار](docs/COMPREHENSIVE_TEST_RESULTS.md) | الأدلة والنتائج والحدود المعروفة |
-| [التعافي من الكوارث](docs/DISASTER_RECOVERY.md) | النسخ الاحتياطي والاستعادة والاستمرارية |
-| [عقد التبعيات](DEPENDENCIES.md) | ما يعتمد عليه التطبيق وما يملكه داخليًا |
+1. **ابنِ الهيكل:** الشركة، الفروع، الأقسام، الوظائف، المواقع والصلاحيات.
+2. **عرّف السياسات:** الورديات والإجازات والعقود وتنبيهات الوثائق.
+3. **أضف موظفًا تجريبيًا:** أكمل هويته وعقده ووثائقه وراتبه.
+4. **شغّل يومًا فعليًا:** حضور ثم طلب إجازة وموافقة ثم راتب تجريبي.
+5. **أغلق الدورة:** راجع التقارير والتنبيهات والمخرجات ثم اختبر النسخ الاحتياطي.
 
-## الجودة والأمان التشغيلي
+ابدأ المسار الموجه حسب دورك من **[دليل التشغيل الحي](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/#tutorial)**.
 
-- صلاحيات على مستوى المستند والسجل، مع حماية بيانات الرواتب والملف الشامل.
-- مهام مجدولة لتنبيهات العقود والإقامات والتصاريح والتأمينات والمهل النظامية.
-- اختبارات Python مستقلة واختبارات Bench للمسارات التي تتطلب موقع Frappe حيًا.
-- توثيق نتائج الاختبار البصري للعربية وRTL والجوال وحالات الفراغ والأخطاء.
-- بيانات الجهات الحكومية تُجهّز وتُراجع داخل النظام؛ الربط الحي يحتاج بيانات اعتماد وقنوات معتمدة من الجهة المعنية.
+## التوثيق الذي تحتاجه عند الحاجة
 
-## المساهمة
+- [التثبيت](docs/installation.md) — المتطلبات والخطوات والتحقق.
+- [النشر](docs/deployment.md) — المسارات والصلاحيات والجاهزية.
+- [تخصيص الإجازات](docs/leave-policy-customization.md) — سياسة عامة أو قسم أو موظف.
+- [البيانات التجريبية](docs/demo-data.md) — دورة آمنة قبل الإنتاج.
+- [مصفوفة الامتثال](docs/LEGAL_COMPLIANCE_MATRIX.md) — من المتطلب إلى الوظيفة والدليل.
+- [خطة الاختبار](docs/COMPREHENSIVE_TEST_PLAN.md) و[النتائج](docs/COMPREHENSIVE_TEST_RESULTS.md).
+- [التعافي من الكوارث](docs/DISASTER_RECOVERY.md) و[عقد التبعيات](DEPENDENCIES.md).
 
-نرحب بالمشكلات الموثقة، تحسينات الترجمة، الاختبارات، والاقتراحات التي ترفع دقة التشغيل السعودي. قبل إرسال التغيير:
+## حدود واضحة
+
+- الربط الحي مع قوى وGOSI ومدد ومقيم يحتاج بيانات اعتماد وقنوات معتمدة من الجهات.
+- المخرجات الحكومية تُجهّز وتُراجع داخل النظام قبل الإرسال.
+- بيانات الرواتب والملف الشامل محكومة بصلاحيات على مستوى المستند والسجل.
+- المهام المجدولة تراقب العقود والإقامات والتصاريح والمهل النظامية.
+
+## المساهمة والجودة
 
 ```bash
-ruff check .
-pytest
+python scripts/validate_quality.py
+ruff check saudi_hr --select F
+pytest -q
 git diff --check
 ```
 
-افتح [Issue](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/issues) مع خطوات إعادة المشكلة، الإصدار، والنتيجة المتوقعة.
+أرسل المشكلة مع الإصدار، خطوات الإعادة، النتيجة المتوقعة ودليل مرئي إن وجد عبر [GitHub Issues](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/issues).
 
 ## صاحب المشروع
 
-<table dir="rtl">
-<tr>
-<td width="70%">
-<strong>ahmad</strong><br>
-صاحب المشروع والمشرف على تطوير تجربة الموارد البشرية السعودية.<br>
-<a href="mailto:ahmad8@outlook.com">ahmad8@outlook.com</a>
-</td>
-<td width="30%" align="center">
-<a href="mailto:ahmad8@outlook.com"><strong>تواصل عبر البريد ←</strong></a>
-</td>
-</tr>
-</table>
+<div dir="rtl">
 
+**ahmad**<br>
+صاحب المشروع والمشرف على تجربة الموارد البشرية السعودية.<br>
+[ahmad8@outlook.com](mailto:ahmad8@outlook.com)
+
+</div>
 ---
 
 <div align="center" dir="rtl">
 
-بُني بعناية لفرق الموارد البشرية في المملكة العربية السعودية.
+**العقد يعرف الراتب · الحضور يعرف الاستحقاق · الامتثال يعرف الموعد**
 
-**[التوتريال](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/)** · **[الإصدارات](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases)** · **[الرخصة](LICENSE)**
+[التجربة التفاعلية](https://ahmadmdm.github.io/hr-saudi-arabia-erpnext/) · [الإصدارات](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases) · [GPL-3.0](LICENSE)
 
 </div>
