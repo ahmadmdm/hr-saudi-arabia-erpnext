@@ -288,8 +288,25 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(rows[0]["late_hours"], 0)
 		self.assertEqual(rows[0]["gross_salary"], 6750)
 		self.assertEqual(rows[0]["gosi_deduction"], 500)
+		self.assertEqual(rows[0]["penalty_deduction"], 0)
+		self.assertEqual(rows[0]["advance_deduction"], 400)
 		self.assertEqual(rows[0]["total_deductions"], 900)
 		self.assertEqual(rows[0]["net_salary"], 5950)
+
+	def test_professional_template_has_supported_sheet_and_auditable_headers(self):
+		content = payroll_module._build_payroll_import_template_workbook(None).getvalue()
+		workbook = load_workbook(BytesIO(content), data_only=False, read_only=True)
+
+		self.assertEqual(workbook.sheetnames[:3], ["دليل الاستخدام", "مسير الرواتب", "مثال مكتمل"])
+		worksheet = workbook["مسير الرواتب"]
+		headers = [cell.value for cell in worksheet[4]]
+		self.assertIn("خصم الغياب", headers)
+		self.assertIn("خصم السلف والاستقطاعات", headers)
+		self.assertIn("إجمالي الخصومات", headers)
+		self.assertIn("حالة التحقق", headers)
+		self.assertEqual(worksheet["L5"].value, '=IF(COUNTA(A5:K5)=0,"",SUM(G5:J5))')
+		self.assertEqual(worksheet["V5"].value, '=IF(COUNTA(A5:U5)=0,"",SUM(O5,Q5:U5))')
+		self.assertEqual(worksheet["W5"].value, '=IF(L5="","",L5+K5-V5)')
 
 	def test_extract_source_workbook_rows_rejects_missing_required_headers(self):
 		workbook = Workbook()
@@ -353,6 +370,42 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(rows[0]["net_salary"], 5950)
 		self.assertEqual(rows[0]["payroll_employee_id"], "2960")
 		self.assertEqual(rows[0]["workbook_department"], "")
+
+	def test_map_workbook_rows_preserves_legacy_deduction_breakdown(self):
+		raw_rows = [{
+			"source_row": 8,
+			"employee_id": 2960,
+			"employee_name": "موظف تجريبي",
+			"department": "الإدارة",
+			"basic_salary": 5000,
+			"gross_salary": 5000,
+			"absence_value": 100,
+			"late_value": 50,
+			"penalty_deduction": 75,
+			"gosi_deduction": 500,
+			"advance_deduction": 250,
+			"manual_deduction": 25,
+			"total_deductions": 1000,
+			"additions": 400,
+			"net_salary": 4400,
+		}]
+		lookup = {
+			"2960": {"employee": {"name": "EMP-2960", "employee_name": "موظف تجريبي", "department": "الإدارة"}, "matched_by": "employee_id"}
+		}
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value=lookup), patch.object(
+			payroll_module.frappe.db, "exists", return_value=True
+		):
+			rows, warnings = payroll_module._map_workbook_rows_to_payroll("amd", raw_rows)
+
+		self.assertEqual(warnings, [])
+		self.assertEqual(rows[0]["absence_deduction"], 100)
+		self.assertEqual(rows[0]["late_deduction"], 50)
+		self.assertEqual(rows[0]["penalty_deduction"], 75)
+		self.assertEqual(rows[0]["advance_deduction"], 250)
+		self.assertEqual(rows[0]["other_deductions"], 25)
+		self.assertEqual(rows[0]["total_deductions"], 1000)
+		self.assertEqual(rows[0]["overtime_addition"], 400)
 
 	def test_map_workbook_rows_to_payroll_normalizes_gross_when_it_includes_additions(self):
 		raw_rows = [{
@@ -418,7 +471,6 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		raw_rows = [
 			{
 				"source_row": 10,
-				"employee_id": "1001A",
 				"employee_name": "محمد علي",
 				"department": "الإدارة",
 				"basic_salary": 1000,
@@ -428,7 +480,6 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			},
 			{
 				"source_row": 11,
-				"employee_id": "1001B",
 				"employee_name": "محمد علي",
 				"department": "المبيعات",
 				"basic_salary": 1000,
@@ -447,7 +498,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertIn("محمد علي", summary["critical_warnings"][0])
 		self.assertIn("10", summary["critical_warnings"][0])
 		self.assertIn("11", summary["critical_warnings"][0])
-		self.assertEqual(summary["error_count"], 0)
+		self.assertEqual(summary["error_count"], 2)
 
 	def test_map_workbook_rows_to_payroll_keeps_unmatched_workbook_rows(self):
 		raw_rows = [{
@@ -563,7 +614,6 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		raw_rows = [
 			{
 				"source_row": 10,
-				"employee_id": "1081A",
 				"employee_name": "دخيل محمد المبارك",
 				"basic_salary": 1000,
 				"gross_salary": 1000,
@@ -572,7 +622,6 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 			},
 			{
 				"source_row": 11,
-				"employee_id": "1081B",
 				"employee_name": "دخيل محمد دخيل المبارك",
 				"basic_salary": 1000,
 				"gross_salary": 1000,
@@ -586,6 +635,14 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(len(warnings), 1)
 		self.assertIn("10", warnings[0])
 		self.assertIn("11", warnings[0])
+
+	def test_duplicate_names_with_distinct_employee_ids_are_safe_without_cost_center(self):
+		raw_rows = [
+			{"source_row": 10, "employee_id": "1081A", "employee_name": "دخيل محمد المبارك", "basic_salary": 1000, "net_salary": 1000},
+			{"source_row": 11, "employee_id": "1081B", "employee_name": "دخيل محمد دخيل المبارك", "basic_salary": 1000, "net_salary": 1000},
+		]
+
+		self.assertEqual(payroll_module._get_duplicate_name_without_cost_center_warnings(raw_rows), [])
 
 	def test_preview_payroll_workbook_summarizes_matching_gap(self):
 		with patch.object(payroll_module, "_extract_source_workbook_rows", return_value=[
@@ -1175,7 +1232,7 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		]
 		self.assertEqual(payroll_module.EMPLOYEE_SETUP_TEMPLATE_HEADERS, required)
 
-	def test_build_payroll_import_template_adds_payload_validations(self):
+	def test_build_payroll_import_template_is_professional_and_validated(self):
 		doc = SimpleNamespace(company="amd")
 
 		with patch.object(payroll_module, "_get_company_default_cost_center", return_value="Main - d"), patch.object(
@@ -1188,10 +1245,13 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		workbook = load_workbook(content)
 		payload_sheet = workbook[payroll_module.PREFERRED_SOURCE_WORKBOOK_SHEETS[0]]
 
-		self.assertEqual(workbook["_Lists"].sheet_state, "hidden")
-		self.assertGreaterEqual(len(payload_sheet.data_validations.dataValidation), 3)
-		self.assertEqual(payload_sheet["A1"].fill.fgColor.rgb[-6:], "FFF4CC")
-		self.assertEqual(payload_sheet["C2"].fill.fgColor.rgb[-6:], "FFF4CC")
+		self.assertIn("دليل الاستخدام", workbook.sheetnames)
+		self.assertIn("مثال مكتمل", workbook.sheetnames)
+		self.assertGreaterEqual(len(payload_sheet.data_validations.dataValidation), 2)
+		self.assertEqual(payload_sheet["A1"].fill.fgColor.rgb[-6:], "123B5D")
+		self.assertEqual(payload_sheet["L5"].value, '=IF(COUNTA(A5:K5)=0,"",SUM(G5:J5))')
+		self.assertEqual(payload_sheet["V5"].value, '=IF(COUNTA(A5:U5)=0,"",SUM(O5,Q5:U5))')
+		self.assertEqual(payload_sheet["W5"].value, '=IF(L5="","",L5+K5-V5)')
 
 	def test_build_simple_payroll_import_template_contains_arabic_instruction_sheet(self):
 		doc = SimpleNamespace(company="amd")

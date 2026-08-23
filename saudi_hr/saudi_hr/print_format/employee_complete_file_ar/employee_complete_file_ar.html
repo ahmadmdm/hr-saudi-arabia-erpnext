@@ -228,26 +228,31 @@
 
 {%- set payroll_rows = frappe.db.sql("""
     SELECT
-        pe.name            AS row_name,
+        p.name             AS row_name,
         pe.parent          AS payroll_name,
         p.month            AS payroll_month,
         p.year             AS payroll_year,
-        pe.basic_salary,
-        pe.housing_allowance,
-        pe.transport_allowance,
-        pe.other_allowances,
-        pe.gross_salary,
-        pe.gosi_employee_deduction  AS gosi_deduction,
-        pe.loan_deduction,
-        pe.other_deductions,
-        pe.total_deductions,
-        pe.overtime_addition,
-        pe.net_salary
+        SUM(pe.basic_salary) AS basic_salary,
+        SUM(pe.housing_allowance) AS housing_allowance,
+        SUM(pe.transport_allowance) AS transport_allowance,
+        SUM(pe.other_allowances) AS other_allowances,
+        SUM(pe.gross_salary) AS gross_salary,
+        SUM(pe.gosi_employee_deduction) AS gosi_deduction,
+        SUM(pe.loan_deduction) AS loan_deduction,
+        SUM(pe.absence_deduction) AS absence_deduction,
+        SUM(pe.late_deduction) AS late_deduction,
+        SUM(pe.penalty_deduction) AS penalty_deduction,
+        SUM(pe.advance_deduction) AS advance_deduction,
+        SUM(pe.other_deductions) AS other_deductions,
+        SUM(pe.total_deductions) AS total_deductions,
+        SUM(pe.overtime_addition) AS overtime_addition,
+        SUM(pe.net_salary) AS net_salary
     FROM `tabSaudi Monthly Payroll Employee` pe
     INNER JOIN `tabSaudi Monthly Payroll` p ON p.name = pe.parent
     WHERE pe.employee = %(emp)s
       AND p.docstatus = 1
       AND IFNULL(p.payroll_journal_entry, '') != ''
+    GROUP BY p.name, p.month, p.year
     ORDER BY p.year DESC, p.month DESC
     LIMIT 36
 """, {"emp": emp.name}, as_dict=True) -%}

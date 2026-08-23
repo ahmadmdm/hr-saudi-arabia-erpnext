@@ -4,7 +4,7 @@ from collections.abc import Iterable
 
 import frappe
 from frappe import _
-from frappe.utils import date_diff, flt, get_first_day, getdate, now_datetime, nowdate
+from frappe.utils import cstr, date_diff, flt, get_first_day, getdate, now_datetime, nowdate
 
 from saudi_hr.saudi_hr.utils import (
 	can_access_complete_employee_file,
@@ -14,7 +14,7 @@ from saudi_hr.saudi_hr.utils import (
 )
 
 
-PROFILE_SCHEMA_VERSION = "2026.1"
+PROFILE_SCHEMA_VERSION = "2026.2"
 EXPIRY_WARNING_DAYS = 60
 
 
@@ -496,7 +496,7 @@ def _latest_payroll(employee: str, company: str | None):
 
 	parents = frappe.get_list(
 		"Saudi Monthly Payroll",
-		filters={"docstatus": 1},
+		filters={"docstatus": ["<", 2]},
 		fields=[
 			"name",
 			"company",
@@ -506,26 +506,59 @@ def _latest_payroll(employee: str, company: str | None):
 			"posting_date",
 			"status",
 			"payroll_journal_entry",
+			"docstatus",
 		],
 		order_by="posting_date desc, modified desc",
 		limit_page_length=50,
 	)
 	for parent in parents:
-		if not parent.payroll_journal_entry:
-			continue
-		row = frappe.db.get_value(
+		rows = frappe.get_all(
 			"Saudi Monthly Payroll Employee",
-			{"parent": parent.name, "employee": employee},
-			[
+			filters={"parent": parent.name, "employee": employee},
+			fields=[
+				"cost_center",
+				"basic_salary",
+				"housing_allowance",
+				"transport_allowance",
+				"other_allowances",
 				"gross_salary",
+				"gosi_employee_deduction",
+				"sick_leave_deduction",
+				"loan_deduction",
+				"absence_deduction",
+				"late_deduction",
+				"penalty_deduction",
+				"advance_deduction",
+				"other_deductions",
 				"total_deductions",
+				"overtime_addition",
 				"net_salary",
 				"salary_mode",
 			],
-			as_dict=True,
 		)
-		if not row:
+		if not rows:
 			continue
+
+		def total(fieldname: str) -> float:
+			return round(sum(flt(row.get(fieldname)) for row in rows), 2)
+
+		allocation_map = {}
+		for row in rows:
+			cost_center = row.get("cost_center") or _("Unassigned / غير محدد")
+			allocation = allocation_map.setdefault(
+				cost_center,
+				{
+					"cost_center": cost_center,
+					"gross_salary": 0.0,
+					"overtime_addition": 0.0,
+					"total_deductions": 0.0,
+					"net_salary": 0.0,
+				},
+			)
+			for fieldname in ("gross_salary", "overtime_addition", "total_deductions", "net_salary"):
+				allocation[fieldname] = round(allocation[fieldname] + flt(row.get(fieldname)), 2)
+
+		salary_modes = sorted({cstr(row.get("salary_mode")).strip() for row in rows if row.get("salary_mode")})
 		currency = (
 			frappe.db.get_value("Company", parent.company or company, "default_currency")
 			if parent.company or company
@@ -536,13 +569,29 @@ def _latest_payroll(employee: str, company: str | None):
 			"period_label": parent.period_label or f"{parent.month or ''} {parent.year or ''}".strip(),
 			"posting_date": _as_date(parent.posting_date),
 			"status": parent.status,
+			"docstatus": parent.docstatus,
 			"journal_entry": parent.payroll_journal_entry,
 			"paid": bool(parent.payroll_journal_entry),
 			"currency": currency or "SAR",
-			"gross_salary": flt(row.gross_salary),
-			"total_deductions": flt(row.total_deductions),
-			"net_salary": flt(row.net_salary),
-			"salary_mode": row.salary_mode,
+			"row_count": len(rows),
+			"basic_salary": total("basic_salary"),
+			"housing_allowance": total("housing_allowance"),
+			"transport_allowance": total("transport_allowance"),
+			"other_allowances": total("other_allowances"),
+			"gross_salary": total("gross_salary"),
+			"gosi_deduction": total("gosi_employee_deduction"),
+			"sick_leave_deduction": total("sick_leave_deduction"),
+			"loan_deduction": total("loan_deduction"),
+			"absence_deduction": total("absence_deduction"),
+			"late_deduction": total("late_deduction"),
+			"penalty_deduction": total("penalty_deduction"),
+			"advance_deduction": total("advance_deduction"),
+			"other_deductions": total("other_deductions"),
+			"total_deductions": total("total_deductions"),
+			"overtime_addition": total("overtime_addition"),
+			"net_salary": total("net_salary"),
+			"salary_mode": " · ".join(salary_modes),
+			"allocations": list(allocation_map.values()),
 		}
 	return None
 
