@@ -28,9 +28,13 @@
   "gross_salary",
   "gosi_employee_deduction",
   "sick_leave_deduction",
-    "loan_deduction",
-    "other_deductions",
-    "total_deductions",
+  "loan_deduction",
+  "absence_deduction",
+  "late_deduction",
+  "penalty_deduction",
+  "advance_deduction",
+  "other_deductions",
+  "total_deductions",
   "overtime_addition",
     "loan_installments",
   "net_salary"
@@ -196,6 +200,34 @@
      "options": "currency",
      "read_only": 1
     },
+  {
+   "fieldname": "absence_deduction",
+   "fieldtype": "Currency",
+   "label": "Absence Deduction / خصم الغياب",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "late_deduction",
+   "fieldtype": "Currency",
+   "label": "Late Deduction / خصم التأخير",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "penalty_deduction",
+   "fieldtype": "Currency",
+   "label": "Penalty Deduction / خصم الجزاءات",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "advance_deduction",
+   "fieldtype": "Currency",
+   "label": "Advance Deduction / خصم السلف والاستقطاعات",
+   "options": "currency",
+   "read_only": 1
+  },
     {
      "fieldname": "other_deductions",
      "fieldtype": "Currency",

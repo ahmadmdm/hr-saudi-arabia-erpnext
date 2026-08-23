@@ -1,9 +1,13 @@
+from unittest.mock import patch
+
+import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, nowdate
 
 from saudi_hr.saudi_hr.employee_profile import (
 	_days_remaining,
 	_expiry_state,
+	_latest_payroll,
 	calculate_employee_readiness,
 )
 
@@ -46,6 +50,77 @@ def _complete_context():
 
 
 class TestEmployeeProfile(FrappeTestCase):
+	def test_latest_payroll_aggregates_all_employee_cost_center_rows(self):
+		parent = frappe._dict({
+			"name": "PAY-2026-08",
+			"company": "Test Company",
+			"period_label": "August 2026",
+			"month": "August",
+			"year": 2026,
+			"posting_date": "2026-08-31",
+			"status": "Draft / مسودة",
+			"payroll_journal_entry": None,
+			"docstatus": 0,
+		})
+		rows = [
+			frappe._dict({
+				"cost_center": "Riyadh",
+				"basic_salary": 3000,
+				"housing_allowance": 500,
+				"transport_allowance": 200,
+				"other_allowances": 0,
+				"gross_salary": 3700,
+				"gosi_employee_deduction": 300,
+				"sick_leave_deduction": 0,
+				"loan_deduction": 0,
+				"absence_deduction": 0,
+				"late_deduction": 0,
+				"penalty_deduction": 0,
+				"advance_deduction": 0,
+				"other_deductions": 0,
+				"total_deductions": 300,
+				"overtime_addition": 0,
+				"net_salary": 3400,
+				"salary_mode": "Bank",
+			}),
+			frappe._dict({
+				"cost_center": "Jeddah",
+				"basic_salary": 1000,
+				"housing_allowance": 0,
+				"transport_allowance": 0,
+				"other_allowances": 0,
+				"gross_salary": 1000,
+				"gosi_employee_deduction": 0,
+				"sick_leave_deduction": 0,
+				"loan_deduction": 0,
+				"absence_deduction": 0,
+				"late_deduction": 0,
+				"penalty_deduction": 0,
+				"advance_deduction": 250,
+				"other_deductions": 0,
+				"total_deductions": 250,
+				"overtime_addition": 500,
+				"net_salary": 1250,
+				"salary_mode": "Bank",
+			}),
+		]
+
+		with patch("saudi_hr.saudi_hr.employee_profile._can_read", return_value=True), patch(
+			"saudi_hr.saudi_hr.employee_profile._doctype_exists", return_value=True
+		), patch("saudi_hr.saudi_hr.employee_profile.frappe.get_list", return_value=[parent]), patch(
+			"saudi_hr.saudi_hr.employee_profile.frappe.get_all", return_value=rows
+		), patch("saudi_hr.saudi_hr.employee_profile.frappe.db.get_value", return_value="SAR"):
+			result = _latest_payroll("EMP-1", "Test Company")
+
+		self.assertEqual(result["row_count"], 2)
+		self.assertEqual(result["gross_salary"], 4700)
+		self.assertEqual(result["overtime_addition"], 500)
+		self.assertEqual(result["advance_deduction"], 250)
+		self.assertEqual(result["total_deductions"], 550)
+		self.assertEqual(result["net_salary"], 4650)
+		self.assertEqual(len(result["allocations"]), 2)
+		self.assertFalse(result["paid"])
+
 	def test_expiry_helpers_have_stable_boundaries(self):
 		self.assertEqual(_days_remaining("2026-02-01", "2026-01-31"), 1)
 		self.assertEqual(_expiry_state("2026-01-30", "2026-01-31"), "expired")

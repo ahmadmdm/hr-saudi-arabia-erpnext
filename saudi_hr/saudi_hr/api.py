@@ -709,18 +709,24 @@ def _get_payroll_snapshot(employee):
 	rows = frappe.db.sql(
 		"""
 		SELECT
-			child.gosi_employee_deduction,
-			child.sick_leave_deduction,
-			child.loan_deduction,
-			child.total_deductions,
-			child.overtime_addition,
-			child.net_salary,
+			SUM(child.gosi_employee_deduction) AS gosi_employee_deduction,
+			SUM(child.sick_leave_deduction) AS sick_leave_deduction,
+			SUM(child.loan_deduction) AS loan_deduction,
+			SUM(child.absence_deduction) AS absence_deduction,
+			SUM(child.late_deduction) AS late_deduction,
+			SUM(child.penalty_deduction) AS penalty_deduction,
+			SUM(child.advance_deduction) AS advance_deduction,
+			SUM(child.other_deductions) AS other_deductions,
+			SUM(child.total_deductions) AS total_deductions,
+			SUM(child.overtime_addition) AS overtime_addition,
+			SUM(child.net_salary) AS net_salary,
 			parent.month,
 			parent.year,
 			parent.status
 		FROM `tabSaudi Monthly Payroll Employee` child
 		INNER JOIN `tabSaudi Monthly Payroll` parent ON parent.name = child.parent
 		WHERE child.employee = %s AND parent.docstatus = 1
+		GROUP BY parent.name, parent.month, parent.year, parent.status, parent.modified
 		ORDER BY parent.year DESC, parent.modified DESC
 		LIMIT 1
 		""",
@@ -737,6 +743,11 @@ def _get_payroll_snapshot(employee):
 		"gosi_deduction": flt(row.gosi_employee_deduction),
 		"sick_leave_deduction": flt(row.sick_leave_deduction),
 		"loan_deduction": flt(row.loan_deduction),
+		"absence_deduction": flt(row.absence_deduction),
+		"late_deduction": flt(row.late_deduction),
+		"penalty_deduction": flt(row.penalty_deduction),
+		"advance_deduction": flt(row.advance_deduction),
+		"other_deductions": flt(row.other_deductions),
 		"total_deductions": flt(row.total_deductions),
 		"overtime_addition": flt(row.overtime_addition),
 		"net_salary": flt(row.net_salary),
@@ -1104,15 +1115,17 @@ def get_employee_paid_payroll_history(employee, limit=10):
 			parent.posting_date,
 			parent.status,
 			parent.payroll_journal_entry,
-			child.gross_salary,
-			child.total_deductions,
-			child.net_salary,
-			child.salary_mode
+			SUM(child.gross_salary) AS gross_salary,
+			SUM(child.total_deductions) AS total_deductions,
+			SUM(child.net_salary) AS net_salary,
+			GROUP_CONCAT(DISTINCT NULLIF(child.salary_mode, '') SEPARATOR ' · ') AS salary_mode
 		FROM `tabSaudi Monthly Payroll Employee` child
 		INNER JOIN `tabSaudi Monthly Payroll` parent ON parent.name = child.parent
 		WHERE child.employee = %s
 			AND parent.docstatus = 1
 			AND IFNULL(parent.payroll_journal_entry, '') != ''
+		GROUP BY parent.name, parent.period_label, parent.month, parent.year, parent.posting_date,
+			parent.status, parent.payroll_journal_entry, parent.modified
 		ORDER BY parent.posting_date DESC, parent.modified DESC
 		LIMIT %s
 		""",

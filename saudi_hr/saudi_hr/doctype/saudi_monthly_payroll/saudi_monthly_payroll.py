@@ -1,5 +1,6 @@
 from io import BytesIO
 from os.path import splitext
+from pathlib import Path
 
 import frappe
 from frappe import _
@@ -15,7 +16,7 @@ from saudi_hr.saudi_hr.doctype.employee_loan.employee_loan import apply_payroll_
 from saudi_hr.saudi_hr.utils import assert_doctype_permissions, assert_positive_basic_salary, calculate_prorated_sick_leave_deduction, get_contract_nationality_lookup, get_employee_nationality, get_employee_salary_components, get_gosi_rates, text_matches_tokens
 
 GOSI_MAX_BASE = 45000.0
-PREFERRED_SOURCE_WORKBOOK_SHEETS = ("كشف الرواتب طباعة", "كشف الرواتب", "كشف المصدر")
+PREFERRED_SOURCE_WORKBOOK_SHEETS = ("مسير الرواتب", "كشف الرواتب طباعة", "كشف الرواتب", "كشف المصدر")
 MAX_WORKBOOK_FILE_SIZE_BYTES = 10 * 1024 * 1024
 ALLOWED_WORKBOOK_EXTENSIONS = {".xlsx", ".xlsm", ".xls"}
 EMPLOYEE_SETUP_TEMPLATE_HEADERS = [
@@ -47,19 +48,22 @@ PAYROLL_IMPORT_TEMPLATE_HEADERS = [
 	"بدل السكن",
 	"بدل المواصلات",
 	"بدلات اخرى",
+	"الإضافي",
 	"الاجمالي",
 	"ايام العمل",
 	"ايام الغياب",
-	"قيمة ايام الغياب",
+	"خصم الغياب",
 	"ساعات التأخير",
-	"قيمة التأخير",
+	"خصم التأخير",
+	"خصم الجزاءات",
 	"خصم التأمينات",
-	"إضافات",
-	"خصم",
-	"اجمالي الخصم",
-	"صافى الراتب",
+	"خصم السلف والاستقطاعات",
+	"خصومات أخرى",
+	"إجمالي الخصومات",
+	"صافي الراتب",
 	"رقم الهوية",
 	"التأمينات",
+	"حالة التحقق",
 ]
 
 WORKBOOK_HEADER_ALIASES = {
@@ -77,13 +81,19 @@ WORKBOOK_HEADER_ALIASES = {
 	"gross_salary": {"الاجمالي", "اجمالي البدلات", "إجمالي البدلات"},
 	"working_days": {"ايام العمل"},
 	"absence_days": {"ايام الغياب", "عدد أيام الغياب"},
-	"absence_value": {"قيمة ايام الغياب"},
+	"absence_value": {"قيمة ايام الغياب", "خصم الغياب"},
 	"late_hours": {"ساعات التأخير"},
-	"late_value": {"قيمة التأخير"},
+	"late_value": {"قيمة التأخير", "خصم التأخير"},
 	"gosi_deduction": {"خصم التأمينات"},
 	"additions": {"إضافات", "الإضافي", "اضافي", "إضافي"},
-	"manual_deduction": {"خصم", "خصم السلف", "خصم السلف والاستقطاعات", "خصم الجزاءات"},
-	"total_deductions": {"اجمالي الخصم", "إجمالي الخصم"},
+	"penalty_deduction": {"خصم الجزاءات", "خصم الجزاء"},
+	"advance_deduction": {
+		"خصم السلف",
+		"خصم السلف والاستقطاعات",
+		"خصم السلف والإستقطاعات",
+	},
+	"manual_deduction": {"خصم", "خصومات أخرى", "خصومات اخرى"},
+	"total_deductions": {"اجمالي الخصم", "إجمالي الخصم", "إجمالي الخصومات", "اجمالي الخصومات"},
 	"net_salary": {"صافى الراتب", "صافي الراتب"},
 	"national_id": {"رقم الهوية"},
 	"gosi_registration": {"التأمينات", "رقم اشتراك التأمينات"},
@@ -148,6 +158,10 @@ class SaudiMonthlyPayroll(Document):
 				flt(row.gosi_employee_deduction)
 				+ flt(row.sick_leave_deduction)
 				+ flt(row.loan_deduction)
+				+ flt(getattr(row, "absence_deduction", 0.0))
+				+ flt(getattr(row, "late_deduction", 0.0))
+				+ flt(getattr(row, "penalty_deduction", 0.0))
+				+ flt(getattr(row, "advance_deduction", 0.0))
 				+ flt(getattr(row, "other_deductions", 0.0)),
 				2,
 			)
@@ -175,7 +189,15 @@ class SaudiMonthlyPayroll(Document):
 			if "Addition" not in (item.item_type or "") and "إضافة" not in (item.item_type or ""):
 				adjustment_deductions += flt(item.amount)
 		self.total_other_deductions = round(
-			sum(flt(getattr(r, "other_deductions", 0.0)) for r in self.employees) + adjustment_deductions,
+			sum(
+				flt(getattr(r, "absence_deduction", 0.0))
+				+ flt(getattr(r, "late_deduction", 0.0))
+				+ flt(getattr(r, "penalty_deduction", 0.0))
+				+ flt(getattr(r, "advance_deduction", 0.0))
+				+ flt(getattr(r, "other_deductions", 0.0))
+				for r in self.employees
+			)
+			+ adjustment_deductions,
 			2,
 		)
 		self.total_overtime = round(sum(flt(r.overtime_addition) for r in self.employees), 2)
@@ -1008,7 +1030,16 @@ def _create_company_cost_center(company: str, cost_center_label: str) -> str:
 		"parent_cost_center": parent_cost_center,
 		"is_group": 0,
 	})
-	cost_center.insert(ignore_permissions=True)
+	try:
+		cost_center.insert(ignore_permissions=True)
+	except frappe.DuplicateEntryError:
+		# Another import/test may have created the ERPNext-generated name
+		# between the lookup above and the insert. Reuse it when it belongs
+		# to the same company instead of failing an otherwise valid import.
+		existing_name = cstr(cost_center.name or "").strip()
+		if not existing_name or frappe.db.get_value("Cost Center", existing_name, "company") != company_name:
+			raise
+		return _get_postable_cost_center(existing_name, company_name) or existing_name
 	return cost_center.name
 
 
@@ -1033,6 +1064,9 @@ def _build_payroll_expense_account_rows(doc, expense_account: str, default_cost_
 			flt(row.gross_salary)
 			+ flt(row.overtime_addition)
 			- flt(row.sick_leave_deduction)
+			- flt(getattr(row, "absence_deduction", 0.0))
+			- flt(getattr(row, "late_deduction", 0.0))
+			- flt(getattr(row, "penalty_deduction", 0.0))
 			- flt(getattr(row, "other_deductions", 0.0)),
 			2,
 		)
@@ -1063,7 +1097,7 @@ def _build_payroll_expense_account_rows(doc, expense_account: str, default_cost_
 	return accounts
 
 
-def _build_payroll_import_template_workbook(doc) -> BytesIO:
+def _build_legacy_payroll_import_template_workbook(doc) -> BytesIO:
 	workbook = Workbook()
 	instructions_sheet = workbook.active
 	instructions_sheet.title = "Instructions"
@@ -1134,6 +1168,19 @@ def _build_payroll_import_template_workbook(doc) -> BytesIO:
 	workbook.save(output)
 	output.seek(0)
 	return output
+
+
+def _build_payroll_import_template_workbook(_doc) -> BytesIO:
+	"""Return the reviewed Arabic-first payroll workbook shipped with the app."""
+	template_path = Path(
+		frappe.get_app_path("saudi_hr", "public", "templates", "professional_payroll_import_template.xlsx")
+	)
+	if not template_path.is_file():
+		frappe.throw(
+			_("Professional payroll template is unavailable.<br>قالب الرواتب الاحترافي غير متاح حالياً."),
+			title=_("Template Missing / القالب غير موجود"),
+		)
+	return BytesIO(template_path.read_bytes())
 
 
 def _build_payroll_import_example_rows(company: str) -> list[list]:
@@ -1220,8 +1267,8 @@ def _get_required_template_headers() -> set[str]:
 		"مركز التكلفة",
 		"الاساسي",
 		"الاجمالي",
-		"اجمالي الخصم",
-		"صافى الراتب",
+		"إجمالي الخصومات",
+		"صافي الراتب",
 	}
 
 
@@ -1277,14 +1324,16 @@ def _apply_payload_sheet_input_rules(lists_sheet, payload_sheet, company: str, r
 		"الاجمالي",
 		"ايام العمل",
 		"ايام الغياب",
-		"قيمة ايام الغياب",
+		"خصم الغياب",
 		"ساعات التأخير",
-		"قيمة التأخير",
+		"خصم التأخير",
+		"خصم الجزاءات",
 		"خصم التأمينات",
-		"إضافات",
-		"خصم",
-		"اجمالي الخصم",
-		"صافى الراتب",
+		"الإضافي",
+		"خصم السلف والاستقطاعات",
+		"خصومات أخرى",
+		"إجمالي الخصومات",
+		"صافي الراتب",
 	]:
 		column_letter = payload_sheet.cell(row=1, column=header_indexes[header]).column_letter
 		numeric_validation = DataValidation(
@@ -1423,6 +1472,10 @@ def _build_employee_row(emp: dict, month: str, year: int) -> dict:
 		"gosi_employee_deduction": gosi_deduction,
 		"sick_leave_deduction": round(sick_deduction, 2),
 		"loan_deduction": loan_deduction,
+		"absence_deduction": 0.0,
+		"late_deduction": 0.0,
+		"penalty_deduction": 0.0,
+		"advance_deduction": 0.0,
 		"other_deductions": 0.0,
 		"total_deductions": total_deductions,
 		"overtime_addition": overtime,
@@ -1533,11 +1586,13 @@ def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
 		basic = _to_currency(raw.get("basic_salary"))
 		raw_gross = _to_currency(raw.get("gross_salary"))
 		total_deductions = _to_currency(raw.get("total_deductions"))
-		gosi = _to_currency(raw.get("gosi_deduction"))
 		overtime = _to_currency(raw.get("additions"))
+		gosi = _to_currency(raw.get("gosi_deduction"))
 		manual_deduction = _to_currency(raw.get("manual_deduction"))
 		absence_value = _to_currency(raw.get("absence_value"))
 		late_value = _to_currency(raw.get("late_value"))
+		penalty_deduction = _to_currency(raw.get("penalty_deduction"))
+		advance_deduction = _to_currency(raw.get("advance_deduction"))
 		component_gross = round(
 			basic
 			+ _to_currency(raw.get("housing_allowance"))
@@ -1550,7 +1605,15 @@ def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
 		if basic < 0 or gross < 0 or total_deductions < 0 or net < 0:
 			errors.append(_("الصف {0}: لا يمكن أن تحتوي قيم الرواتب أو الخصومات على أرقام سالبة.").format(row_label))
 
-		calculated_deductions = total_deductions or round(gosi + manual_deduction + absence_value + late_value, 2)
+		calculated_deductions = total_deductions or round(
+			gosi
+			+ manual_deduction
+			+ absence_value
+			+ late_value
+			+ penalty_deduction
+			+ advance_deduction,
+			2,
+		)
 		calculated_net = round(gross + overtime - calculated_deductions, 2)
 		if not _is_blank(raw.get("net_salary")) and abs(net - calculated_net) > 0.01:
 			errors.append(_("الصف {0}: صافي الراتب لا يطابق المعادلة المحاسبية. المدخل {1:.2f} والمتوقع {2:.2f}.").format(row_label, net, calculated_net))
@@ -2244,25 +2307,25 @@ def _get_duplicate_name_without_cost_center_warnings(raw_rows: list[dict]) -> li
 		group = groups.setdefault(name_key, {
 			"display_name": name_value,
 			"all_rows": [],
-			"rows_without_cost_center": [],
+			"rows_without_safe_identity": [],
 		})
 		row_label = cstr(raw.get("source_row") or "?")
 		group["all_rows"].append(row_label)
-		if _is_blank(raw.get("cost_center")):
-			group["rows_without_cost_center"].append(row_label)
+		if _is_blank(raw.get("employee_id")) and _is_blank(raw.get("cost_center")):
+			group["rows_without_safe_identity"].append(row_label)
 
 	warnings = []
 	for group in groups.values():
-		if len(group["all_rows"]) < 2 or not group["rows_without_cost_center"]:
+		if len(group["all_rows"]) < 2 or not group["rows_without_safe_identity"]:
 			continue
 		warnings.append(
 			_(
-				"الاسم {0} مكرر في الصفوف {1}، وبعض هذه الصفوف ({2}) لا تحتوي على مركز تكلفة صريح. "
-				"يرجى تعبئة مركز التكلفة لتجنب المطابقة الخاطئة."
+				"الاسم {0} مكرر في الصفوف {1}، وبعض هذه الصفوف ({2}) لا تحتوي على رقم وظيفي أو مركز تكلفة صريح. "
+				"يرجى تعبئة الرقم الوظيفي أو مركز التكلفة لتجنب المطابقة الخاطئة."
 			).format(
 				group["display_name"],
 				", ".join(group["all_rows"][:10]),
-				", ".join(group["rows_without_cost_center"][:10]),
+				", ".join(group["rows_without_safe_identity"][:10]),
 			)
 		)
 
@@ -2299,17 +2362,29 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 			component_gross,
 			overtime,
 		)
+		gosi = _to_currency(raw.get("gosi_deduction"))
+		absence_deduction = _to_currency(raw.get("absence_value"))
+		late_deduction = _to_currency(raw.get("late_value"))
+		penalty_deduction = _to_currency(raw.get("penalty_deduction"))
+		advance_deduction = _to_currency(raw.get("advance_deduction"))
+		manual_deduction = _to_currency(raw.get("manual_deduction"))
+		known_deductions = round(
+			gosi
+			+ absence_deduction
+			+ late_deduction
+			+ penalty_deduction
+			+ advance_deduction
+			+ manual_deduction,
+			2,
+		)
 		total_deductions = _to_currency(raw.get("total_deductions"))
 		if not total_deductions:
-			total_deductions = round(
-				gosi + _to_currency(raw.get("manual_deduction")) + _to_currency(raw.get("absence_value")) + _to_currency(raw.get("late_value")),
-				2,
-			)
+			total_deductions = known_deductions
 
-		other_deductions = round(max(total_deductions - gosi, 0.0), 2)
+		other_deductions = round(manual_deduction + max(total_deductions - known_deductions, 0.0), 2)
 		net = _to_currency(raw.get("net_salary"))
 		if not net:
-			net = round(gross + overtime - gosi - other_deductions, 2)
+			net = round(gross + overtime - total_deductions, 2)
 
 		calculated_net = round(gross + overtime - total_deductions, 2)
 		if net and abs(net - calculated_net) > 0.01:
@@ -2344,8 +2419,20 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 			"gosi_employee_deduction": gosi,
 			"sick_leave_deduction": 0.0,
 			"loan_deduction": 0.0,
+			"absence_deduction": absence_deduction,
+			"late_deduction": late_deduction,
+			"penalty_deduction": penalty_deduction,
+			"advance_deduction": advance_deduction,
 			"other_deductions": other_deductions,
-			"total_deductions": round(gosi + other_deductions, 2),
+			"total_deductions": round(
+				gosi
+				+ absence_deduction
+				+ late_deduction
+				+ penalty_deduction
+				+ advance_deduction
+				+ other_deductions,
+				2,
+			),
 			"overtime_addition": overtime,
 			"loan_installments": "",
 			"net_salary": net,

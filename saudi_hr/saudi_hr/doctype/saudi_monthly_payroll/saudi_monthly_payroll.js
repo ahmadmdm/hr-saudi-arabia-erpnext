@@ -52,6 +52,10 @@ frappe.ui.form.on('Saudi Monthly Payroll Employee', {
     transport_allowance(frm, cdt, cdn){ _calc_row(frm, cdt, cdn); },
     other_allowances(frm, cdt, cdn) { _calc_row(frm, cdt, cdn); },
     loan_deduction(frm, cdt, cdn)   { _calc_row(frm, cdt, cdn); },
+    absence_deduction(frm, cdt, cdn){ _calc_row(frm, cdt, cdn); },
+    late_deduction(frm, cdt, cdn)   { _calc_row(frm, cdt, cdn); },
+    penalty_deduction(frm, cdt, cdn){ _calc_row(frm, cdt, cdn); },
+    advance_deduction(frm, cdt, cdn){ _calc_row(frm, cdt, cdn); },
     other_deductions(frm, cdt, cdn) { _calc_row(frm, cdt, cdn); },
 });
 
@@ -85,7 +89,7 @@ function _add_buttons(frm) {
             _validate_workbook(frm);
         }, __('Actions / إجراءات'));
 
-        frm.add_custom_button(__('Download Payroll Import Template / تنزيل قالب رفع الرواتب'), function() {
+        frm.add_custom_button(__('Download Professional Payroll Template / تنزيل قالب الرواتب الاحترافي'), function() {
             _download_payroll_import_template(frm);
         }, __('Actions / إجراءات'));
 
@@ -169,6 +173,10 @@ function _open_wps_submission(frm) {
 
 
 function _sync_workbook_fields(frm) {
+	if (frm.is_nova) {
+		frm.toggle_display('employee_setup_workbook', false);
+		return;
+	}
     frm.set_df_property('employee_setup_workbook', 'hidden', 1);
     frm.toggle_display('employee_setup_workbook', false);
     frm.refresh_field('employee_setup_workbook');
@@ -202,6 +210,9 @@ function _sync_auto_create_defaults(frm) {
 
 
 function _render_source_workbook_guidance(frm) {
+	if (frm.is_nova) {
+		return;
+	}
     const field = frm.get_field('source_workbook');
     if (!field || !field.$wrapper) {
         return;
@@ -323,6 +334,9 @@ function _show_workbook_validation_summary(summary) {
 
 
 function _setup_payroll_grid_state(frm) {
+	if (frm.is_nova) {
+		return;
+	}
     _ensure_payroll_grid_styles();
     _bind_payroll_grid_events(frm);
     _refresh_payroll_grid_state(frm);
@@ -787,14 +801,14 @@ function _download_payroll_import_template(frm) {
                 doc_name: frm.doc.name
             },
             freeze: true,
-            freeze_message: __('Generating payroll import template...<br>جاري إنشاء قالب رفع الرواتب...'),
+            freeze_message: __('Preparing the professional payroll template...<br>جاري تجهيز قالب الرواتب الاحترافي...'),
             callback(r) {
                 if (!r.message || !r.message.file_url) {
                     return;
                 }
                 window.open(r.message.file_url, '_blank');
                 frappe.show_alert({
-                    message: __('Payroll import template is ready / تم تجهيز قالب رفع الرواتب'),
+                    message: __('Professional payroll template is ready / تم تجهيز قالب الرواتب الاحترافي'),
                     indicator: 'green'
                 }, 5);
             }
@@ -1115,7 +1129,14 @@ function _calc_row(frm, cdt, cdn) {
     const gosi_base = Math.min(basic, 45000);
     const gosi_ded  = parseFloat((gosi_base * gosi_rate / 100).toFixed(2));
 
-    const total_deductions = gosi_ded + flt(row.sick_leave_deduction) + flt(row.loan_deduction) + flt(row.other_deductions);
+    const total_deductions = gosi_ded
+        + flt(row.sick_leave_deduction)
+        + flt(row.loan_deduction)
+        + flt(row.absence_deduction)
+        + flt(row.late_deduction)
+        + flt(row.penalty_deduction)
+        + flt(row.advance_deduction)
+        + flt(row.other_deductions);
     const net = parseFloat((gross + flt(row.overtime_addition) - total_deductions).toFixed(2));
 
     frappe.model.set_value(cdt, cdn, 'gross_salary', parseFloat(gross.toFixed(2)));
@@ -1136,7 +1157,11 @@ function _update_totals(frm) {
         total_gosi  += flt(row.gosi_employee_deduction);
         total_sick  += flt(row.sick_leave_deduction);
         total_loan  += flt(row.loan_deduction);
-        total_other += flt(row.other_deductions);
+        total_other += flt(row.absence_deduction)
+            + flt(row.late_deduction)
+            + flt(row.penalty_deduction)
+            + flt(row.advance_deduction)
+            + flt(row.other_deductions);
         total_ot    += flt(row.overtime_addition);
         total_net   += flt(row.net_salary);
     });
