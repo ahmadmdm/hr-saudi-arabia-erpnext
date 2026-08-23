@@ -307,6 +307,19 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertEqual(worksheet["L5"].value, '=IF(COUNTA(A5:K5)=0,"",SUM(G5:J5))')
 		self.assertEqual(worksheet["V5"].value, '=IF(COUNTA(A5:U5)=0,"",SUM(O5,Q5:U5))')
 		self.assertEqual(worksheet["W5"].value, '=IF(L5="","",L5+K5-V5)')
+		example = workbook["مثال مكتمل"]
+		self.assertTrue(
+			all(str(example.cell(row=row, column=1).value).startswith("DEMO-") for row in range(5, 8))
+		)
+		self.assertTrue(
+			all(str(example.cell(row=row, column=2).value).startswith("موظف تجريبي") for row in range(5, 8))
+		)
+		self.assertTrue(
+			all(str(example.cell(row=row, column=24).value).startswith("DEMO-ID-") for row in range(5, 8))
+		)
+		self.assertTrue(
+			all(str(example.cell(row=row, column=25).value).startswith("DEMO-GOSI-") for row in range(5, 8))
+		)
 
 	def test_extract_source_workbook_rows_rejects_missing_required_headers(self):
 		workbook = Workbook()
