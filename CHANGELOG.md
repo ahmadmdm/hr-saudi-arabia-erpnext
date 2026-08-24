@@ -2,6 +2,13 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.19.2 - 2026-08-24
+
+- Fixed the classic Saudi Monthly Payroll workflow so an attached Excel workbook is imported instead of being silently replaced by contract-based employee fetching or recalculation.
+- Promoted workbook import to a clear primary action and added Arabic/English guidance that attachment alone does not load payroll values.
+- Added an overtime integrity gate and import-result totals so legacy `كشف الرواتب طباعة` files cannot complete silently if overtime is lost.
+- Added regression coverage for blocking destructive contract refresh when a source workbook is attached, with matching ERPNext v15 and v16 behavior.
+
 ## v1.16.5 - 2026-05-25
 
 - Added the Saudi labor regulations compliance layer for ERPNext v15, including statutory records, ministry filings, document custody, work arrangements, working-time checks, inspection fine SLAs, and final settlement tracking.

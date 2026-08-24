@@ -39,6 +39,16 @@ frappe.ui.form.on('Saudi Monthly Payroll', {
     month(frm)    { _update_period(frm); },
     year(frm)     { _update_period(frm); },
     posting_date(frm) { _sync_auto_create_defaults(frm); },
+    source_workbook(frm) {
+        _render_source_workbook_guidance(frm);
+        _add_buttons(frm);
+        if (frm.doc.source_workbook) {
+            frappe.show_alert({
+                message: __('The file is attached but not imported yet. Click Import Attached Workbook to load overtime and deductions.<br>تم إرفاق الملف ولم يُستورد بعد. اضغط استيراد الملف المرفق لتحميل الإضافي والخصومات.'),
+                indicator: 'orange'
+            }, 8);
+        }
+    },
     auto_create_missing_employees(frm) {
         _sync_auto_create_defaults(frm);
         _refresh_payroll_grid_state(frm);
@@ -77,9 +87,15 @@ function _add_buttons(frm) {
             _recalculate_all(frm);
         }, __('Actions / إجراءات'));
 
-        frm.add_custom_button(__('Import Workbook / استيراد ملف الرواتب'), function() {
-            _import_workbook(frm);
-        }, __('Actions / إجراءات'));
+        if (frm.doc.source_workbook) {
+            frm.add_custom_button(__('Import Attached Workbook / استيراد الملف المرفق'), function() {
+                _import_workbook(frm);
+            }).addClass('btn-primary');
+        } else {
+            frm.add_custom_button(__('Import Workbook / استيراد ملف الرواتب'), function() {
+                _import_workbook(frm);
+            }, __('Actions / إجراءات'));
+        }
 
         frm.add_custom_button(__('Analyze Workbook / تحليل ملف الرواتب'), function() {
             _analyze_workbook(frm);
@@ -239,6 +255,7 @@ function _get_workbook_upload_guidance_html(frm) {
         <div><b>${__('Workbook Upload Rules / تعليمات رفع ملف الرواتب')}</b></div>
         <div>${templateHint}</div>
         <ul style="margin: 8px 0 0; padding-inline-start: 18px;">
+            <li><b>${__('Attaching the file alone does not import its values. After attachment, click Import Attached Workbook; do not use Fetch Employees for workbook payroll.<br>إرفاق الملف وحده لا يستورد قيمه. بعد الإرفاق اضغط استيراد الملف المرفق، ولا تستخدم جلب الموظفين لمسير مبني على Excel.')}</b></li>
             <li>${__('Enter the correct payroll employee ID whenever it exists. Do not rely on name-only matching when an ID is available.<br>أدخل الرقم الوظيفي الصحيح متى ما كان موجوداً، ولا تعتمد على الاسم فقط إذا كان الرقم متاحاً.')}</li>
             <li>${__('If the same employee name appears more than once, separate rows using cost center and payroll ID.<br>عند تكرار الاسم نفسه يجب التفريق بين الصفوف باستخدام مركز التكلفة والرقم الوظيفي.')}</li>
             <li>${__('Rows with zero salary or zero net salary are treated as leave rows and will be skipped during import.<br>أي صف راتبه أو صافي راتبه صفر سيُعتبر إجازة وسيتم تجاهله عند الاستيراد.')}</li>
@@ -462,6 +479,10 @@ function _fetch_employees(frm) {
         frappe.msgprint(__('Please select Month and Year first.<br>يرجى اختيار الشهر والسنة أولاً.'), __('Required'));
         return;
     }
+    if (frm.doc.source_workbook) {
+        _import_workbook(frm);
+        return;
+    }
 
     // حفظ أولاً إذا كان جديداً
     const do_fetch = function() {
@@ -498,6 +519,10 @@ function _fetch_employees(frm) {
 
 
 function _recalculate_all(frm) {
+    if (frm.doc.source_workbook) {
+        _import_workbook(frm);
+        return;
+    }
     if (!frm.doc.employees || frm.doc.employees.length === 0) {
         frappe.msgprint(__('No employees. Please fetch employees first.<br>لا يوجد موظفون. جلب الموظفين أولاً.'));
         return;
@@ -599,7 +624,12 @@ function _import_workbook(frm) {
 
                 frm.reload_doc();
                 frappe.show_alert({
-                    message: __(`Imported ${r.message.count} payroll rows. Total Net: ${format_currency(r.message.total_net)}`),
+                    message: __('Imported {0} payroll rows. Overtime: {1} across {2} rows. Total Net: {3}', [
+                        r.message.count,
+                        format_currency(r.message.total_overtime || 0),
+                        r.message.overtime_rows || 0,
+                        format_currency(r.message.total_net)
+                    ]),
                     indicator: 'green'
                 }, 6);
 
@@ -609,6 +639,7 @@ function _import_workbook(frm) {
                         indicator: r.message.remaining_unlinked_rows ? 'orange' : 'green',
                         message: `
                             <p>${__('Imported payroll rows')}: <b>${r.message.count}</b></p>
+                            <p>${__('Imported overtime / الإضافي المستورد')}: <b>${format_currency(r.message.total_overtime || 0)}</b> (${r.message.overtime_rows || 0} ${__('rows / صفوف')})</p>
                             <p>${__('Auto-created employees')}: <b>${r.message.created_count || 0}</b></p>
                             <p>${__('Linked existing rows')}: <b>${r.message.linked_count || 0}</b></p>
                             <p>${__('Remaining unlinked rows')}: <b>${r.message.remaining_unlinked_rows || 0}</b></p>

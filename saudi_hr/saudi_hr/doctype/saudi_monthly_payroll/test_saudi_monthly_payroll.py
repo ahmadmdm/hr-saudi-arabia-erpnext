@@ -150,6 +150,14 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertIn("Zero Employee", result["warnings"][0])
 		self.assertIn("skipped 1", fake_doc.comments[0][1])
 
+	def test_fetch_employees_blocks_contract_replacement_when_workbook_is_attached(self):
+		fake_doc = SimpleNamespace(source_workbook="/private/files/dksa.xlsx")
+		with patch.object(payroll_module.frappe, "get_doc", return_value=fake_doc), patch.object(
+			payroll_module.frappe, "has_permission"
+		):
+			with self.assertRaises(frappe.ValidationError):
+				payroll_module.fetch_employees("SAU-PAY-TEST")
+
 	def test_recalculate_totals_includes_loan_and_sick_deductions(self):
 		doc = frappe.get_doc({
 			"doctype": "Saudi Monthly Payroll",
