@@ -222,6 +222,16 @@ def fetch_employees(doc_name: str):
 	"""
 	doc = frappe.get_doc("Saudi Monthly Payroll", doc_name)
 	frappe.has_permission("Saudi Monthly Payroll", "write", doc=doc, throw=True)
+	if getattr(doc, "source_workbook", None):
+		frappe.throw(
+			_(
+				"A payroll workbook is attached. Import the workbook so its overtime and deductions are preserved; "
+				"Fetch Employees uses contract data only. Detach the workbook first if contract-based payroll is intentional.<br>"
+				"يوجد ملف رواتب مرفق. استخدم استيراد ملف الرواتب حتى تُحفظ قيم الإضافي والخصومات الموجودة فيه؛ "
+				"جلب الموظفين يعتمد على بيانات العقود فقط. احذف المرفق أولاً إذا كنت تقصد إنشاء المسير من العقود."
+			),
+			title=_("Workbook Import Required / يلزم استيراد ملف الرواتب"),
+		)
 
 	employees = frappe.get_all(
 		"Employee",
@@ -463,6 +473,18 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 
 	doc._recalculate_employee_rows()
 	doc._recalculate_totals()
+	expected_overtime = round(sum(flt(row.get("overtime_addition")) for row in import_rows), 2)
+	expected_overtime_rows = sum(1 for row in import_rows if flt(row.get("overtime_addition")))
+	if abs(flt(doc.total_overtime) - expected_overtime) > 0.01:
+		frappe.throw(
+			_(
+				"Overtime integrity check failed after importing the workbook. Expected {0:.2f}, but the payroll contains {1:.2f}. "
+				"No partial result was accepted.<br>"
+				"فشل تحقق سلامة العمل الإضافي بعد استيراد الملف. المتوقع {0:.2f} بينما يحتوي المسير على {1:.2f}. "
+				"لم يتم اعتماد نتيجة جزئية."
+			).format(expected_overtime, flt(doc.total_overtime)),
+			title=_("Overtime Import Integrity Error / خطأ سلامة استيراد الإضافي"),
+		)
 	doc.save()
 	_add_payroll_audit_comment(
 		doc,
@@ -480,6 +502,8 @@ def import_payroll_workbook(doc_name: str, file_url: str | None = None):
 		"count": len(import_rows),
 		"warnings": warnings,
 		"total_net": doc.total_net_payable,
+		"total_overtime": doc.total_overtime,
+		"overtime_rows": expected_overtime_rows,
 		"auto_create_enabled": auto_create_result["enabled"],
 		"created_count": auto_create_result["created_count"],
 		"enriched_employee_count": enriched_count,

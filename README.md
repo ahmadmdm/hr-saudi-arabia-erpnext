@@ -6,7 +6,7 @@
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-1.18.0-49D5A2?style=flat-square&labelColor=06161C)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.18.0-v16)
+[![Version](https://img.shields.io/badge/version-1.19.2-49D5A2?style=flat-square&labelColor=06161C)](https://github.com/ahmadmdm/hr-saudi-arabia-erpnext/releases/tag/v1.19.2-v16)
 ![ERPNext](https://img.shields.io/badge/ERPNext-v16-DFA96A?style=flat-square&labelColor=06161C)
 ![Arabic first](https://img.shields.io/badge/Arabic-first-E9E2D0?style=flat-square&labelColor=06161C)
 ![HRMS](https://img.shields.io/badge/HRMS-not_required-49D5A2?style=flat-square&labelColor=06161C)
@@ -57,7 +57,7 @@
 
 ## التثبيت
 
-هذه الحزمة مخصصة لـ **ERPNext v16**. الحزمة المختبرة: Saudi HR `1.18.0` — الإصدار `v1.18.0-v16`.
+هذه الحزمة مخصصة لـ **ERPNext v16**. الحزمة المختبرة: Saudi HR `1.19.2` — الإصدار `v1.19.2-v16`.
 
 ```bash
 cd ~/frappe-bench

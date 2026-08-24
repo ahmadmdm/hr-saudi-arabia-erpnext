@@ -216,7 +216,7 @@ def _employee_profile_assets_are_valid() -> None:
 	hooks = (ROOT / "saudi_hr" / "hooks.py").read_text(encoding="utf-8")
 	translations = (ROOT / "saudi_hr" / "translations" / "ar.csv").read_text(encoding="utf-8")
 
-	assert 'PROFILE_SCHEMA_VERSION = "2026.1"' in profile, "Employee profile API schema must be versioned"
+	assert 'PROFILE_SCHEMA_VERSION = "2026.2"' in profile, "Employee profile API schema must be versioned"
 	assert 'frappe.has_permission("Employee", "read", doc=employee_doc, throw=True)' in profile, "Employee profile must enforce Employee read permission"
 	assert "frappe.get_list(" in profile, "Employee profile related records must use permission-aware queries"
 	assert "_can_read_doctype" in dashboard and "frappe.has_permission" in dashboard, "Employee connections must be permission-aware"
