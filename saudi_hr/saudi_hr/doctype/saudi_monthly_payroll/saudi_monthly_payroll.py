@@ -1552,11 +1552,12 @@ def _assert_required_workbook_headers(header_map: dict[str, int]) -> None:
 
 def _preview_payroll_workbook(company: str, workbook_url: str) -> dict:
 	raw_rows = _extract_source_workbook_rows(_get_attached_file_content(workbook_url))
+	unique_rows, _duplicate_warnings = _deduplicate_exact_payroll_rows(raw_rows)
 	import_rows, warnings = _map_workbook_rows_to_payroll(company, raw_rows)
-	critical_warnings = _get_duplicate_name_without_cost_center_warnings(raw_rows)
+	critical_warnings = _get_duplicate_name_without_cost_center_warnings(unique_rows)
 	unmatched_rows = [warning for warning in warnings if "could not match employee" in warning]
 	matched_fallbacks = [warning for warning in warnings if "matched employee" in warning]
-	unmatched_details = _collect_unmatched_workbook_rows(company, raw_rows)
+	unmatched_details = _collect_unmatched_workbook_rows(company, unique_rows)
 	company_employee_count = frappe.db.count("Employee", {"company": company})
 
 	return {
@@ -1577,13 +1578,14 @@ def _preview_payroll_workbook(company: str, workbook_url: str) -> dict:
 def _validate_payroll_workbook_rows(company: str, raw_rows: list[dict]) -> dict:
 	lookup = _get_company_employee_lookup(company)
 	errors = []
-	warnings = []
-	critical_warnings = _get_duplicate_name_without_cost_center_warnings(raw_rows)
+	unique_rows, duplicate_warnings = _deduplicate_exact_payroll_rows(raw_rows)
+	warnings = list(duplicate_warnings)
+	critical_warnings = _get_duplicate_name_without_cost_center_warnings(unique_rows)
 	would_create_cost_centers = []
 	duplicate_keys = {}
 	required_fields = _required_workbook_field_labels()
 
-	for raw in raw_rows:
+	for raw in unique_rows:
 		row_label = raw.get("source_row") or "?"
 		if _is_zero_salary_leave_row(raw):
 			warnings.append(_("الصف {0}: تم تجاهل الموظف لأن صافي الراتب في الملف صفر ويُعامل كإجازة.").format(row_label))
@@ -2359,9 +2361,10 @@ def _get_duplicate_name_without_cost_center_warnings(raw_rows: list[dict]) -> li
 def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[list[dict], list[str]]:
 	employees_by_key = _get_company_employee_lookup(company)
 	import_rows = []
-	warnings = []
+	unique_rows, duplicate_warnings = _deduplicate_exact_payroll_rows(raw_rows)
+	warnings = list(duplicate_warnings)
 
-	for raw in raw_rows:
+	for raw in unique_rows:
 		if _is_zero_salary_leave_row(raw):
 			warnings.append(
 				_(f"Row {raw.get('source_row')}: skipped because salary is zero in the workbook, so the employee is treated as on leave.")
@@ -2475,6 +2478,45 @@ def _map_workbook_rows_to_payroll(company: str, raw_rows: list[dict]) -> tuple[l
 			)
 
 	return import_rows, warnings
+
+
+def _deduplicate_exact_payroll_rows(raw_rows: list[dict]) -> tuple[list[dict], list[str]]:
+	"""Skip byte-for-byte-equivalent payroll rows without double-counting salary values.
+
+	Rows for the same employee and cost center that differ in any imported value remain
+	in the result so validation can block the conflicting duplicate. Only an exact copy
+	is treated as a recoverable legacy-workbook issue.
+	"""
+	unique_rows = []
+	warnings = []
+	seen: dict[tuple, str] = {}
+
+	for raw in raw_rows:
+		fingerprint = tuple(
+			(sorted((key, _normalize_exact_duplicate_value(value)) for key, value in raw.items() if key != "source_row"))
+		)
+		first_row = seen.get(fingerprint)
+		if first_row is not None:
+			warnings.append(
+				_(
+					"Row {0}: ignored because it is an exact duplicate of row {1}; payroll values were counted once only."
+					" / الصف {0}: تم تجاهله لأنه نسخة مطابقة تماماً للصف {1}، وتم احتساب قيم الرواتب مرة واحدة فقط."
+				).format(raw.get("source_row") or "?", first_row)
+			)
+			continue
+
+		seen[fingerprint] = cstr(raw.get("source_row") or "?")
+		unique_rows.append(raw)
+
+	return unique_rows, warnings
+
+
+def _normalize_exact_duplicate_value(value):
+	if value is None:
+		return ""
+	if isinstance(value, str):
+		return " ".join(value.split()).strip().lower()
+	return value
 
 
 def _match_workbook_employee_for_import(raw: dict, lookup: dict[str, dict]):

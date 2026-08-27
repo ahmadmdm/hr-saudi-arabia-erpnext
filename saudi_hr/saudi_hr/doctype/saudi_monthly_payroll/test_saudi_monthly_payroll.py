@@ -548,6 +548,68 @@ class TestSaudiMonthlyPayroll(FrappeTestCase):
 		self.assertIn("could not match employee 7803A", warnings[0])
 		self.assertIn("without a linked Employee record", warnings[1])
 
+	def test_exact_duplicate_workbook_row_is_skipped_without_double_counting(self):
+		base_row = {
+			"employee_id": "6585A",
+			"employee_name": "هيا فهد بن دخيل المبارك",
+			"department": "مدار الفكرة",
+			"cost_center": "س مدار الفكرة",
+			"basic_salary": 1200,
+			"gross_salary": 1200,
+			"additions": 0,
+			"total_deductions": 0,
+			"net_salary": 1200,
+		}
+		raw_rows = [
+			{**base_row, "source_row": 112},
+			{**base_row, "source_row": 113},
+		]
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value={}), patch.object(
+			payroll_module.frappe.db, "exists", return_value=False
+		), patch.object(payroll_module, "_get_postable_cost_center", return_value="س مدار الفكرة"):
+			rows, map_warnings = payroll_module._map_workbook_rows_to_payroll("amd", raw_rows)
+			summary = payroll_module._validate_payroll_workbook_rows("amd", raw_rows)
+
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["net_salary"], 1200)
+		self.assertEqual(summary["error_count"], 0)
+		self.assertTrue(any("113" in warning and "112" in warning for warning in map_warnings))
+		self.assertTrue(any("113" in warning and "112" in warning for warning in summary["warnings"]))
+
+	def test_conflicting_duplicate_workbook_row_still_blocks_import(self):
+		raw_rows = [
+			{
+				"source_row": 112,
+				"employee_id": "6585A",
+				"employee_name": "هيا فهد بن دخيل المبارك",
+				"cost_center": "س مدار الفكرة",
+				"basic_salary": 1200,
+				"gross_salary": 1200,
+				"total_deductions": 0,
+				"net_salary": 1200,
+			},
+			{
+				"source_row": 113,
+				"employee_id": "6585A",
+				"employee_name": "هيا فهد بن دخيل المبارك",
+				"cost_center": "س مدار الفكرة",
+				"basic_salary": 1300,
+				"gross_salary": 1300,
+				"total_deductions": 0,
+				"net_salary": 1300,
+			},
+		]
+
+		with patch.object(payroll_module, "_get_company_employee_lookup", return_value={}), patch.object(
+			payroll_module, "_get_postable_cost_center", return_value="س مدار الفكرة"
+		):
+			summary = payroll_module._validate_payroll_workbook_rows("amd", raw_rows)
+
+		self.assertEqual(summary["error_count"], 1)
+		self.assertIn("113", summary["errors"][0])
+		self.assertIn("112", summary["errors"][0])
+
 	def test_map_workbook_rows_to_payroll_skips_zero_salary_leave_rows(self):
 		raw_rows = [{
 			"source_row": 14,
