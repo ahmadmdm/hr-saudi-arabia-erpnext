@@ -2,6 +2,12 @@
 
 All notable changes to `saudi_hr` are documented in this file.
 
+## v1.19.3 - 2026-09-02
+
+- Fixed legacy payroll imports that were blocked when the workbook contained an exact duplicate employee row.
+- Exact duplicate rows are now counted once with an explicit Arabic/English audit warning, while conflicting duplicates remain blocking validation errors.
+- Added regression coverage for both recoverable exact duplicates and unsafe conflicting duplicates, with matching ERPNext v15 and v16 behavior.
+
 ## v1.19.2 - 2026-08-24
 
 - Fixed the classic Saudi Monthly Payroll workflow so an attached Excel workbook is imported instead of being silently replaced by contract-based employee fetching or recalculation.
